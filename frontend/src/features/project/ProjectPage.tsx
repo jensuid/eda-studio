@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { DatasetRecord } from "../../shared/ipc/generated";
 
@@ -26,22 +26,22 @@ export function ProjectPage() {
     enabled: !!projectId && !!dataset,
   });
 
-  const [profiling, setProfiling] = useState(false);
-  const profile = useQuery({
-    queryKey: ["profile", projectId, dataset?.dataset_id],
-    queryFn: () => ipcClient.getProfile(projectId!, dataset!.dataset_id),
-    enabled: !!projectId && !!dataset && profiling,
-  });
+  const queryClient = useQueryClient();
+  // G6: single canonical profiling action — JobManager-wrapped command.
+  // (The legacy sync `dataset.profile` query stays registered for compat,
+  // but the UI no longer offers two competing buttons.)
+  const [savedProfile, setSavedProfile] = useState<import("../../shared/ipc/generated").ProfileRecord | null>(null);
 
-  // G6: job-wrapped profiling run + persisted history + snapshots list
+  // Feedback is driven by mutation state, NOT query isPending — a disabled
+  // query without data is 'pending' forever, so isPending shows a stuck
+  // "Profiling sedang berjalan…" next to a finished table.
   const runProfile = useMutation({
     mutationFn: () => ipcClient.runProfile(projectId!, dataset!.dataset_id),
     onSuccess: (r) => {
       setSavedProfile(r);
-      setProfiling(false);
+      void queryClient.invalidateQueries({ queryKey: ["profiles", projectId, dataset?.dataset_id] });
     },
   });
-  const [savedProfile, setSavedProfile] = useState<import("../../shared/ipc/generated").ProfileRecord | null>(null);
   const profiles = useQuery({
     queryKey: ["profiles", projectId, dataset?.dataset_id],
     queryFn: () => ipcClient.listProfiles(projectId!, dataset!.dataset_id),
@@ -54,7 +54,7 @@ export function ProjectPage() {
   });
   const openSaved = useMutation({
     mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
-    onSuccess: (r) => { setSavedProfile(r); setProfiling(false); },
+    onSuccess: (r) => { setSavedProfile(r); },
   });
 
   return (
@@ -84,19 +84,18 @@ export function ProjectPage() {
       {dataset && (
         <section>
           <h2>Profiling</h2>
-          {!profiling && <button onClick={() => setProfiling(true)}>Jalankan Profiling</button>}
-          <button disabled={runProfile.isPending} onClick={() => runProfile.mutate()}>Jalankan Profiling (Job)</button>
-          {runProfile.isError && <p role="alert">Profiling job gagal: {runProfile.error.message}</p>}
+          <button disabled={runProfile.isPending} onClick={() => runProfile.mutate()}>Jalankan Profiling</button>
+          {runProfile.isPending && <p role="status">Profiling sedang berjalan…</p>}
+          {runProfile.isError && <p role="alert">Profiling gagal: {runProfile.error.message}</p>}
+          {openSaved.isPending && <p role="status">Membuka profil tersimpan…</p>}
           {openSaved.isError && <p role="alert">Membuka profil tersimpan gagal: {openSaved.error.message}</p>}
-          {profile.isPending && <p role="status">Profiling sedang berjalan…</p>}
-          {profile.isError && <p role="alert">Profiling gagal. Silakan coba lagi.</p>}
-          {(savedProfile ?? profile.data) && (
+          {savedProfile && (
             <>
-              <p>{(savedProfile ?? profile.data)!.row_count} baris · {(savedProfile ?? profile.data)!.column_count} kolom · fingerprint {(savedProfile ?? profile.data)!.fingerprint.slice(0, 12)}…</p>
+              <p>{savedProfile.row_count} baris · {savedProfile.column_count} kolom · fingerprint {savedProfile.fingerprint.slice(0, 12)}…{savedProfile.profile_id ? ` · profil ${String(savedProfile.profile_id).slice(0, 8)}` : ""}</p>
               <table>
                 <thead><tr><th>Kolom</th><th>Tipe</th><th>Missing %</th><th>Min</th><th>Max</th><th>Mean</th><th>Top</th><th>Status</th></tr></thead>
                 <tbody>
-                  {(savedProfile ?? profile.data)!.columns.map((c) => (
+                  {savedProfile.columns.map((c) => (
                     <tr key={c.name}>
                       <td>{c.name}</td><td>{c.inferred_type}</td><td>{c.missing_pct}</td>
                       <td>{String(c.min_value ?? "")}</td><td>{String(c.max_value ?? "")}</td>
@@ -107,6 +106,11 @@ export function ProjectPage() {
                 </tbody>
               </table>
             </>
+          )}
+          {profiles.isPending && <p role="status">Memuat riwayat profiling…</p>}
+          {profiles.isError && <p role="alert">Riwayat profiling gagal dimuat: {profiles.error.message}</p>}
+          {profiles.data && profiles.data.profiles.length === 0 && !runProfile.isPending && (
+            <p>Belum ada profil tersimpan. Jalankan profiling untuk membuat profil pertama.</p>
           )}
           {profiles.data && profiles.data.profiles.length > 0 && (
             <>

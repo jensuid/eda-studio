@@ -1,0 +1,37 @@
+"""SEC-004 default-deny + ErrorContract translation (ES-13.2)."""
+
+
+def test_unknown_command_is_denied(bridge):
+    res = bridge.execute_command({"request_id": "r-x", "command": "[...]",
+                                  "payload": {}})
+    assert res["ok"] is False
+    assert res["error"]["code"] == "PERMISSION_DENIED"
+
+
+def test_unknown_query_is_denied(bridge):
+    res = bridge.execute_query({"request_id": "r-x", "command": "dataset.delete",
+                                "payload": {}})
+    assert res["ok"] is False
+    assert res["error"]["code"] == "PERMISSION_DENIED"
+
+
+def test_validation_error_shape(bridge):
+    res = bridge.execute_command({"request_id": "r-x", "command": "project.create",
+                                  "payload": {"name": ""}})
+    assert res["ok"] is False
+    assert res["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_unsupported_format(bridge, project_id):
+    res = bridge.execute_command({
+        "request_id": "r-x", "command": "dataset.import",
+        "payload": {"project_id": project_id, "source_path": "x.xlsx", "dataset_name": "x"},
+    })
+    assert res["ok"] is False
+    assert res["error"]["code"] == "UNSUPPORTED_FORMAT"
+
+
+def test_protocol_info_lists_only_registered(bridge):
+    info = bridge.get_protocol_info()
+    assert info["commands"] == ["dataset.import", "project.create"]
+    assert info["queries"] == ["dataset.preview", "project.open"]

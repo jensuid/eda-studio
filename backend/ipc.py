@@ -1,0 +1,125 @@
+"""IPC bridge — exactly 4 methods (ES-8.6, IPC-009: no FastAPI in MVP).
+
+Default-deny (SEC-004): only registered commands/queries are dispatchable;
+anything else is rejected with PERMISSION_DENIED. Domain exceptions are
+translated to ErrorContract at this boundary (ES-13.2). This class is the
+object PyWebView exposes as `window.pywebview` api in the desktop shell.
+"""
+from __future__ import annotations
+
+from typing import Any
+
+from pydantic import BaseModel, ValidationError
+
+from backend.application import NotFoundError, UnsupportedFormatError, WorkbenchService
+from backend.contracts import (
+    CreateProjectPayload,
+    ErrorCode,
+    ErrorContract,
+    GetDatasetPreviewPayload,
+    ImportDatasetPayload,
+    OpenProjectPayload,
+    ProtocolInfo,
+    Request,
+    Response,
+)
+from backend.execution import JobManager
+
+# Registry: command/query name -> (payload model, handler kind)
+_COMMANDS: dict[str, type[BaseModel]] = {
+    "project.create": CreateProjectPayload,
+    "dataset.import": ImportDatasetPayload,
+}
+_QUERIES: dict[str, type[BaseModel]] = {
+    "project.open": OpenProjectPayload,
+    "dataset.preview": GetDatasetPreviewPayload,
+}
+
+
+def _error(code: ErrorCode, message: str, correlation_id: str | None) -> Response:
+    return Response(ok=False, error=ErrorContract(code=code, message=message,
+                                                  correlation_id=correlation_id),
+                    correlation_id=correlation_id)
+
+
+class Bridge:
+    def __init__(self, service: WorkbenchService, jobs: JobManager) -> None:
+        self.service = service
+        self.jobs = jobs
+
+    # -- the 4 bridge methods --------------------------------------------
+    def get_protocol_info(self) -> dict[str, Any]:
+        return ProtocolInfo(commands=sorted(_COMMANDS), queries=sorted(_QUERIES)).model_dump()
+
+    def execute_command(self, request: Request | dict) -> dict[str, Any]:
+        req = Request(**request) if isinstance(request, dict) else request
+        if req.command not in _COMMANDS:
+            return _error(ErrorCode.PERMISSION_DENIED,
+                          f"command not allowed: {req.command}", req.correlation_id).model_dump()
+        try:
+            payload = _COMMANDS[req.command](**req.payload)
+        except ValidationError as exc:
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+        try:
+            if req.command == "project.create":
+                result = self.service.create_project(payload.name, payload.project_id)
+            elif req.command == "dataset.import":
+                captured: list = []
+
+                def _import() -> None:
+                    captured.append(self.service.import_dataset(
+                        payload.project_id, payload.source_path, payload.dataset_name))
+
+                self.jobs.run(
+                    req.command, _import,
+                    correlation_id=req.correlation_id or req.request_id,
+                )
+                result = captured[0]
+            else:  # pragma: no cover — guarded by registry check above
+                raise AssertionError(req.command)
+        except NotFoundError as exc:
+            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump()
+        except UnsupportedFormatError as exc:
+            return _error(ErrorCode.UNSUPPORTED_FORMAT, str(exc), req.correlation_id).model_dump()
+        except Exception as exc:  # noqa: BLE001 — boundary translation
+            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump()
+        return Response(ok=True, data=result.model_dump() if hasattr(result, "model_dump") else result,
+                        correlation_id=req.correlation_id).model_dump()
+
+    def execute_query(self, request: Request | dict) -> dict[str, Any]:
+        req = Request(**request) if isinstance(request, dict) else request
+        if req.command not in _QUERIES:
+            return _error(ErrorCode.PERMISSION_DENIED,
+                          f"query not allowed: {req.command}", req.correlation_id).model_dump()
+        try:
+            payload = _QUERIES[req.command](**req.payload)
+        except ValidationError as exc:
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+        try:
+            if req.command == "project.open":
+                result = self.service.open_project(payload.project_id)
+            elif req.command == "dataset.preview":
+                result = self.service.get_preview(
+                    payload.project_id, payload.dataset_id, payload.limit)
+            else:  # pragma: no cover
+                raise AssertionError(req.command)
+        except NotFoundError as exc:
+            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump()
+        except Exception as exc:  # noqa: BLE001
+            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump()
+        return Response(ok=True, data=result.model_dump(),
+                        correlation_id=req.correlation_id).model_dump()
+
+    def get_events(self, since_seq: int = 0) -> list[dict[str, Any]]:
+        return [e.model_dump() for e in self.jobs.events_since(since_seq)]
+
+def make_bridge(root: str) -> Bridge:
+    """Composition Root (SYS-010): wire store -> jobs -> service -> bridge."""
+    from pathlib import Path
+
+    from backend.persistence import Store
+
+    store = Store(Path(root))
+    jobs = JobManager(store)
+    service = WorkbenchService(store, jobs)
+    return Bridge(service, jobs)

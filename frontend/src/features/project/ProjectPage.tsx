@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { DatasetRecord } from "../../shared/ipc/generated";
+import type { DatasetRecord, HistogramRecord } from "../../shared/ipc/generated";
+import { HistogramChart } from "../histogram/HistogramChart";
 
 interface ProjectForm { name: string; sourcePath: string; datasetName: string }
 
@@ -55,6 +56,14 @@ export function ProjectPage() {
   const openSaved = useMutation({
     mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
     onSuccess: (r) => { setSavedProfile(r); },
+  });
+
+  // SCREEN-HIST-001: column histogram — mutation-driven feedback (never query isPending).
+  const [histColumn, setHistColumn] = useState("");
+  const [histRecord, setHistRecord] = useState<HistogramRecord | null>(null);
+  const runHistogram = useMutation({
+    mutationFn: (column: string) => ipcClient.runHistogram(projectId!, dataset!.dataset_id, column),
+    onSuccess: (r) => setHistRecord(r),
   });
 
   return (
@@ -135,6 +144,27 @@ export function ProjectPage() {
               </ul>
             </>
           )}
+        </section>
+      )}
+      {dataset && (
+        <section>
+          <h2>Histogram</h2>
+          <label htmlFor="hist-column">Pilih kolom</label>{" "}
+          <select
+            id="hist-column"
+            value={histColumn}
+            onChange={(e) => setHistColumn(e.target.value)}
+          >
+            <option value="">— pilih —</option>
+            {dataset.columns.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>{" "}
+          <button disabled={runHistogram.isPending || !histColumn} onClick={() => runHistogram.mutate(histColumn)}>
+            Tampilkan Histogram
+          </button>
+          {runHistogram.isPending && <p role="status">Membuat histogram…</p>}
+          {runHistogram.isError && <p role="alert">Histogram gagal dibuat. Silakan coba lagi. — {runHistogram.error.message}</p>}
+          {histRecord && histRecord.kind !== "empty" && <HistogramChart record={histRecord} />}
+          {histRecord && histRecord.kind === "empty" && <p>Kolom ini tidak memiliki nilai.</p>}
         </section>
       )}
       {preview.data && (

@@ -22,6 +22,7 @@ MODELS = [
     "GetDatasetPreviewPayload", "OpenProjectPayload", "GetDatasetProfilePayload",
     "RunProfilePayload", "ListProfilesPayload", "GetProfileByIdPayload",
     "ListSnapshotsPayload",
+    "RunHistogramPayload", "HistogramBin", "HistogramRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",

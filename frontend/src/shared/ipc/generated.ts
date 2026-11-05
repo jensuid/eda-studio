@@ -159,3 +159,31 @@ export interface GetProfileByIdPayload {
 export interface ListSnapshotsPayload {
   project_id: string;
 }
+
+export interface RunHistogramPayload {
+  project_id: string;
+  dataset_id: string;
+  column_name: string;
+}
+
+export interface HistogramBin {
+  label: string;
+  count: number;
+}
+
+export interface HistogramRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  column_name: string;
+  inferred_type: string;
+  kind: string;
+  bins: HistogramBin[];
+  bin_method: string;
+  missing_pct: number;
+  min_value?: unknown;
+  max_value?: unknown;
+  mean_value?: unknown;
+  top_bin?: unknown;
+  value_count: number;
+}

@@ -9,6 +9,8 @@ from __future__ import annotations
 from backend.contracts import (
     ColumnProfile,
     DatasetRecord,
+    HistogramBin,
+    HistogramRecord,
     PreviewRecord,
     ProfileListRecord,
     ProfileRecord,
@@ -19,6 +21,7 @@ from backend.contracts import (
 )
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes, new_id
 from backend.execution import JobManager
+from backend.histograms import describe_column
 from backend.ingestion import (
     UnsupportedFormatError,
     preview_rows,
@@ -153,6 +156,41 @@ class WorkbenchService:
             )
             for r in rows
         ])
+
+    def run_histogram(self, project_id: str, dataset_id: str,
+                      column_name: str, correlation_id: str | None = None) -> HistogramRecord:
+        """SCREEN-HIST-001: descriptive histogram as a JobManager job (SYS-015)."""
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, HistogramRecord] = {}
+
+        def work() -> None:
+            try:
+                d = describe_column(
+                    self.store.read_snapshot(dataset.snapshot.snapshot_id),
+                    column_name)
+            except LookupError as exc:
+                raise NotFoundError(str(exc)) from exc
+            holder["rec"] = HistogramRecord(
+                dataset_id=dataset.dataset_id,
+                snapshot_id=dataset.snapshot.snapshot_id,
+                fingerprint=dataset.snapshot.fingerprint,
+                column_name=column_name,
+                inferred_type=d["inferred_type"],
+                kind=d["kind"],
+                bins=[HistogramBin(**b) for b in d["bins"]],
+                bin_method=d["bin_method"],
+                missing_pct=d["missing_pct"],
+                min_value=d["min_value"],
+                max_value=d["max_value"],
+                mean_value=d["mean_value"],
+                top_bin=d["top_bin"],
+                value_count=d["value_count"],
+            )
+
+        self.jobs.run("dataset.histogram.run", work, correlation_id)
+        return holder["rec"]
 
     def list_snapshots(self, project_id: str) -> SnapshotListRecord:
         if self.store.get_project(project_id) is None:

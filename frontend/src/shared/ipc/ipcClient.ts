@@ -5,6 +5,7 @@
  */
 import type {
   DatasetRecord,
+  HistogramRecord,
   JobEvent,
   PreviewRecord,
   ProfileListRecord,
@@ -125,6 +126,14 @@ export const ipcClient = {
       payload: { project_id: projectId },
     }) as BridgeResponse<SnapshotListRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listSnapshots failed");
+    return res.data;
+  },
+  async runHistogram(projectId: string, datasetId: string, columnName: string): Promise<HistogramRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.histogram.run",
+      payload: { project_id: projectId, dataset_id: datasetId, column_name: columnName },
+    }) as BridgeResponse<HistogramRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runHistogram failed");
     return res.data;
   },
   async getEvents(sinceSeq = 0): Promise<JobEvent[]> {

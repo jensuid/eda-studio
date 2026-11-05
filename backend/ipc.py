@@ -26,6 +26,7 @@ from backend.contracts import (
     ProtocolInfo,
     Request,
     Response,
+    RunHistogramPayload,
     RunProfilePayload,
 )
 from backend.execution import JobManager
@@ -35,6 +36,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "project.create": CreateProjectPayload,
     "dataset.import": ImportDatasetPayload,
     "dataset.profile.run": RunProfilePayload,  # G6: job-wrapped profiling
+    "dataset.histogram.run": RunHistogramPayload,  # M2 histogram
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
@@ -89,6 +91,11 @@ class Bridge:
                 # service.run_profile owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_profile(
                     payload.project_id, payload.dataset_id,
+                    req.correlation_id or req.request_id)
+            elif req.command == "dataset.histogram.run":
+                result = self.service.run_histogram(
+                    payload.project_id, payload.dataset_id,
+                    payload.column_name,
                     req.correlation_id or req.request_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)

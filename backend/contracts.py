@@ -222,6 +222,35 @@ class SnapshotListRecord(BaseModel):
     snapshots: list[SnapshotInfo]
 
 
+# ---- Desriptive histogram (M2, SCREEN-HIST-001) ----
+class RunHistogramPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    column_name: str = Field(min_length=1)
+
+
+class HistogramBin(BaseModel):
+    label: str  # numeric: "min–max" range label; categorical: category
+    count: int
+
+
+class HistogramRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    column_name: str
+    inferred_type: str  # "numeric" | "categorical" | "empty"
+    kind: str  # "histogram" | "frequency" | "empty"
+    bins: list[HistogramBin]
+    bin_method: str  # "freedman-diaconis" | "equal-width" | "top-n" | "constant" | "empty"
+    missing_pct: float
+    min_value: float | None = None
+    max_value: float | None = None
+    mean_value: float | None = None
+    top_bin: str | None = None
+    value_count: int
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

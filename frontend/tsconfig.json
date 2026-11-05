@@ -9,6 +9,7 @@
     "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "skipLibCheck": true,
     "types": ["vite/client"]
   },
   "include": ["src"]

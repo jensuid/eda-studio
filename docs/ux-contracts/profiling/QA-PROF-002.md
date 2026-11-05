@@ -18,5 +18,7 @@
   `tsc --noEmit` clean; `npm run build` OK (226.12 kB).
 - Tests: `tests/test_m2_profiling_g6.py` (job COMPLETED event, history round-trip,
   reopen by id, snapshots list, NOT_FOUND mapping).
-- Review pending: desktop re-verify (PO machine) + Critic visual on history/
-  snapshots layout at 900px before M3 ECharts histograms.
+- **Desktop re-verified (PO, 2026-11-05):** load fix confirmed (single
+  "Jalankan Profiling" action, mutation-driven loading state); each run
+  appends to Profiling history. Critic visual on history/snapshots layout
+  at 900px still pending before M3 ECharts histograms.

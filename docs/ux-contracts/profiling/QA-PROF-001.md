@@ -24,7 +24,9 @@ empty-first-run, loading, error, done).
 3. Tabel belum virtual scroll; kolom belum bisa di-sort/expand (contract M2 iterasi).
 
 ## Critique list untuk reviewer desktop
-- [ ] Layout di 900px dan 1440px (DS-CORE-001)
-- [ ] Badge status terlihat jelas (teks, bukan hanya warna)
-- [ ] State loading/error terbaca
-- [ ] Hierarki: ringkasan → tabel → aksi lanjutan
+- [x] Layout di 900px dan 1440px (DS-CORE-001) — **ok (PO, 2026-11-05)**
+- [x] Badge status terlihat jelas (teks, bukan hanya warna) — **ok (PO, 2026-11-05)**
+- [x] State loading/error terbaca — **ok (PO, 2026-11-05)**
+- [x] Hierarki: ringkasan → tabel → aksi lanjutan — **ok (PO, 2026-11-05)**
+
+**Verdict: G5 PASSED. Slice disetujui. Silakan lanjut G6 batch implementation.**

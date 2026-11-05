@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from pathlib import Path
 
 from backend.domain import Dataset, Project, Snapshot
@@ -49,7 +50,11 @@ class Store:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "snapshots").mkdir(exist_ok=True)
-        self.db = sqlite3.connect(self.root / "project.db")
+        # PyWebView dispatches js_api calls on worker threads; the connection
+        # is created in the main thread. check_same_thread=False + an RLock
+        # makes the Store safe for concurrent calls (SQLite serialized).
+        self._lock = threading.RLock()
+        self.db = sqlite3.connect(self.root / "project.db", check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA foreign_keys=ON")
@@ -58,16 +63,18 @@ class Store:
 
     # -- projects ---------------------------------------------------------
     def save_project(self, project: Project) -> None:
-        self.db.execute(
-            "INSERT OR REPLACE INTO projects(project_id, name) VALUES (?, ?)",
-            (project.project_id, project.name),
-        )
-        self.db.commit()
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO projects(project_id, name) VALUES (?, ?)",
+                (project.project_id, project.name),
+            )
+            self.db.commit()
 
     def get_project(self, project_id: str) -> Project | None:
-        row = self.db.execute(
-            "SELECT * FROM projects WHERE project_id = ?", (project_id,)
-        ).fetchone()
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM projects WHERE project_id = ?", (project_id,)
+            ).fetchone()
         return Project(row["project_id"], row["name"]) if row else None
 
     # -- snapshots + datasets --------------------------------------------
@@ -80,24 +87,26 @@ class Store:
         return path
 
     def save_dataset(self, dataset: Dataset) -> None:
-        self.db.execute(
-            "INSERT OR REPLACE INTO datasets VALUES (?,?,?,?,?,?,?)",
-            (
-                dataset.dataset_id,
-                dataset.project_id,
-                dataset.name,
-                dataset.snapshot.snapshot_id,
-                dataset.snapshot.fingerprint,
-                dataset.snapshot.row_count,
-                json.dumps(list(dataset.snapshot.columns)),
-            ),
-        )
-        self.db.commit()
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO datasets VALUES (?,?,?,?,?,?,?)",
+                (
+                    dataset.dataset_id,
+                    dataset.project_id,
+                    dataset.name,
+                    dataset.snapshot.snapshot_id,
+                    dataset.snapshot.fingerprint,
+                    dataset.snapshot.row_count,
+                    json.dumps(list(dataset.snapshot.columns)),
+                ),
+            )
+            self.db.commit()
 
     def get_dataset(self, dataset_id: str) -> Dataset | None:
-        row = self.db.execute(
-            "SELECT * FROM datasets WHERE dataset_id = ?", (dataset_id,)
-        ).fetchone()
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM datasets WHERE dataset_id = ?", (dataset_id,)
+            ).fetchone()
         if not row:
             return None
         columns = tuple(json.loads(row["columns"]))
@@ -118,25 +127,29 @@ class Store:
 
     # -- jobs (durable lifecycle, OBS-009) --------------------------------
     def save_job(self, job_id: str, command: str, state: str, correlation_id: str | None) -> None:
-        self.db.execute(
-            "INSERT OR REPLACE INTO jobs VALUES (?,?,?,?)",
-            (job_id, command, state, correlation_id),
-        )
-        self.db.commit()
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO jobs VALUES (?,?,?,?)",
+                (job_id, command, state, correlation_id),
+            )
+            self.db.commit()
 
     def save_event(self, event_id: str, job_id: str, correlation_id: str | None,
                    state: str, seq: int, message: str) -> None:
-        self.db.execute(
-            "INSERT INTO job_events VALUES (?,?,?,?,?,?)",
-            (event_id, job_id, correlation_id, state, seq, message),
-        )
-        self.db.commit()
+        with self._lock:
+            self.db.execute(
+                "INSERT INTO job_events VALUES (?,?,?,?,?,?)",
+                (event_id, job_id, correlation_id, state, seq, message),
+            )
+            self.db.commit()
 
     def events_since(self, seq: int) -> list[dict]:
-        rows = self.db.execute(
-            "SELECT * FROM job_events WHERE seq > ? ORDER BY seq", (seq,)
-        ).fetchall()
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM job_events WHERE seq > ? ORDER BY seq", (seq,)
+            ).fetchall()
         return [dict(r) for r in rows]
 
     def close(self) -> None:
-        self.db.close()
+        with self._lock:
+            self.db.close()

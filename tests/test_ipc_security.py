@@ -22,10 +22,12 @@ def test_validation_error_shape(bridge):
     assert res["error"]["code"] == "VALIDATION_ERROR"
 
 
-def test_unsupported_format(bridge, project_id):
+def test_unsupported_format(bridge, project_id, tmp_path):
+    bad = tmp_path / "x.json"
+    bad.write_text("{}")
     res = bridge.execute_command({
         "request_id": "r-x", "command": "dataset.import",
-        "payload": {"project_id": project_id, "source_path": "x.xlsx", "dataset_name": "x"},
+        "payload": {"project_id": project_id, "source_path": str(bad), "dataset_name": "x"},
     })
     assert res["ok"] is False
     assert res["error"]["code"] == "UNSUPPORTED_FORMAT"

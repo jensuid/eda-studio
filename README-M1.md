@@ -28,8 +28,11 @@ IPC-001–005/010–012, SYS-015/016/018, SEC-004, FE-002/004/011, OD-9 (Pyright
 TS strict, generator dipilih di ADR P1), OD-8 gate merge, OD-11 didelegasi ke ADR.
 
 ## Batasan M1 ini (sengaja)
-- Import hanya `.csv` (stdlib). Adapter `.parquet`/`.xlsx` = M1-next; port storage sudah siap.
-- Snapshot disimpan sebagai bytes CSV ter-fingerprint SHA-256 (Parquet menyusul dengan pyarrow).
+- M1-next (selesai): import CSV/XLSX/Parquet dinormalisasi ke snapshot **Parquet kanonis**
+  (`backend/ingestion.py`); fingerprint SHA-256 selalu dari bytes sumber asli.
+- Desktop shell terverifikasi di level bridge+bundle (pywebview terinstall, `js_api`
+  terekspos, `frontend/dist` terbangun); peluncuran jendela interaktif = langkah manual
+  `python desktop/main.py` (tidak diuji otomatis di lingkungan ini).
 - JobManager sinkron in-process; ProcessPool/scheduler = M2 (Doc05 §21).
 - Desktop shell butuh `pip install pywebview` (tidak diuji di CI ini).
 

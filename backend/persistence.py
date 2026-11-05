@@ -72,7 +72,7 @@ class Store:
 
     # -- snapshots + datasets --------------------------------------------
     def save_snapshot(self, snapshot_id: str, data: bytes) -> Path:
-        path = self.root / "snapshots" / f"{snapshot_id}.csv"
+        path = self.root / "snapshots" / f"{snapshot_id}.parquet"
         if not path.exists():  # immutable: never overwrite
             tmp = path.with_suffix(".tmp")
             tmp.write_bytes(data)
@@ -114,7 +114,7 @@ class Store:
         )
 
     def read_snapshot(self, snapshot_id: str) -> bytes:
-        return (self.root / "snapshots" / f"{snapshot_id}.csv").read_bytes()
+        return (self.root / "snapshots" / f"{snapshot_id}.parquet").read_bytes()
 
     # -- jobs (durable lifecycle, OBS-009) --------------------------------
     def save_job(self, job_id: str, command: str, state: str, correlation_id: str | None) -> None:

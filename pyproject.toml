@@ -8,12 +8,16 @@ version = "0.1.0"
 description = "EDA Workbench — local-first guided EDA (M1 Technical Foundation)"
 # Target runtime 3.12+ (ES-5.14); code stays 3.11-compatible for CI flexibility.
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.9"]
+dependencies = [
+    "pydantic>=2.9",
+    "pyarrow>=14",   # canonical Parquet snapshots (Doc04)
+    "openpyxl>=3.1", # Excel import adapter (M1-next)
+]
+# NOTE: local dev interpreter is Python 3.9, so the venv pins numpy<2 for
+# pyarrow 14 compat; target runtime 3.12+ uses current pyarrow + numpy 2.
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
-# M1 slice uses stdlib csv/sqlite only. Parquet/Excel adapters (pyarrow/openpyxl)
-# are added in M1-next; the snapshot port already isolates storage format.
 
 [tool.setuptools]
 py-modules = []

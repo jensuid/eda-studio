@@ -1,25 +1,26 @@
 """Application orchestration (M1): project -> import -> snapshot -> preview.
 
-This layer owns use-case sequencing and depends on domain + execution +
-persistence ports. It knows nothing about IPC envelopes or the UI.
+Owns use-case sequencing; depends on domain + execution + persistence ports.
+Ingestion normalises CSV/XLSX/Parquet to a canonical Parquet snapshot (Doc04);
+the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
-
-import csv
-import io
-from pathlib import Path
 
 from backend.contracts import DatasetRecord, PreviewRecord, ProjectRecord
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes, new_id
 from backend.execution import JobManager
+from backend.ingestion import (
+    UnsupportedFormatError,
+    preview_rows,
+    read_source,
+    to_parquet_bytes,
+)
 from backend.persistence import Store
+
+__all__ = ["NotFoundError", "UnsupportedFormatError", "WorkbenchService"]
 
 
 class NotFoundError(LookupError):
-    pass
-
-
-class UnsupportedFormatError(ValueError):
     pass
 
 
@@ -35,33 +36,26 @@ class WorkbenchService:
         return ProjectRecord(project_id=project.project_id, name=project.name)
 
     def import_dataset(self, project_id: str, source_path: str, dataset_name: str) -> DatasetRecord:
-        """Import CSV into an immutable snapshot. Parquet/Excel adapters plug
-        in here in M1-next; the storage port does not change."""
         if self.store.get_project(project_id) is None:
             raise NotFoundError(f"project not found: {project_id}")
-        path = Path(source_path)
-        if path.suffix.lower() != ".csv":
-            raise UnsupportedFormatError(
-                "M1 supports .csv only; .parquet/.xlsx adapters are M1-next"
-            )
-        data = path.read_bytes()
-        text = data.decode("utf-8-sig")
-        rows = list(csv.DictReader(io.StringIO(text)))
-        columns = list(rows[0].keys()) if rows else []
+        table, source_bytes = read_source(source_path)
         snapshot_id = new_id()
-        self.store.save_snapshot(snapshot_id, data)
+        self.store.save_snapshot(snapshot_id, to_parquet_bytes(table))
+        columns = tuple(table.column_names)
         dataset = Dataset(
             dataset_id=new_id(),
             project_id=project_id,
             name=dataset_name,
-            snapshot=Snapshot(snapshot_id, fingerprint_bytes(data), len(rows), tuple(columns)),
-            _rows=tuple(rows),
+            snapshot=Snapshot(
+                snapshot_id, fingerprint_bytes(source_bytes),
+                table.num_rows, columns,
+            ),
         )
         self.store.save_dataset(dataset)
         return DatasetRecord(
             dataset_id=dataset.dataset_id, project_id=project_id, name=dataset_name,
             snapshot_id=snapshot_id, fingerprint=dataset.snapshot.fingerprint,
-            row_count=len(rows), columns=columns,
+            row_count=table.num_rows, columns=list(columns),
         )
 
     # -- queries ----------------------------------------------------------
@@ -75,13 +69,9 @@ class WorkbenchService:
         dataset = self.store.get_dataset(dataset_id)
         if dataset is None or dataset.project_id != project_id:
             raise NotFoundError(f"dataset not found: {dataset_id}")
-        raw = self.store.read_snapshot(dataset.snapshot.snapshot_id)
-        rows = list(csv.DictReader(io.StringIO(raw.decode("utf-8-sig"))))
-        preview = rows[:limit]
+        columns, rows, total = preview_rows(
+            self.store.read_snapshot(dataset.snapshot.snapshot_id), limit)
         return PreviewRecord(
-            dataset_id=dataset_id,
-            columns=list(dataset.snapshot.columns),
-            rows=preview,
-            total_rows=len(rows),
-            truncated=len(rows) > len(preview),
+            dataset_id=dataset_id, columns=columns, rows=rows,
+            total_rows=total, truncated=total > len(rows),
         )

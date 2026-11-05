@@ -25,8 +25,8 @@
   polish visual M3; label teks dipertahankan (bukan color-only).
 - **O2** — `evidence_detail` format angka `.4g` ("IQR 2–4, pagar -1–7")
   terse/kasar. Rekomendasi: format yang lebih ramah di iterasi berikut.
-- **O3** — Section Profiling history/snapshots tidak ada di screenshot;
-  Critic untuk section tersebut tetap pending (jangan dianggap ter-cover).
+- **O3** — Section Profiling history/snapshots tidak ada di screenshot
+  awal. **CLOSED** oleh QA-PROF-003 (`history-snapshots.png`, PASS).
 
 ## State coverage note
 Screenshot hanya membuktikan state **done/clean** (snapshot bersih).
@@ -34,5 +34,5 @@ State loading/error/stale/empty-first-run terverifikasi via kode
 (mutation-driven, copy literal di `ProjectPage.tsx`) + tests, bukan screenshot.
 
 ## Verdict
-**G6 visual PASS** untuk slice quality (O1/O2 deferred polish; O3 pending
-screenshot terpisah). M3 boleh dimulai setelah O3 dicatat sebagai utang QA.
+**G6 visual PASS** untuk slice quality (O1/O2 deferred polish; O3 CLOSED
+via QA-PROF-003). M2 QA utang bersih — M3 boleh dimulai.

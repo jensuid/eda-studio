@@ -7,6 +7,7 @@ import type {
   DatasetRecord,
   JobEvent,
   PreviewRecord,
+  ProfileRecord,
   ProjectRecord,
   ProtocolInfo,
 } from "./generated";
@@ -70,6 +71,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId, limit },
     }) as BridgeResponse<PreviewRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getPreview failed");
+    return res.data;
+  },
+  async getProfile(projectId: string, datasetId: string): Promise<ProfileRecord> {
+    const res = bridge().execute_query({
+      request_id: rid(), command: "dataset.profile",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<ProfileRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProfile failed");
     return res.data;
   },
   async getEvents(sinceSeq = 0): Promise<JobEvent[]> {

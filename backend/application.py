@@ -6,7 +6,13 @@ the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
 
-from backend.contracts import DatasetRecord, PreviewRecord, ProjectRecord
+from backend.contracts import (
+    ColumnProfile,
+    DatasetRecord,
+    PreviewRecord,
+    ProfileRecord,
+    ProjectRecord,
+)
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes, new_id
 from backend.execution import JobManager
 from backend.ingestion import (
@@ -16,6 +22,7 @@ from backend.ingestion import (
     to_parquet_bytes,
 )
 from backend.persistence import Store
+from backend.profiling import profile_table
 
 __all__ = ["NotFoundError", "UnsupportedFormatError", "WorkbenchService"]
 
@@ -74,4 +81,25 @@ class WorkbenchService:
         return PreviewRecord(
             dataset_id=dataset_id, columns=columns, rows=rows,
             total_rows=total, truncated=total > len(rows),
+        )
+
+    def get_profile(self, project_id: str, dataset_id: str) -> ProfileRecord:
+        """M2 slice: univariate descriptives from the immutable snapshot.
+
+        Slice simplification: runs synchronously as a query; wrapping in a
+        JobManager job (Created->...->Completed) is a G6 follow-up, recorded
+        in the QA/profiling contracts.
+        """
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        row_count, cols = profile_table(
+            self.store.read_snapshot(dataset.snapshot.snapshot_id))
+        return ProfileRecord(
+            dataset_id=dataset_id,
+            snapshot_id=dataset.snapshot.snapshot_id,
+            fingerprint=dataset.snapshot.fingerprint,
+            row_count=row_count,
+            column_count=len(cols),
+            columns=[ColumnProfile(**c) for c in cols],
         )

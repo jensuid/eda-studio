@@ -17,6 +17,7 @@ from backend.contracts import (
     ErrorCode,
     ErrorContract,
     GetDatasetPreviewPayload,
+    GetDatasetProfilePayload,
     ImportDatasetPayload,
     OpenProjectPayload,
     ProtocolInfo,
@@ -33,6 +34,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
     "dataset.preview": GetDatasetPreviewPayload,
+    "dataset.profile": GetDatasetProfilePayload,  # M2 slice, SCREEN-PROF-001
 }
 
 
@@ -101,6 +103,9 @@ class Bridge:
             elif req.command == "dataset.preview":
                 result = self.service.get_preview(
                     payload.project_id, payload.dataset_id, payload.limit)
+            elif req.command == "dataset.profile":
+                result = self.service.get_profile(
+                    payload.project_id, payload.dataset_id)
             else:  # pragma: no cover
                 raise AssertionError(req.command)
         except NotFoundError as exc:

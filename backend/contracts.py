@@ -121,6 +121,11 @@ class OpenProjectPayload(BaseModel):
     project_id: str
 
 
+class GetDatasetProfilePayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
 # ---- Command/Query results (M1) ----
 
 class ProjectRecord(BaseModel):
@@ -144,6 +149,31 @@ class PreviewRecord(BaseModel):
     rows: list[dict[str, str]]
     total_rows: int
     truncated: bool
+
+
+# ---- Profiling (M2 slice, SCREEN-PROF-001) ----
+# Status thresholds (missing>30% -> problem; any missing or single distinct
+# -> check) are PROPOSED for this slice, pending PO ratification.
+class ColumnProfile(BaseModel):
+    name: str
+    inferred_type: str  # "numeric" | "categorical" | "empty"
+    missing_count: int
+    missing_pct: float
+    distinct_count: int
+    min_value: float | None = None
+    max_value: float | None = None
+    mean_value: float | None = None
+    top_value: str | None = None
+    status: str  # "ok" | "check" | "problem"
+
+
+class ProfileRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    row_count: int
+    column_count: int
+    columns: list[ColumnProfile]
 
 
 class Kind(str, Enum):

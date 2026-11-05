@@ -26,6 +26,13 @@ export function ProjectPage() {
     enabled: !!projectId && !!dataset,
   });
 
+  const [profiling, setProfiling] = useState(false);
+  const profile = useQuery({
+    queryKey: ["profile", projectId, dataset?.dataset_id],
+    queryFn: () => ipcClient.getProfile(projectId!, dataset!.dataset_id),
+    enabled: !!projectId && !!dataset && profiling,
+  });
+
   return (
     <main>
       <h1>EDA Workbench — M1</h1>
@@ -46,6 +53,32 @@ export function ProjectPage() {
             <button disabled={doImport.isPending}>Import</button>
           </form>
           {dataset && <p>Snapshot {dataset.snapshot_id} · {dataset.row_count} rows · sha256 {dataset.fingerprint.slice(0, 12)}…</p>}
+        </section>
+      )}
+      {dataset && (
+        <section>
+          <h2>Profiling</h2>
+          {!profiling && <button onClick={() => setProfiling(true)}>Jalankan Profiling</button>}
+          {profile.isPending && <p role="status">Profiling sedang berjalan…</p>}
+          {profile.isError && <p role="alert">Profiling gagal. Silakan coba lagi.</p>}
+          {profile.data && (
+            <>
+              <p>{profile.data.row_count} baris · {profile.data.column_count} kolom · fingerprint {profile.data.fingerprint.slice(0, 12)}…</p>
+              <table>
+                <thead><tr><th>Kolom</th><th>Tipe</th><th>Missing %</th><th>Min</th><th>Max</th><th>Mean</th><th>Top</th><th>Status</th></tr></thead>
+                <tbody>
+                  {profile.data.columns.map((c) => (
+                    <tr key={c.name}>
+                      <td>{c.name}</td><td>{c.inferred_type}</td><td>{c.missing_pct}</td>
+                      <td>{String(c.min_value ?? "")}</td><td>{String(c.max_value ?? "")}</td>
+                      <td>{String(c.mean_value ?? "")}</td><td>{String(c.top_value ?? "")}</td>
+                      <td>{c.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </section>
       )}
       {preview.data && (

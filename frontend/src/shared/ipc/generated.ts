@@ -67,6 +67,28 @@ export interface PreviewRecord {
   truncated: boolean;
 }
 
+export interface ColumnProfile {
+  name: string;
+  inferred_type: string;
+  missing_count: number;
+  missing_pct: number;
+  distinct_count: number;
+  min_value?: unknown;
+  max_value?: unknown;
+  mean_value?: unknown;
+  top_value?: unknown;
+  status: string;
+}
+
+export interface ProfileRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  row_count: number;
+  column_count: number;
+  columns: ColumnProfile[];
+}
+
 export interface CreateProjectPayload {
   name: string;
   project_id?: unknown;
@@ -86,4 +108,9 @@ export interface GetDatasetPreviewPayload {
 
 export interface OpenProjectPayload {
   project_id: string;
+}
+
+export interface GetDatasetProfilePayload {
+  project_id: string;
+  dataset_id: string;
 }

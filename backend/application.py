@@ -16,6 +16,8 @@ from backend.contracts import (
     ProfileRecord,
     ProfileSummary,
     ProjectRecord,
+    QualityFindingRecord,
+    QualityRecord,
     SnapshotInfo,
     SnapshotListRecord,
 )
@@ -30,6 +32,7 @@ from backend.ingestion import (
 )
 from backend.persistence import Store
 from backend.profiling import profile_table
+from backend.quality import assess_quality, summarise
 
 __all__ = ["NotFoundError", "UnsupportedFormatError", "WorkbenchService"]
 
@@ -190,6 +193,37 @@ class WorkbenchService:
             )
 
         self.jobs.run("dataset.histogram.run", work, correlation_id)
+        return holder["rec"]
+
+    def run_quality(self, project_id: str, dataset_id: str,
+                    correlation_id: str | None = None) -> QualityRecord:
+        """SCREEN-QUAL-001: deterministic quality assessment as a job (SYS-015).
+
+        Read-only: assessment never modifies the snapshot (Doc03 §4.3).
+        No persistence in this slice (Q5) — recompute is cheap.
+        """
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, QualityRecord] = {}
+
+        def work() -> None:
+            row_count, findings = assess_quality(
+                self.store.read_snapshot(dataset.snapshot.snapshot_id))
+            ok, check, problem, summary = summarise(findings)
+            holder["rec"] = QualityRecord(
+                dataset_id=dataset.dataset_id,
+                snapshot_id=dataset.snapshot.snapshot_id,
+                fingerprint=dataset.snapshot.fingerprint,
+                row_count=row_count,
+                findings=[QualityFindingRecord(**f) for f in findings],
+                ok_count=ok,
+                check_count=check,
+                problem_count=problem,
+                summary=summary,
+            )
+
+        self.jobs.run("dataset.quality.run", work, correlation_id)
         return holder["rec"]
 
     def list_snapshots(self, project_id: str) -> SnapshotListRecord:

@@ -11,6 +11,7 @@ import type {
   ProfileListRecord,
   ProfileRecord,
   ProjectRecord,
+  QualityRecord,
   ProtocolInfo,
   SnapshotListRecord,
 } from "./generated";
@@ -134,6 +135,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId, column_name: columnName },
     }) as BridgeResponse<HistogramRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runHistogram failed");
+    return res.data;
+  },
+  async runQuality(projectId: string, datasetId: string): Promise<QualityRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.quality.run",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<QualityRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runQuality failed");
     return res.data;
   },
   async getEvents(sinceSeq = 0): Promise<JobEvent[]> {

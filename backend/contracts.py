@@ -222,6 +222,34 @@ class SnapshotListRecord(BaseModel):
     snapshots: list[SnapshotInfo]
 
 
+# ---- Quality Rules Engine (M2, SCREEN-QUAL-001) ----
+class RunQualityPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class QualityFindingRecord(BaseModel):
+    rule_id: str  # "completeness" | "duplicates" | "constant" | "outliers"
+    column_name: str | None = None  # null for snapshot-level rules
+    severity: str  # "ok" | "check" | "problem"
+    message: str
+    evidence_count: int
+    evidence_pct: float
+    evidence_detail: str
+
+
+class QualityRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    row_count: int
+    findings: list[QualityFindingRecord]
+    ok_count: int
+    check_count: int
+    problem_count: int
+    summary: str
+
+
 # ---- Desriptive histogram (M2, SCREEN-HIST-001) ----
 class RunHistogramPayload(BaseModel):
     project_id: str

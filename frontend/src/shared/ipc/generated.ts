@@ -187,3 +187,30 @@ export interface HistogramRecord {
   top_bin?: unknown;
   value_count: number;
 }
+
+export interface RunQualityPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface QualityFindingRecord {
+  rule_id: string;
+  column_name?: unknown;
+  severity: string;
+  message: string;
+  evidence_count: number;
+  evidence_pct: number;
+  evidence_detail: string;
+}
+
+export interface QualityRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  row_count: number;
+  findings: QualityFindingRecord[];
+  ok_count: number;
+  check_count: number;
+  problem_count: number;
+  summary: string;
+}

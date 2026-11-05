@@ -23,6 +23,7 @@ MODELS = [
     "RunProfilePayload", "ListProfilesPayload", "GetProfileByIdPayload",
     "ListSnapshotsPayload",
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",
+    "RunQualityPayload", "QualityFindingRecord", "QualityRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",

@@ -37,7 +37,7 @@ def test_protocol_info_lists_only_registered(bridge):
     info = bridge.get_protocol_info()
     assert info["commands"] == [
         "dataset.histogram.run", "dataset.import",
-        "dataset.profile.run", "project.create"]
+        "dataset.profile.run", "dataset.quality.run", "project.create"]
     assert info["queries"] == [
         "dataset.preview", "dataset.profile", "dataset.profile.get",
         "dataset.profiles.list", "dataset.snapshots.list", "project.open"]

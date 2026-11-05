@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { DatasetRecord, HistogramRecord } from "../../shared/ipc/generated";
+import type { DatasetRecord, HistogramRecord, QualityRecord } from "../../shared/ipc/generated";
 import { HistogramChart } from "../histogram/HistogramChart";
 
 interface ProjectForm { name: string; sourcePath: string; datasetName: string }
@@ -64,6 +64,13 @@ export function ProjectPage() {
   const runHistogram = useMutation({
     mutationFn: (column: string) => ipcClient.runHistogram(projectId!, dataset!.dataset_id, column),
     onSuccess: (r) => setHistRecord(r),
+  });
+
+  // SCREEN-QUAL-001: quality check — mutation-driven feedback (never query isPending).
+  const [qualityRecord, setQualityRecord] = useState<QualityRecord | null>(null);
+  const runQuality = useMutation({
+    mutationFn: () => ipcClient.runQuality(projectId!, dataset!.dataset_id),
+    onSuccess: (r) => setQualityRecord(r),
   });
 
   return (
@@ -165,6 +172,49 @@ export function ProjectPage() {
           {runHistogram.isError && <p role="alert">Histogram gagal dibuat. Silakan coba lagi. — {runHistogram.error.message}</p>}
           {histRecord && histRecord.kind !== "empty" && <HistogramChart record={histRecord} />}
           {histRecord && histRecord.kind === "empty" && <p>Kolom ini tidak memiliki nilai.</p>}
+        </section>
+      )}
+      {dataset && (
+        <section>
+          <h2>Quality Check</h2>
+          {!savedProfile && <p>Jalankan profiling terlebih dahulu.</p>}
+          <button disabled={runQuality.isPending} onClick={() => runQuality.mutate()}>
+            Jalankan Quality Check
+          </button>
+          {runQuality.isPending && <p role="status">Memeriksa kualitas…</p>}
+          {runQuality.isError && <p role="alert">Quality check gagal. Silakan coba lagi. — {runQuality.error.message}</p>}
+          {qualityRecord && (
+            <>
+              <p aria-live="polite">
+                {qualityRecord.summary} · fingerprint {String(qualityRecord.fingerprint).slice(0, 8)} · {qualityRecord.row_count} baris
+              </p>
+              {savedProfile && qualityRecord.fingerprint !== savedProfile.fingerprint && (
+                <p>Hasil mungkin usang — jalankan ulang.</p>
+              )}
+              {qualityRecord.problem_count + qualityRecord.check_count === 0 && (
+                <p>Tidak ditemukan masalah kualitas pada snapshot ini.</p>
+              )}
+              <div style={{ overflowX: "auto" }}>
+                <table>
+                  <thead>
+                    <tr><th>Kolom</th><th>Aturan</th><th>Severity</th><th>Bukti</th><th>Keterangan</th></tr>
+                  </thead>
+                  <tbody>
+                    {qualityRecord.findings.map((f, i) => (
+                      <tr key={i}>
+                        <td>{String(f.column_name ?? "—")}</td>
+                        <td><code>{f.rule_id}</code></td>
+                        <td>{f.severity === "ok" ? "OK" : f.severity === "check" ? "Perlu perhatian" : "Masalah"}</td>
+                        <td>{String(f.evidence_count)} ({String(f.evidence_pct)}%) — {f.evidence_detail}</td>
+                        <td>{f.message}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p><button disabled title="Cleaning tersedia di M3">Cleaning tersedia di M3</button></p>
+            </>
+          )}
         </section>
       )}
       {preview.data && (

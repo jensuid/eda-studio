@@ -81,12 +81,38 @@ export interface ColumnProfile {
 }
 
 export interface ProfileRecord {
+  profile_id?: unknown;
   dataset_id: string;
   snapshot_id: string;
   fingerprint: string;
   row_count: number;
   column_count: number;
   columns: ColumnProfile[];
+}
+
+export interface ProfileSummary {
+  profile_id: string;
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  row_count: number;
+  column_count: number;
+}
+
+export interface ProfileListRecord {
+  profiles: ProfileSummary[];
+}
+
+export interface SnapshotInfo {
+  snapshot_id: string;
+  dataset_id: string;
+  dataset_name: string;
+  fingerprint: string;
+  row_count: number;
+}
+
+export interface SnapshotListRecord {
+  snapshots: SnapshotInfo[];
 }
 
 export interface CreateProjectPayload {
@@ -113,4 +139,23 @@ export interface OpenProjectPayload {
 export interface GetDatasetProfilePayload {
   project_id: string;
   dataset_id: string;
+}
+
+export interface RunProfilePayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface ListProfilesPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface GetProfileByIdPayload {
+  project_id: string;
+  profile_id: string;
+}
+
+export interface ListSnapshotsPayload {
+  project_id: string;
 }

@@ -18,11 +18,15 @@ from backend.contracts import (
     ErrorContract,
     GetDatasetPreviewPayload,
     GetDatasetProfilePayload,
+    GetProfileByIdPayload,
     ImportDatasetPayload,
+    ListProfilesPayload,
+    ListSnapshotsPayload,
     OpenProjectPayload,
     ProtocolInfo,
     Request,
     Response,
+    RunProfilePayload,
 )
 from backend.execution import JobManager
 
@@ -30,11 +34,15 @@ from backend.execution import JobManager
 _COMMANDS: dict[str, type[BaseModel]] = {
     "project.create": CreateProjectPayload,
     "dataset.import": ImportDatasetPayload,
+    "dataset.profile.run": RunProfilePayload,  # G6: job-wrapped profiling
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
     "dataset.preview": GetDatasetPreviewPayload,
-    "dataset.profile": GetDatasetProfilePayload,  # M2 slice, SCREEN-PROF-001
+    "dataset.profile": GetDatasetProfilePayload,  # M2 slice (compat)
+    "dataset.profile.get": GetProfileByIdPayload,  # G6 history
+    "dataset.profiles.list": ListProfilesPayload,  # G6 history
+    "dataset.snapshots.list": ListSnapshotsPayload,  # G6
 }
 
 
@@ -77,6 +85,11 @@ class Bridge:
                     correlation_id=req.correlation_id or req.request_id,
                 )
                 result = captured[0]
+            elif req.command == "dataset.profile.run":
+                # service.run_profile owns the JobManager lifecycle (SYS-015)
+                result = self.service.run_profile(
+                    payload.project_id, payload.dataset_id,
+                    req.correlation_id or req.request_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError as exc:
@@ -106,6 +119,14 @@ class Bridge:
             elif req.command == "dataset.profile":
                 result = self.service.get_profile(
                     payload.project_id, payload.dataset_id)
+            elif req.command == "dataset.profile.get":
+                result = self.service.get_profile_by_id(
+                    payload.project_id, payload.profile_id)
+            elif req.command == "dataset.profiles.list":
+                result = self.service.list_profiles(
+                    payload.project_id, payload.dataset_id)
+            elif req.command == "dataset.snapshots.list":
+                result = self.service.list_snapshots(payload.project_id)
             else:  # pragma: no cover
                 raise AssertionError(req.command)
         except NotFoundError as exc:

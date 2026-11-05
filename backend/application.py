@@ -10,8 +10,12 @@ from backend.contracts import (
     ColumnProfile,
     DatasetRecord,
     PreviewRecord,
+    ProfileListRecord,
     ProfileRecord,
+    ProfileSummary,
     ProjectRecord,
+    SnapshotInfo,
+    SnapshotListRecord,
 )
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes, new_id
 from backend.execution import JobManager
@@ -83,23 +87,82 @@ class WorkbenchService:
             total_rows=total, truncated=total > len(rows),
         )
 
-    def get_profile(self, project_id: str, dataset_id: str) -> ProfileRecord:
-        """M2 slice: univariate descriptives from the immutable snapshot.
-
-        Slice simplification: runs synchronously as a query; wrapping in a
-        JobManager job (Created->...->Completed) is a G6 follow-up, recorded
-        in the QA/profiling contracts.
-        """
-        dataset = self.store.get_dataset(dataset_id)
-        if dataset is None or dataset.project_id != project_id:
-            raise NotFoundError(f"dataset not found: {dataset_id}")
+    def _compute_profile(self, dataset: Dataset) -> ProfileRecord:
         row_count, cols = profile_table(
             self.store.read_snapshot(dataset.snapshot.snapshot_id))
         return ProfileRecord(
-            dataset_id=dataset_id,
+            dataset_id=dataset.dataset_id,
             snapshot_id=dataset.snapshot.snapshot_id,
             fingerprint=dataset.snapshot.fingerprint,
             row_count=row_count,
             column_count=len(cols),
             columns=[ColumnProfile(**c) for c in cols],
         )
+
+    def get_profile(self, project_id: str, dataset_id: str) -> ProfileRecord:
+        """M2 slice: read-only compute (kept for backward compat + notes).
+        G6 canonical path is `run_profile` (job-wrapped + persisted)."""
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        return self._compute_profile(dataset)
+
+    def run_profile(self, project_id: str, dataset_id: str,
+                    correlation_id: str | None = None) -> ProfileRecord:
+        """G6: profiling as a JobManager job (SYS-015), result persisted."""
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, ProfileRecord] = {}
+
+        def work() -> None:
+            rec = self._compute_profile(dataset)
+            profile_id = new_id()
+            self.store.save_profile(
+                profile_id, rec.dataset_id, rec.snapshot_id, rec.fingerprint,
+                rec.row_count, rec.column_count,
+                rec.model_dump_json(),
+            )
+            rec.profile_id = profile_id
+            holder["rec"] = rec
+
+        self.jobs.run("dataset.profile.run", work, correlation_id)
+        return holder["rec"]
+
+    def get_profile_by_id(self, project_id: str, profile_id: str) -> ProfileRecord:
+        row = self.store.get_profile(profile_id)
+        if row is None:
+            raise NotFoundError(f"profile not found: {profile_id}")
+        dataset = self.store.get_dataset(row["dataset_id"])
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"profile not found: {profile_id}")
+        rec = ProfileRecord.model_validate_json(row["columns_json"])
+        rec.profile_id = row["profile_id"]
+        return rec
+
+    def list_profiles(self, project_id: str, dataset_id: str) -> ProfileListRecord:
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        rows = self.store.list_profiles(dataset_id)
+        return ProfileListRecord(profiles=[
+            ProfileSummary(
+                profile_id=r["profile_id"], dataset_id=r["dataset_id"],
+                snapshot_id=r["snapshot_id"], fingerprint=r["fingerprint"],
+                row_count=r["row_count"], column_count=r["column_count"],
+            )
+            for r in rows
+        ])
+
+    def list_snapshots(self, project_id: str) -> SnapshotListRecord:
+        if self.store.get_project(project_id) is None:
+            raise NotFoundError(f"project not found: {project_id}")
+        rows = self.store.list_snapshots(project_id)
+        return SnapshotListRecord(snapshots=[
+            SnapshotInfo(
+                snapshot_id=r["snapshot_id"], dataset_id=r["dataset_id"],
+                dataset_name=r["name"], fingerprint=r["fingerprint"],
+                row_count=r["row_count"],
+            )
+            for r in rows
+        ])

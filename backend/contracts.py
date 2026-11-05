@@ -126,6 +126,26 @@ class GetDatasetProfilePayload(BaseModel):
     dataset_id: str
 
 
+# ---- G6: job-wrapped profiling + history ----
+class RunProfilePayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class ListProfilesPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class GetProfileByIdPayload(BaseModel):
+    project_id: str
+    profile_id: str
+
+
+class ListSnapshotsPayload(BaseModel):
+    project_id: str
+
+
 # ---- Command/Query results (M1) ----
 
 class ProjectRecord(BaseModel):
@@ -168,12 +188,38 @@ class ColumnProfile(BaseModel):
 
 
 class ProfileRecord(BaseModel):
+    profile_id: str | None = None  # set when persisted (G6)
     dataset_id: str
     snapshot_id: str
     fingerprint: str
     row_count: int
     column_count: int
     columns: list[ColumnProfile]
+
+
+class ProfileSummary(BaseModel):
+    profile_id: str
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    row_count: int
+    column_count: int
+
+
+class ProfileListRecord(BaseModel):
+    profiles: list[ProfileSummary]
+
+
+class SnapshotInfo(BaseModel):
+    snapshot_id: str
+    dataset_id: str
+    dataset_name: str
+    fingerprint: str
+    row_count: int
+
+
+class SnapshotListRecord(BaseModel):
+    snapshots: list[SnapshotInfo]
 
 
 class Kind(str, Enum):

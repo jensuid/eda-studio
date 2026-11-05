@@ -7,9 +7,11 @@ import type {
   DatasetRecord,
   JobEvent,
   PreviewRecord,
+  ProfileListRecord,
   ProfileRecord,
   ProjectRecord,
   ProtocolInfo,
+  SnapshotListRecord,
 } from "./generated";
 
 export interface BridgeResponse<T> {
@@ -91,6 +93,38 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProfileRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProfile failed");
+    return res.data;
+  },
+  async runProfile(projectId: string, datasetId: string): Promise<ProfileRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.profile.run",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<ProfileRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runProfile failed");
+    return res.data;
+  },
+  async listProfiles(projectId: string, datasetId: string): Promise<ProfileListRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "dataset.profiles.list",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<ProfileListRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listProfiles failed");
+    return res.data;
+  },
+  async getProfileById(projectId: string, profileId: string): Promise<ProfileRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "dataset.profile.get",
+      payload: { project_id: projectId, profile_id: profileId },
+    }) as BridgeResponse<ProfileRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProfileById failed");
+    return res.data;
+  },
+  async listSnapshots(projectId: string): Promise<SnapshotListRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "dataset.snapshots.list",
+      payload: { project_id: projectId },
+    }) as BridgeResponse<SnapshotListRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listSnapshots failed");
     return res.data;
   },
   async getEvents(sinceSeq = 0): Promise<JobEvent[]> {

@@ -42,6 +42,15 @@ CREATE TABLE IF NOT EXISTS job_events (
     seq INTEGER NOT NULL,
     message TEXT NOT NULL DEFAULT ''
 );
+CREATE TABLE IF NOT EXISTS profiles (
+    profile_id TEXT PRIMARY KEY,
+    dataset_id TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    row_count INTEGER NOT NULL,
+    column_count INTEGER NOT NULL,
+    columns_json TEXT NOT NULL
+);
 """
 
 
@@ -147,6 +156,39 @@ class Store:
         with self._lock:
             rows = self.db.execute(
                 "SELECT * FROM job_events WHERE seq > ? ORDER BY seq", (seq,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    # -- profiles (G6) ----------------------------------------------------
+    def save_profile(self, profile_id: str, dataset_id: str, snapshot_id: str,
+                     fingerprint: str, row_count: int, column_count: int,
+                     columns_json: str) -> None:
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO profiles VALUES (?,?,?,?,?,?,?)",
+                (profile_id, dataset_id, snapshot_id, fingerprint,
+                 row_count, column_count, columns_json),
+            )
+            self.db.commit()
+
+    def get_profile(self, profile_id: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM profiles WHERE profile_id = ?", (profile_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_profiles(self, dataset_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM profiles WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def list_snapshots(self, project_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM datasets WHERE project_id = ? ORDER BY rowid", (project_id,)
             ).fetchall()
         return [dict(r) for r in rows]
 

@@ -33,6 +33,30 @@ export function ProjectPage() {
     enabled: !!projectId && !!dataset && profiling,
   });
 
+  // G6: job-wrapped profiling run + persisted history + snapshots list
+  const runProfile = useMutation({
+    mutationFn: () => ipcClient.runProfile(projectId!, dataset!.dataset_id),
+    onSuccess: (r) => {
+      setSavedProfile(r);
+      setProfiling(false);
+    },
+  });
+  const [savedProfile, setSavedProfile] = useState<import("../../shared/ipc/generated").ProfileRecord | null>(null);
+  const profiles = useQuery({
+    queryKey: ["profiles", projectId, dataset?.dataset_id],
+    queryFn: () => ipcClient.listProfiles(projectId!, dataset!.dataset_id),
+    enabled: !!projectId && !!dataset,
+  });
+  const snapshots = useQuery({
+    queryKey: ["snapshots", projectId],
+    queryFn: () => ipcClient.listSnapshots(projectId!),
+    enabled: !!projectId && !!dataset,
+  });
+  const openSaved = useMutation({
+    mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
+    onSuccess: (r) => { setSavedProfile(r); setProfiling(false); },
+  });
+
   return (
     <main>
       <h1>EDA Workbench — M1</h1>
@@ -61,15 +85,18 @@ export function ProjectPage() {
         <section>
           <h2>Profiling</h2>
           {!profiling && <button onClick={() => setProfiling(true)}>Jalankan Profiling</button>}
+          <button disabled={runProfile.isPending} onClick={() => runProfile.mutate()}>Jalankan Profiling (Job)</button>
+          {runProfile.isError && <p role="alert">Profiling job gagal: {runProfile.error.message}</p>}
+          {openSaved.isError && <p role="alert">Membuka profil tersimpan gagal: {openSaved.error.message}</p>}
           {profile.isPending && <p role="status">Profiling sedang berjalan…</p>}
           {profile.isError && <p role="alert">Profiling gagal. Silakan coba lagi.</p>}
-          {profile.data && (
+          {(savedProfile ?? profile.data) && (
             <>
-              <p>{profile.data.row_count} baris · {profile.data.column_count} kolom · fingerprint {profile.data.fingerprint.slice(0, 12)}…</p>
+              <p>{(savedProfile ?? profile.data)!.row_count} baris · {(savedProfile ?? profile.data)!.column_count} kolom · fingerprint {(savedProfile ?? profile.data)!.fingerprint.slice(0, 12)}…</p>
               <table>
                 <thead><tr><th>Kolom</th><th>Tipe</th><th>Missing %</th><th>Min</th><th>Max</th><th>Mean</th><th>Top</th><th>Status</th></tr></thead>
                 <tbody>
-                  {profile.data.columns.map((c) => (
+                  {(savedProfile ?? profile.data)!.columns.map((c) => (
                     <tr key={c.name}>
                       <td>{c.name}</td><td>{c.inferred_type}</td><td>{c.missing_pct}</td>
                       <td>{String(c.min_value ?? "")}</td><td>{String(c.max_value ?? "")}</td>
@@ -79,6 +106,29 @@ export function ProjectPage() {
                   ))}
                 </tbody>
               </table>
+            </>
+          )}
+          {profiles.data && profiles.data.profiles.length > 0 && (
+            <>
+              <h3>Riwayat Profiling ({profiles.data.profiles.length})</h3>
+              <ul>
+                {profiles.data.profiles.map((p) => (
+                  <li key={p.profile_id}>
+                    {p.profile_id.slice(0, 8)} · {p.row_count} rows · {p.column_count} cols · {p.fingerprint.slice(0, 12)}…{" "}
+                    <button onClick={() => openSaved.mutate(p.profile_id)}>Buka</button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {snapshots.data && snapshots.data.snapshots.length > 0 && (
+            <>
+              <h3>Snapshots ({snapshots.data.snapshots.length})</h3>
+              <ul>
+                {snapshots.data.snapshots.map((s) => (
+                  <li key={s.snapshot_id}>{s.dataset_name} · {s.snapshot_id.slice(0, 8)} · {s.row_count} rows · {s.fingerprint.slice(0, 12)}…</li>
+                ))}
+              </ul>
             </>
           )}
         </section>

@@ -16,8 +16,12 @@ from backend import contracts
 MODELS = [
     "ErrorContract", "Request", "ProtocolInfo", "JobEvent", "JobStatus",
     "ProjectRecord", "DatasetRecord", "PreviewRecord",
+    "ColumnProfile", "ProfileRecord", "ProfileSummary", "ProfileListRecord",
+    "SnapshotInfo", "SnapshotListRecord",
     "CreateProjectPayload", "ImportDatasetPayload",
-    "GetDatasetPreviewPayload", "OpenProjectPayload",
+    "GetDatasetPreviewPayload", "OpenProjectPayload", "GetDatasetProfilePayload",
+    "RunProfilePayload", "ListProfilesPayload", "GetProfileByIdPayload",
+    "ListSnapshotsPayload",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",

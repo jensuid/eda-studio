@@ -53,7 +53,11 @@
 - **validation:** limit/sort input divalidasi; pesan error literal dari backend.
 - **copy (ID):** Judul "Profiling Dataset"; primary "Jalankan Profiling"; error generik "Profiling gagal. Silakan coba lagi."; loading "Profiling sedang berjalan…".
 - **accessibility:** kontras AA; badge status tidak hanya warna (ada label teks); tabel punya header scope; status job diumumkan (aria-live polite).
-- **responsive/adaptive (desktop):** min window 1024px; panel tabel scroll horizontal bila perlu; tidak ada layout mobile (desktop app, Doc14).
+- **responsive/adaptive (desktop):** min window **900px** (DS-CORE-001). ≥1200px:
+  ringkasan + tabel + panel aksi berdampingan. 900–1200px: ringkasan menumpuk
+  (stack) di atas tabel; scroll horizontal hanya di dalam panel tabel, tidak di
+  halaman. Semua state tetap terbaca di 900px (tidak ada teks terpotong, target
+  keyboard/kontras unchanged). Tidak ada layout mobile (desktop app, Doc14).
 
 ## Exit G3 (untuk review PO)
 Tidak ada perilaku penting yang ditinggalkan ke penemuan implementasi: setiap region punya state,

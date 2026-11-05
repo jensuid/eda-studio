@@ -9,7 +9,10 @@ profiling slice dulu; diperluas seiring fitur M2 (aturan: token/varian baru waji
   `status-warning`, `status-danger`, `status-info`. Kontras teks ≥ 4.5:1 (AA).
 - **Typography:** satu family sistem; scale `title` / `body` / `caption`; line-height ≥ 1.4.
 - **Spacing:** base unit 4px; gap scale 4/8/16/24; padding panel 16.
-- **Sizing:** tinggi kontrol 36px; lebar kolom tabel adaptif; min window 1024px (desktop).
+- **Sizing:** tinggi kontrol 36px; lebar kolom tabel adaptif; **min window 900px**
+  (diputuskan 2026-11-05 — kompromi: cukup untuk side-by-side/resize di desktop,
+  tidak terlalu sempit untuk tabel; 850px ditolak karena risiko layout berantakan
+  tanpa keuntungan nyata). Di bawah 900px window tidak dapat di-resize lebih kecil.
 - **Shape:** radius 6px (kontrol), 8px (panel); border 1px `border-subtle`.
 - **Elevation:** panel memakai border + surface-raised; shadow minimal (desktop app tenang).
 - **Motion:** transisi ≤ 150ms; hormati reduced-motion.

@@ -20,8 +20,13 @@ export function HistogramChart({ record }: Props) {
     const peakIdx = record.bins.reduce(
       (best, b, i) => (b.count > (record.bins[best]?.count ?? -1) ? i : best), 0);
     chart.setOption({
-      title: { text: `Distribusi ${record.column_name}`, left: "left" },
-      grid: { left: 48, right: 16, top: 44, bottom: 64 },
+      title: {
+        text: `Distribusi ${record.column_name}`,
+        left: 0,
+        top: 0,
+        textStyle: { fontSize: 14, fontWeight: 600 },
+      },
+      grid: { left: 56, right: 16, top: 56, bottom: 72, containLabel: true },
       tooltip: {
         trigger: "item",
         formatter: (p: { name: string; value: number }) =>
@@ -32,7 +37,13 @@ export function HistogramChart({ record }: Props) {
         data: record.bins.map((b) => b.label),
         axisLabel: { rotate: record.bins.length > 8 ? 30 : 0, fontSize: 11 },
       },
-      yAxis: { type: "value", name: "count" },
+      yAxis: {
+        type: "value",
+        name: "count",
+        nameLocation: "middle",
+        nameGap: 36,
+        nameTextStyle: { fontSize: 11 },
+      },
       series: [{
         type: "bar",
         data: record.bins.map((b, i) => ({

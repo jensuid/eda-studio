@@ -31,9 +31,14 @@ interface PywebviewBridge {
   get_events(sinceSeq: number): Promise<JobEvent[]>;
 }
 
+/**
+ * PyWebView exposes js_api under `window.pywebview.api` (NOT directly on
+ * window.pywebview). Calling the bare object yields
+ * "bridge().execute_command is not a function".
+ */
 declare global {
   interface Window {
-    pywebview?: PywebviewBridge;
+    pywebview?: { api?: PywebviewBridge };
   }
 }
 
@@ -44,10 +49,13 @@ function rid(): string {
 }
 
 function bridge(): PywebviewBridge {
-  if (!window.pywebview) {
-    throw new Error("pywebview bridge unavailable — run inside the desktop shell (demo mode: use `pnpm dev` with a mock)");
+  const api = window.pywebview?.api;
+  if (!api) {
+    throw new Error(
+      "pywebview bridge unavailable (window.pywebview.api not found) — run inside the desktop shell",
+    );
   }
-  return window.pywebview;
+  return api;
 }
 
 export const ipcClient = {

@@ -20,11 +20,15 @@ export interface BridgeResponse<T> {
   correlation_id: string | null;
 }
 
+/**
+ * PyWebView js_api calls are ALWAYS async (Promise). Every bridge call below
+ * must be awaited — a non-awaited Promise has no `.ok` and fails silently.
+ */
 interface PywebviewBridge {
-  get_protocol_info(): ProtocolInfo;
-  execute_command(req: unknown): BridgeResponse<unknown>;
-  execute_query(req: unknown): BridgeResponse<unknown>;
-  get_events(sinceSeq: number): JobEvent[];
+  get_protocol_info(): Promise<ProtocolInfo>;
+  execute_command(req: unknown): Promise<BridgeResponse<unknown>>;
+  execute_query(req: unknown): Promise<BridgeResponse<unknown>>;
+  get_events(sinceSeq: number): Promise<JobEvent[]>;
 }
 
 declare global {
@@ -47,18 +51,18 @@ function bridge(): PywebviewBridge {
 }
 
 export const ipcClient = {
-  getProtocolInfo(): ProtocolInfo {
+  async getProtocolInfo(): Promise<ProtocolInfo> {
     return bridge().get_protocol_info();
   },
   async createProject(name: string): Promise<ProjectRecord> {
-    const res = bridge().execute_command({
+    const res = await bridge().execute_command({
       request_id: rid(), command: "project.create", payload: { name },
     }) as BridgeResponse<ProjectRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createProject failed");
     return res.data;
   },
   async importDataset(projectId: string, sourcePath: string, datasetName: string): Promise<DatasetRecord> {
-    const res = bridge().execute_command({
+    const res = await bridge().execute_command({
       request_id: rid(), command: "dataset.import",
       payload: { project_id: projectId, source_path: sourcePath, dataset_name: datasetName },
     }) as BridgeResponse<DatasetRecord>;
@@ -66,7 +70,7 @@ export const ipcClient = {
     return res.data;
   },
   async getPreview(projectId: string, datasetId: string, limit = 20): Promise<PreviewRecord> {
-    const res = bridge().execute_query({
+    const res = await bridge().execute_query({
       request_id: rid(), command: "dataset.preview",
       payload: { project_id: projectId, dataset_id: datasetId, limit },
     }) as BridgeResponse<PreviewRecord>;
@@ -74,7 +78,7 @@ export const ipcClient = {
     return res.data;
   },
   async getProfile(projectId: string, datasetId: string): Promise<ProfileRecord> {
-    const res = bridge().execute_query({
+    const res = await bridge().execute_query({
       request_id: rid(), command: "dataset.profile",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProfileRecord>;

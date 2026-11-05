@@ -42,6 +42,7 @@ export function ProjectPage() {
           <input {...register("name", { required: true })} placeholder="Nama project" />
           <button disabled={create.isPending}>Buat</button>
         </form>
+        {create.isError && <p role="alert">Gagal membuat project: {create.error.message}</p>}
         {projectId && <p>Project: {projectId}</p>}
       </section>
       {projectId && (
@@ -52,6 +53,7 @@ export function ProjectPage() {
             <input {...register("datasetName", { required: true })} placeholder="Nama dataset" />
             <button disabled={doImport.isPending}>Import</button>
           </form>
+          {doImport.isError && <p role="alert">Gagal import: {doImport.error.message}</p>}
           {dataset && <p>Snapshot {dataset.snapshot_id} · {dataset.row_count} rows · sha256 {dataset.fingerprint.slice(0, 12)}…</p>}
         </section>
       )}

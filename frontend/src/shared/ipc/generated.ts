@@ -380,3 +380,32 @@ export interface CleaningRecord {
   affected_rows: number;
   filled_rows?: number;
 }
+
+export interface BackupCreatePayload {
+  project_id: string;
+  dest_path: string;
+}
+
+export interface BackupRestorePayload {
+  archive_path: string;
+  dest_root: string;
+}
+
+export interface BackupRecord {
+  project_id: string;
+  file_path: string;
+  file_size_bytes: number;
+  created_at: string;
+  project_db_sha256: string;
+  counts?: Record<string, unknown>;
+  version: string;
+}
+
+export interface RestoreRecord {
+  project_id: string;
+  dest_root: string;
+  file_path: string;
+  project_db_sha256: string;
+  counts?: Record<string, unknown>;
+  version: string;
+}

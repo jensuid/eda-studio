@@ -21,6 +21,8 @@ from backend.application import (
     ValidationError as ServiceValidationError,
 )
 from backend.contracts import (
+    BackupCreatePayload,
+    BackupRestorePayload,
     CleaningPreviewPayload,
     CleaningRunPayload,
     CreateProjectPayload,
@@ -58,6 +60,8 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dataset.pdf.generate": RunPdfPayload,  # M3 PDF
     "dataset.cleaning.run": CleaningRunPayload,
     "dataset.snapshot.activate": DatasetActivatePayload,
+    "project.backup.create": BackupCreatePayload,  # M3 P0 backup (Doc04 §12)
+    "project.restore": BackupRestorePayload,  # M3 P0 restore to new root
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
@@ -153,6 +157,15 @@ class Bridge:
             elif req.command == "dataset.snapshot.activate":
                 # service.activate_snapshot changes the active snapshot for a dataset
                 result = self.service.activate_snapshot(payload.project_id, payload.dataset_id, payload.snapshot_id)
+            elif req.command == "project.backup.create":
+                # service.create_backup owns the JobManager lifecycle (SYS-015)
+                result = self.service.create_backup(
+                    payload.project_id, payload.dest_path,
+                    req.correlation_id or req.request_id)
+            elif req.command == "project.restore":
+                result = self.service.restore_project(
+                    payload.archive_path, payload.dest_root,
+                    req.correlation_id or req.request_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError as exc:

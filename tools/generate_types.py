@@ -30,6 +30,8 @@ MODELS = [
     "CleaningPreviewPayload",
     "CleaningColumnImpact", "CleaningPreviewSummary", "CleaningRunPayload",
     "DatasetActivatePayload", "CleaningRecord",
+    "BackupCreatePayload", "BackupRestorePayload",
+    "BackupRecord", "RestoreRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",

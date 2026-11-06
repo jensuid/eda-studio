@@ -4,6 +4,8 @@
  * TanStack Query owns server cache, Zustand is for ephemeral UI state.
  */
 import type {
+  BackupRecord,
+  RestoreRecord,
   BivariateRecord,
   CleaningOperation,
   CleaningPreviewSummary,
@@ -213,6 +215,22 @@ export const ipcClient = {
       },
     }) as BridgeResponse<CleaningRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runCleaning failed");
+    return res.data;
+  },
+  async createBackup(projectId: string, destPath: string): Promise<BackupRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "project.backup.create",
+      payload: { project_id: projectId, dest_path: destPath },
+    }) as BridgeResponse<BackupRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createBackup failed");
+    return res.data;
+  },
+  async restoreProject(archivePath: string, destRoot: string): Promise<RestoreRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "project.restore",
+      payload: { archive_path: archivePath, dest_root: destRoot },
+    }) as BridgeResponse<RestoreRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "restoreProject failed");
     return res.data;
   },
   async activateSnapshot(projectId: string, datasetId: string, snapshotId: string): Promise<DatasetRecord> {

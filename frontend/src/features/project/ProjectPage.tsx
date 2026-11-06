@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { DatasetRecord, HistogramRecord, ProfileRecord, QualityRecord } from "../../shared/ipc/generated";
+import type { BackupRecord, DatasetRecord, HistogramRecord, ProfileRecord, QualityRecord, RestoreRecord } from "../../shared/ipc/generated";
 import { BivariateSection } from "../bivariate/BivariateSection";
 import { CleaningSection } from "../cleaning/CleaningSection";
 import { HistogramChart } from "../histogram/HistogramChart";
@@ -84,6 +84,23 @@ export function ProjectPage() {
   const activateSnapshot = useMutation({
     mutationFn: (snapshotId: string) => ipcClient.activateSnapshot(projectId!, dataset!.dataset_id, snapshotId),
     onSuccess: (d) => { setDataset(d); refetchSnapshots(); },
+  });
+
+  // M3 P0 backup/restore (Doc04 §12): path text inputs; restored project
+  // lives in a NEW root — on success we surface the record, no auto-switch.
+  const [backupPath, setBackupPath] = useState("");
+  const [restoreArchive, setRestoreArchive] = useState("");
+  const [restoreRoot, setRestoreRoot] = useState("");
+  const [backupRecord, setBackupRecord] = useState<BackupRecord | null>(null);
+  const [restoreRecord, setRestoreRecord] = useState<RestoreRecord | null>(null);
+  const createBackup = useMutation({
+    mutationFn: (dest: string) => ipcClient.createBackup(projectId!, dest),
+    onSuccess: (r) => setBackupRecord(r),
+  });
+  const restoreProject = useMutation({
+    mutationFn: (v: { archive: string; root: string }) =>
+      ipcClient.restoreProject(v.archive, v.root),
+    onSuccess: (r) => setRestoreRecord(r),
   });
 
   return (
@@ -262,6 +279,30 @@ export function ProjectPage() {
           qualityRecord={qualityRecord}
           onDatasetChange={(d) => { setDataset(d); refetchSnapshots(); }}
         />
+      )}
+      {projectId && (
+        <section>
+          <h2>Backup &amp; Restore (Doc04 §12)</h2>
+          <form onSubmit={(e) => { e.preventDefault(); createBackup.mutate(backupPath); }}>
+            <input value={backupPath} onChange={(e) => setBackupPath(e.target.value)} placeholder="Path file backup (.edaworkspace)" required />
+            <button disabled={createBackup.isPending}>Buat Backup</button>
+          </form>
+          {createBackup.isPending && <p role="status">Membuat backup…</p>}
+          {createBackup.isError && <p role="alert">Backup gagal: {createBackup.error.message}</p>}
+          {backupRecord && (
+            <p>Backup: {backupRecord.file_path} · {(backupRecord.file_size_bytes / 1024).toFixed(1)} KB · db sha256 {backupRecord.project_db_sha256.slice(0, 12)}… · v{backupRecord.version}</p>
+          )}
+          <form onSubmit={(e) => { e.preventDefault(); restoreProject.mutate({ archive: restoreArchive, root: restoreRoot }); }}>
+            <input value={restoreArchive} onChange={(e) => setRestoreArchive(e.target.value)} placeholder="Path file backup" required />
+            <input value={restoreRoot} onChange={(e) => setRestoreRoot(e.target.value)} placeholder="Folder tujuan restore (baru/kosong)" required />
+            <button disabled={restoreProject.isPending}>Restore</button>
+          </form>
+          {restoreProject.isPending && <p role="status">Me-restore backup…</p>}
+          {restoreProject.isError && <p role="alert">Restore gagal: {restoreProject.error.message}</p>}
+          {restoreRecord && (
+            <p>Restore selesai: {restoreRecord.project_id} → {restoreRecord.dest_root} · db sha256 {restoreRecord.project_db_sha256.slice(0, 12)}…</p>
+          )}
+        </section>
       )}
       {preview.data && (
         <section>

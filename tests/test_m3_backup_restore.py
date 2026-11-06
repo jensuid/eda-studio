@@ -55,6 +55,51 @@ def test_backup_restore_roundtrip(tmp_path, bridge, project_id):
     assert res["ok"], res
 
 
+def test_backup_restore_via_ipc(tmp_path, bridge, project_id):
+    dataset_id = _import(bridge, project_id)
+    dest_zip = tmp_path / "backup.edaworkspace"
+    res = bridge.execute_command({"request_id": "r-bk", "command": "project.backup.create",
+                                  "payload": {"project_id": project_id,
+                                              "dest_path": str(dest_zip)}})
+    assert res["ok"], res
+    d = res["data"]
+    assert d["project_id"] == project_id
+    assert d["version"] == "1"
+    assert d["file_size_bytes"] > 0
+    assert d["project_db_sha256"]
+    assert d["counts"].get("projects") == 1 and d["counts"].get("datasets") == 1
+    from pathlib import Path as _Path
+    assert _Path(d["file_path"]).exists()
+
+    dest_root = tmp_path / "restored-ipc"
+    res = bridge.execute_command({"request_id": "r-rs", "command": "project.restore",
+                                  "payload": {"archive_path": str(dest_zip),
+                                              "dest_root": str(dest_root)}})
+    assert res["ok"], res
+    d = res["data"]
+    assert d["project_id"] == project_id
+    assert d["dest_root"] == str(dest_root.resolve())
+    assert (dest_root / "project.db").exists()
+
+    # Restored copy opens + previews
+    bridge2 = make_bridge(str(dest_root))
+    res = bridge2.execute_query({"request_id": "r-o2", "command": "project.open",
+                                 "payload": {"project_id": project_id}})
+    assert res["ok"], res
+    res = bridge2.execute_query({"request_id": "r-p2", "command": "dataset.preview",
+                                 "payload": {"project_id": project_id,
+                                             "dataset_id": dataset_id}})
+    assert res["ok"], res
+
+
+def test_backup_unknown_project_not_found(bridge):
+    res = bridge.execute_command({"request_id": "r-nf", "command": "project.backup.create",
+                                  "payload": {"project_id": "missing",
+                                              "dest_path": "x.zip"}})
+    assert res["ok"] is False
+    assert res["error"]["code"] == "NOT_FOUND"
+
+
 def test_restore_refuses_nonempty_dest(tmp_path, bridge, project_id):
     _import(bridge, project_id)
     dest_zip = tmp_path / "b.zip"

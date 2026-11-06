@@ -504,6 +504,41 @@ class CleaningRecord(BaseModel):
     filled_rows: int | None = None
 
 
+# ---- Backup / Restore (M3 P0, Doc04 §12) ----
+# A backup is a full `.edaworkspace`-shaped ZIP (project.db + snapshots/ +
+# manifest.json, per-file SHA-256). A restore targets a NEW root and never
+# touches the current project. The artifact lives on disk; IPC payload
+# stays small (BackupRecord/RestoreRecord only).
+
+class BackupCreatePayload(BaseModel):
+    project_id: str
+    dest_path: str = Field(min_length=1)
+
+
+class BackupRestorePayload(BaseModel):
+    archive_path: str = Field(min_length=1)
+    dest_root: str = Field(min_length=1)
+
+
+class BackupRecord(BaseModel):
+    project_id: str
+    file_path: str
+    file_size_bytes: int
+    created_at: datetime
+    project_db_sha256: str
+    counts: dict[str, int] = Field(default_factory=dict)
+    version: str
+
+
+class RestoreRecord(BaseModel):
+    project_id: str  # first project in the restored manifest
+    dest_root: str
+    file_path: str  # source archive path
+    project_db_sha256: str
+    counts: dict[str, int] = Field(default_factory=dict)
+    version: str
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

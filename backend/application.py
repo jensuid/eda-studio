@@ -6,11 +6,13 @@ the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
 
+from backend.backup_restore import BackupError, create_backup, restore_backup
 from backend.bivariate import describe_bivariate
 from backend.cleaning import (
     CleaningNotFoundError,
@@ -19,6 +21,7 @@ from backend.cleaning import (
     preview_cleaning,
 )
 from backend.contracts import (
+    BackupRecord,
     BivariateGroup,
     BivariateRecord,
     BivariateScatterPoint,
@@ -43,6 +46,7 @@ from backend.contracts import (
     ReportRecord,
     ReportScope,
     ReportSection,
+    RestoreRecord,
     SnapshotInfo,
     SnapshotListRecord,
 )
@@ -734,3 +738,52 @@ class WorkbenchService:
             )
             for r in rows
         ])
+
+    # -- backup / restore (M3 P0, Doc04 §12) ------------------------------
+    def create_backup(self, project_id: str, dest_path: str,
+                      correlation_id: str | None = None) -> BackupRecord:
+        """Full project backup as a ZIP package (Doc04 §12.1)."""
+        if self.store.get_project(project_id) is None:
+            raise NotFoundError(f"project not found: {project_id}")
+        holder: dict[str, BackupRecord] = {}
+
+        def work() -> None:
+            try:
+                manifest = create_backup(self.store.root, Path(dest_path))
+            except BackupError as exc:
+                raise ValidationError(str(exc)) from exc
+            holder["rec"] = BackupRecord(
+                project_id=project_id,
+                file_path=str(Path(dest_path).resolve()),
+                file_size_bytes=Path(dest_path).stat().st_size,
+                created_at=datetime.fromisoformat(manifest["created_at"]),
+                project_db_sha256=manifest["project_db_sha256"],
+                counts=dict(manifest.get("counts", {})),
+                version=str(manifest.get("version", "")),
+            )
+
+        self.jobs.run("project.backup.create", work, correlation_id)
+        return holder["rec"]
+
+    def restore_project(self, archive_path: str, dest_root: str,
+                        correlation_id: str | None = None) -> RestoreRecord:
+        """Restore a backup ZIP to a NEW root (Doc04 §12.3)."""
+        holder: dict[str, RestoreRecord] = {}
+
+        def work() -> None:
+            try:
+                manifest = restore_backup(Path(archive_path), Path(dest_root))
+            except BackupError as exc:
+                raise ValidationError(str(exc)) from exc
+            projects = manifest.get("projects") or []
+            holder["rec"] = RestoreRecord(
+                project_id=str(projects[0].get("project_id", "")) if projects else "",
+                dest_root=str(Path(dest_root).resolve()),
+                file_path=str(Path(archive_path).resolve()),
+                project_db_sha256=manifest["project_db_sha256"],
+                counts=dict(manifest.get("counts", {})),
+                version=str(manifest.get("version", "")),
+            )
+
+        self.jobs.run("project.restore", work, correlation_id)
+        return holder["rec"]

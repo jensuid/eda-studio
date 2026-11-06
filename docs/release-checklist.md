@@ -1,0 +1,28 @@
+# Release Checklist — M3 MVP Release Candidate (Doc16 §4.3, P0)
+
+Checklist berbasis evidence. Status diisi dari gate yang benar-benar dijalankan.
+
+## P0 Mandatory (harus selesai sebelum MVP RC)
+
+- [x] Backup/restore roundtrip — `backend/backup_restore.py`, `tests/test_m3_backup_restore.py`
+- [x] Dataset export CSV/Parquet — `backend/application.py::export_dataset`, `tests/test_m3_export.py`
+- [x] HTML/PDF reporting — `dataset.report.generate` / `dataset.pdf.generate`, `tests/test_m3_report.py`, `tests/test_m3_pdf.py`
+- [x] Provenance ≠ audit — `dataset.provenance`, SEC-012, `tests/test_m3_provenance.py`
+- [x] Insight lifecycle — Finding/Hypothesis state machines, `tests/test_m3_insight.py`
+- [x] Diagnostic bundle + redaction — `project.diagnostic.create`, `tests/test_m3_diagnostic.py`
+- [x] SBOM + checksums — `tools/generate_sbom.py`, CycloneDX dari `uv.lock`
+- [x] Performance envelope baseline — `tools/benchmark.py`, `tests/test_benchmark.py`
+- [ ] Cross-platform evidence — macOS observed; Windows/Linux belum dijalankan ([cross-platform-evidence.md](cross-platform-evidence.md))
+- [ ] Packaging + signing installer — perlu build host bertanda tangan (manual; bukan kode)
+- [ ] Release compatibility documentation — [operational-runbook.md](operational-runbook.md) draft, sentence 1 bagian
+
+## Gates terakhir (2026-11-06, macOS)
+
+- `pytest -q`: **70 passed**
+- `ruff check backend tests tools`: **All checks passed**
+- `tsc --noEmit`: clean
+- frontend `npm run build`: sukses (warning chunk-size saja)
+
+## Non-MVP (tidak masuk RC — sesuai §4.2)
+
+AI integration, plugin marketplace, collaboration, cloud platform.

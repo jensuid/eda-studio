@@ -42,4 +42,4 @@ def test_protocol_info_lists_only_registered(bridge):
     assert info["queries"] == [
         "dataset.cleaning.preview", "dataset.preview", "dataset.profile",
         "dataset.profile.get", "dataset.profiles.list",
-        "dataset.snapshots.list", "project.open"]
+        "dataset.provenance", "dataset.snapshots.list", "project.open"]

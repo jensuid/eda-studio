@@ -34,6 +34,7 @@ MODELS = [
     "BackupRecord", "RestoreRecord",
     "ExportDatasetPayload",
     "ExportRecord",
+    "GetDatasetProvenancePayload", "ProvenanceEdge", "ProvenanceRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",

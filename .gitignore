@@ -9,3 +9,6 @@ frontend/node_modules/
 *.edaworkspace/
 data/
 .DS_Store
+eda_workbench.egg-info/
+uv.lock
+*.egg-info/

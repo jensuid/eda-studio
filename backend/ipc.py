@@ -32,6 +32,7 @@ from backend.contracts import (
     ExportDatasetPayload,
     GetDatasetPreviewPayload,
     GetDatasetProfilePayload,
+    GetDatasetProvenancePayload,
     GetProfileByIdPayload,
     ImportDatasetPayload,
     ListProfilesPayload,
@@ -72,6 +73,7 @@ _QUERIES: dict[str, type[BaseModel]] = {
     "dataset.profile.get": GetProfileByIdPayload,  # G6 history
     "dataset.profiles.list": ListProfilesPayload,  # G6 history
     "dataset.snapshots.list": ListSnapshotsPayload,  # G6
+    "dataset.provenance": GetDatasetProvenancePayload,  # M3 P1 SEC-012
     "dataset.cleaning.preview": CleaningPreviewPayload,
 }
 
@@ -215,6 +217,9 @@ class Bridge:
                     payload.project_id, payload.dataset_id)
             elif req.command == "dataset.snapshots.list":
                 result = self.service.list_snapshots(payload.project_id)
+            elif req.command == "dataset.provenance":
+                result = self.service.get_provenance(
+                    payload.project_id, payload.dataset_id)
             elif req.command == "dataset.cleaning.preview":
                 result = self.service.cleaning_preview(payload)
             else:  # pragma: no cover

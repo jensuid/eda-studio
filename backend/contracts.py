@@ -567,6 +567,43 @@ class ExportRecord(BaseModel):
     created_at: datetime
 
 
+# ---- Provenance (M3 P1, SEC-012: provenance != audit) ----
+# Provenance is the lineage of artifacts (import origin → profile
+# observations → cleaning transforms), NOT the job/audit trail
+# (job_events). It answers "where did this snapshot come from?".
+
+class GetDatasetProvenancePayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class ProvenanceEdge(BaseModel):
+    cleaning_id: str
+    parent_snapshot_id: str
+    parent_fingerprint: str
+    child_snapshot_id: str
+    child_fingerprint: str
+    operation: str
+    columns: list[str]
+    strategy: str | None = None
+    row_count_before: int
+    row_count_after: int
+    affected_rows: int
+
+
+class ProvenanceRecord(BaseModel):
+    project_id: str
+    dataset_id: str
+    dataset_name: str
+    active_snapshot_id: str
+    active_fingerprint: str
+    origin_snapshot_id: str
+    origin_fingerprint: str
+    snapshots: list[SnapshotInfo]
+    profiles: list[ProfileSummary]
+    lineage: list[ProvenanceEdge]
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

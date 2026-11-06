@@ -21,6 +21,7 @@ import type {
   PdfRecord,
   ProfileRecord,
   ProjectRecord,
+  ProvenanceRecord,
   QualityRecord,
   ReportRecord,
   ReportScope,
@@ -139,6 +140,14 @@ export const ipcClient = {
       payload: { project_id: projectId },
     }) as BridgeResponse<SnapshotListRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listSnapshots failed");
+    return res.data;
+  },
+  async getProvenance(projectId: string, datasetId: string): Promise<ProvenanceRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "dataset.provenance",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<ProvenanceRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProvenance failed");
     return res.data;
   },
   async runHistogram(projectId: string, datasetId: string, columnName: string): Promise<HistogramRecord> {

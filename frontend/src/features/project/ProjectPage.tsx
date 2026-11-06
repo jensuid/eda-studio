@@ -57,6 +57,12 @@ export function ProjectPage() {
     queryFn: () => ipcClient.listSnapshots(projectId!),
     enabled: !!projectId && !!dataset,
   });
+  const [showProvenance, setShowProvenance] = useState(false);
+  const provenance = useQuery({
+    queryKey: ["provenance", projectId, dataset?.dataset_id],
+    queryFn: () => ipcClient.getProvenance(projectId!, dataset!.dataset_id),
+    enabled: !!projectId && !!dataset && showProvenance,
+  });
   const openSaved = useMutation({
     mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
     onSuccess: (r) => { setSavedProfile(r); },
@@ -222,6 +228,41 @@ export function ProjectPage() {
                 {activateSnapshot.isError && (
                   <p role="alert">Gagal mengaktifkan snapshot: {activateSnapshot.error.message}</p>
                 )}
+              </ul>
+            </>
+          )}
+          <h3>Provenance</h3>
+          <p>Lineage artefak (asal import → observasi profil → transform cleaning). Bukan audit trail job.</p>
+          <button onClick={() => setShowProvenance((v) => !v)}>
+            {showProvenance ? "Sembunyikan provenance" : "Tampilkan provenance"}
+          </button>
+          {provenance.isPending && <p role="status">Memuat provenance…</p>}
+          {provenance.isError && <p role="alert">Provenance gagal dimuat: {provenance.error.message}</p>}
+          {showProvenance && provenance.data && (
+            <>
+              <p>
+                Asal: {provenance.data.origin_snapshot_id.slice(0, 8)} · {provenance.data.origin_fingerprint.slice(0, 12)}…{" "}
+                Aktif: {provenance.data.active_snapshot_id.slice(0, 8)} · {provenance.data.active_fingerprint.slice(0, 12)}…
+              </p>
+              <ul>
+                {provenance.data.snapshots.map((s) => (
+                  <li key={s.snapshot_id}>
+                    {s.snapshot_id.slice(0, 8)} · {s.row_count} rows · {s.fingerprint.slice(0, 12)}…
+                  </li>
+                ))}
+              </ul>
+              <ul>
+                {provenance.data.profiles.map((p) => (
+                  <li key={p.profile_id}>profil {p.profile_id.slice(0, 8)} → snapshot {p.snapshot_id.slice(0, 8)}</li>
+                ))}
+              </ul>
+              <ul>
+                {provenance.data.lineage.map((e) => (
+                  <li key={e.cleaning_id}>
+                    {e.operation} · {e.parent_snapshot_id.slice(0, 8)} → {e.child_snapshot_id.slice(0, 8)}
+                    {" "}({e.row_count_before}→{e.row_count_after} rows)
+                  </li>
+                ))}
               </ul>
             </>
           )}

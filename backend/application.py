@@ -43,6 +43,8 @@ from backend.contracts import (
     ProfileRecord,
     ProfileSummary,
     ProjectRecord,
+    ProvenanceEdge,
+    ProvenanceRecord,
     QualityFindingRecord,
     QualityRecord,
     ReportRecord,
@@ -834,3 +836,68 @@ class WorkbenchService:
 
         self.jobs.run("dataset.export", work, correlation_id)
         return holder["rec"]
+
+    def get_provenance(self, project_id: str, dataset_id: str) -> ProvenanceRecord:
+        """Artifact lineage for a dataset (SEC-012: provenance != audit).
+
+        Chains import origin → profile observations → cleaning transforms
+        (parent → child snapshots). Job/audit events are NOT included here.
+        """
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        import json
+
+        snapshots = [
+            SnapshotInfo(
+                snapshot_id=r["snapshot_id"], dataset_id=r["dataset_id"],
+                dataset_name=r["name"], fingerprint=r["fingerprint"],
+                row_count=r["row_count"],
+            )
+            for r in self.store.list_snapshots(project_id)
+            if r["dataset_id"] == dataset_id
+        ]
+        profiles = [
+            ProfileSummary(
+                profile_id=r["profile_id"], dataset_id=r["dataset_id"],
+                snapshot_id=r["snapshot_id"], fingerprint=r["fingerprint"],
+                row_count=r["row_count"], column_count=r["column_count"],
+            )
+            for r in self.store.list_profiles(dataset_id)
+        ]
+        lineage: list[ProvenanceEdge] = []
+        for cl in self.store.list_cleanings(dataset_id):
+            try:
+                cols = json.loads(cl["columns"])
+            except (TypeError, ValueError):
+                cols = []
+            lineage.append(ProvenanceEdge(
+                cleaning_id=cl["id"],
+                parent_snapshot_id=cl["parent_snapshot_id"],
+                parent_fingerprint=cl["parent_fingerprint"],
+                child_snapshot_id=cl["child_snapshot_id"],
+                child_fingerprint=cl["child_fingerprint"],
+                operation=cl["operation"],
+                columns=list(cols),
+                strategy=cl.get("strategy"),
+                row_count_before=cl["row_count_before"],
+                row_count_after=cl["row_count_after"],
+                affected_rows=cl["affected_rows"],
+            ))
+        child_ids = {e.child_snapshot_id for e in lineage}
+        origin = next(
+            (s for s in snapshots if s.snapshot_id not in child_ids),
+            snapshots[0] if snapshots else None,
+        )
+        return ProvenanceRecord(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            dataset_name=dataset.name,
+            active_snapshot_id=dataset.snapshot.snapshot_id,
+            active_fingerprint=dataset.snapshot.fingerprint,
+            origin_snapshot_id=origin.snapshot_id if origin else "",
+            origin_fingerprint=origin.fingerprint if origin else "",
+            snapshots=snapshots,
+            profiles=profiles,
+            lineage=lineage,
+        )

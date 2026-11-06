@@ -430,3 +430,35 @@ export interface ExportRecord {
   file_fingerprint: string;
   created_at: string;
 }
+
+export interface GetDatasetProvenancePayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface ProvenanceEdge {
+  cleaning_id: string;
+  parent_snapshot_id: string;
+  parent_fingerprint: string;
+  child_snapshot_id: string;
+  child_fingerprint: string;
+  operation: string;
+  columns: string[];
+  strategy?: string;
+  row_count_before: number;
+  row_count_after: number;
+  affected_rows: number;
+}
+
+export interface ProvenanceRecord {
+  project_id: string;
+  dataset_id: string;
+  dataset_name: string;
+  active_snapshot_id: string;
+  active_fingerprint: string;
+  origin_snapshot_id: string;
+  origin_fingerprint: string;
+  snapshots: SnapshotInfo[];
+  profiles: ProfileSummary[];
+  lineage: ProvenanceEdge[];
+}

@@ -2,7 +2,7 @@
 
 **Status:** Ratified v1.0 oleh PO (2026-11-06) — lihat `01-po-ratifikasi.md` · **Scope:** perluasan DS-CORE-001 khusus hubungan dua kolom deskriptif.
 Token & komponen di DS-CORE-001 + DS-HIST-001 tetap berlaku; kontrak ini hanya menambah yang dibutuhkan bivariat.
-**Sifat:** semua yang baru di bawah ini **PROPOSED** sampai disetujui PO di G4 exit.
+**Sifat:** semua yang baru di bawah ini **Ratified oleh PO (2026-11-06)** — lihat `01-po-ratifikasi.md`.
 
 ## Tokens tambahan (semantic, bukan hex)
 
@@ -38,9 +38,9 @@ Larangan warisan DS-CORE-001/DS-HIST-001: raw hex dilarang di komponen chart; ti
 6. **Aksesibilitas**: container `role="img"` + `aria-label` = kalimat ringkasan SCREEN-BIVAR-001; `BivariateDataTable` selalu tersedia; status job `aria-live="polite"`.
 7. **Gerakan**: transisi ≤ 150ms, hormati reduced-motion; tidak ada animasi dekoratif pada chart.
 8. **ECharts-only** (LD-06): tidak ada plotly/bokeh/custom canvas. Heatmap B3 diimplementasikan sebagai `visualMap` + cell/tooltip, bukan tabel trik.
-9. **Sampling eksplisit**: bila `sampled: true`, footnote chart + badge menampilkan `sample_size` dan aturan seleksi (deterministik: baris pertama n pada snapshot, atau V3 bila PO memilih lain). Tidak ada silent approximation.
+9. **Sampling eksplisit**: bila `sampled: true`, footnote chart + badge menampilkan `sample_size` dan aturan seleksi (deterministik: baris pertama n pada snapshot, sesuai V3 yang teratifikasi). Tidak ada silent approximation.
 
-## Nilai ambang yang masih PROPOSED (untuk ratifikasi)
+## Nilai ambang (Ratified V1–V7)
 
 | ID | Ambang | Usulan |
 |---|---|---|

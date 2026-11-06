@@ -3,7 +3,7 @@
 **IDs:** JOB-BIVAR-001, FLOW-BIVAR-001, SCREEN-BIVAR-001 · **Status:** Ratified oleh PO (2026-11-06) — lihat `01-po-ratifikasi.md`; siap validasi Critic, selanjutnya G5.
 **Parent:** Doc16 §M2 (Basic bivariate analysis) · Doc01 §Scope (Basic univariate and bivariate analysis) · Doc08 §5 Guided stage 3+ · JobManager (Doc05) · ECharts (Doc07, LD-06 di DS-CORE-001)
 **Rigor:** Standard (G1, G2, G3–G6) · **Kondisi:** belum boleh coding UI sampai kontrak ini disetujui PO.
-**Keputusan yang masih PROPOSED:** V1–V7 di bagian bawah (butuh ratifikasi PO saat exit G4).
+**Keputusan:** V1–V7 di bagian bawah — **Ratified oleh PO (2026-11-06)**, lihat `01-po-ratifikasi.md`.
 
 ## G1 — Job Contract (JOB-BIVAR-001)
 
@@ -65,7 +65,7 @@ Catatan arah: B2/B3 tidak simetris — urutan kolom pertama = baris/grup. Kontra
 ## G3 — Screen & Interaction Contract (SCREEN-BIVAR-001)
 
 - **screen:** `bivariate` (panel/region baru di bawah Quality, satu `ProjectPage`, satu jalur Guided) · **purpose:** "Bandingkan dua kolom dalam satu pandangan" · **primary_action:** "Jalankan Analisis Bivariat"
-- **keputusan tampil per mode (V1, PROPOSED):**
+- **keputusan tampil per mode (V1, Ratified):**
   - B1 numerik×numerik → scatter + ringkasan korelasi (Pearson + Spearman + n).
   - B2 kategorikal×numerik → bar per kategori (mean) + tabel grup (count/mean/median/min–max).
   - B3 kategorikal×kategorikal → heatmap-tabel silang (count + % baris) + marginal totals.
@@ -110,13 +110,13 @@ Catatan arah: B2/B3 tidak simetris — urutan kolom pertama = baris/grup. Kontra
 
 ## Kontrak teknis yang diusulkan (untuk G5/G6, bukan bagian UI kontrak)
 
-- **IPC (PROPOSED, V7):** command `dataset.bivariate.run` (JobManager-wrapped, seperti `dataset.histogram.run` / `dataset.quality.run`) dengan payload `{project_id, dataset_id, column_a, column_b}` → `BivariateRecord {dataset_id, snapshot_id, fingerprint, column_a, column_b, mode: 'num-num'|'cat-num'|'cat-cat', metrics: {...}, n_pairs, missing_pairs, sampled: bool, sample_size?, created_at}`. Payload kecil (ringkasan + sampel plot, bukan whole-DataFrame) → JSON IPC aman.
-- **B1 korelasi (PROPOSED, V2):** Pearson (linear) + Spearman (rank) dihitung di atas pasangan lengkap (pairwise-complete; pasangan dengan missing di salah satu sisi tidak masuk n). Dibulatkan 2 desimal di UI, presisi penuh di record. Scatter: bila n > V3, sampel ditampilkan direkam `sampled: true` + `sample_size`; tidak ada downgrade diam-diam (exact vs sampled eksplisit, sesuai M2 §5).
-- **B2 grup (PROPOSED, V5):** kategori diurutkan by count desc, > V4 digabung "Lainnya" (menjumlahkan count, mean/median dihitung ulang dari anggota grup + ditandai). Bar = mean; tooltip + tabel memuat median/min–max.
-- **B3 silang (PROPOSED, V4):** kategori diurutkan by count desc per sumbu, > V4 digabung "Lainnya" per sumbu. Cell = count; % = count / total baris kategori A. Marginal totals wajib tampil.
-- **Traceability (PROPOSED, V6):** setiap `BivariateRecord` membawa `snapshot_id` + `fingerprint` yang sama dengan profilnya; hasil dari snapshot lama ditandai partial (banner usang). Tabel B1 menampilkan ringkasan + sampel titik yang sama dengan chart (bukan seluruh DataFrame).
+- **IPC (Ratified, V7):** command `dataset.bivariate.run` (JobManager-wrapped, seperti `dataset.histogram.run` / `dataset.quality.run`) dengan payload `{project_id, dataset_id, column_a, column_b}` → `BivariateRecord {dataset_id, snapshot_id, fingerprint, column_a, column_b, mode: 'num-num'|'cat-num'|'cat-cat', metrics: {...}, n_pairs, missing_pairs, sampled: bool, sample_size?, created_at}`. Payload kecil (ringkasan + sampel plot, bukan whole-DataFrame) → JSON IPC aman.
+- **B1 korelasi (Ratified, V2):** Pearson (linear) + Spearman (rank) dihitung di atas pasangan lengkap (pairwise-complete; pasangan dengan missing di salah satu sisi tidak masuk n). Dibulatkan 2 desimal di UI, presisi penuh di record. Scatter: bila n > V3, sampel ditampilkan direkam `sampled: true` + `sample_size`; tidak ada downgrade diam-diam (exact vs sampled eksplisit, sesuai M2 §5).
+- **B2 grup (Ratified, V5):** kategori diurutkan by count desc, > V4 digabung "Lainnya" (menjumlahkan count, mean/median dihitung ulang dari anggota grup + ditandai). Bar = mean; tooltip + tabel memuat median/min–max.
+- **B3 silang (Ratified, V4):** kategori diurutkan by count desc per sumbu, > V4 digabung "Lainnya" per sumbu. Cell = count; % = count / total baris kategori A. Marginal totals wajib tampil.
+- **Traceability (Ratified, V6):** setiap `BivariateRecord` membawa `snapshot_id` + `fingerprint` yang sama dengan profilnya; hasil dari snapshot lama ditandai partial (banner usang). Tabel B1 menampilkan ringkasan + sampel titik yang sama dengan chart (bukan seluruh DataFrame).
 - **Stale:** mengikuti aturan C5 (cleaning) — profil/quality/bivariat dari snapshot lama = stale.
 
 ## Exit G1–G3 (untuk review PO)
 
-Tidak ada perilaku penting yang ditinggalkan ke penemuan implementasi: mode per pasangan, rumus ringkas, sampling, penggabungan kategori, 8 states, keyboard, copy, dan a11y sudah diputuskan (V1–V7 PROPOSED menunggu ratifikasi). **Belum boleh coding UI sampai kontrak ini disetujui. Tanpa tandatangan ratifikasi, builder tidak boleh mulai G5 slice.**
+Tidak ada perilaku penting yang ditinggalkan ke penemuan implementasi: mode per pasangan, rumus ringkas, sampling, penggabungan kategori, 8 states, keyboard, copy, dan a11y sudah diputuskan (V1–V7 Ratified). Exit G4 lulus — builder boleh mulai G5 slice (backend contract lock → slice) pada kerangka kontrak ini.

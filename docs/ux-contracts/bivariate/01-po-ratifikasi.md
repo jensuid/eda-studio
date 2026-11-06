@@ -42,4 +42,4 @@ Tanpa tandatangan ratifikasi, builder tidak boleh mulai G5 slice.
 - PO / penanggung jawab: Setuju oleh PO (dipandu dialog, semua item ✓ Setuju di atas)  Tanggal: 2026-11-06
 - Catatan perubahan (bila ada penolakan, revisi dokumen kontrak sebelum G5): Tidak ada penolakan.
 
-Setelah semua item ✓ Setuju → status 4 dokumen kontrak diubah dari Draft menjadi Ratified, dan tahap selanjutnya = Independent Critic → backend contract lock (`contracts.py` + record) → G5 slice.
+Setelah semua item ✓ Setuju → status kontrak (JOB-FLOW-SCREEN-BIVAR.md, DS-BIVAR-001.md) diubah dari Draft menjadi Ratified, dan tahap selanjutnya = Independent Critic → backend contract lock (`contracts.py` + record) → G5 slice.

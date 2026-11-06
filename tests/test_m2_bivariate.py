@@ -64,15 +64,13 @@ def test_unknown_column_not_found(bridge, project_id):
 
 
 def test_cat_cat_with_second_fixture(bridge, project_id):
-    import pathlib
-    import tempfile
-    csv_text = "city,channel\nJakarta,online\nJakarta,online\nBandung,store\nMedan,online\n"
-    tmp = pathlib.Path(tempfile.mkdtemp()) / "cc.csv"
-    tmp.write_text(csv_text)
+    from pathlib import Path as _P
+
+    fixture = _P(__file__).parent / "fixtures" / "bivariate-cc.csv"
     res = bridge.execute_command({
         "request_id": "i2", "command": "dataset.import",
-        "payload": {"project_id": project_id, "source_path": str(tmp),
-                    "dataset_name": "cc"},
+        "payload": {"project_id": project_id, "source_path": str(fixture),
+                    "dataset_name": "city-channel"},
     })
     assert res["ok"], res
     ds = res["data"]["dataset_id"]
@@ -80,7 +78,7 @@ def test_cat_cat_with_second_fixture(bridge, project_id):
     assert res["ok"], res
     d = res["data"]
     assert d["mode"] == "cat-cat"
-    assert sum(sum(row) for row in d["cells"]) == d["n_pairs"] == 4
+    assert sum(sum(row) for row in d["cells"]) == d["n_pairs"] == 10
 
 
 def test_payload_shape_small(bridge, project_id):

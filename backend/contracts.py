@@ -10,6 +10,7 @@ ties a command to its job and durable events.
 """
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Literal, TypeVar
 
@@ -277,6 +278,81 @@ class HistogramRecord(BaseModel):
     mean_value: float | None = None
     top_bin: str | None = None
     value_count: int
+
+
+class CleaningOperation(str, Enum):
+    DROP_DUPLICATES = "drop_duplicates"
+    DROP_MISSING = "drop_missing"
+    IMPUTE = "impute"
+
+
+class CleaningStrategy(str, Enum):
+    MEAN = "mean"
+    MEDIAN = "median"
+    MODE = "mode"
+    CONSTANT = "constant"
+
+
+class CleaningPreviewPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    operation: CleaningOperation
+    columns: list[str]
+    strategy: CleaningStrategy | None = None
+    constant_value: str | None = None
+
+
+class CleaningColumnImpact(BaseModel):
+    column: str
+    affected_rows: int
+
+
+class CleaningPreviewSummary(BaseModel):
+    operation: CleaningOperation
+    columns: list[str]
+    parent_fingerprint: str
+    row_count_before: int
+    row_count_after: int
+    affected_rows: int
+    affected_pct: float
+    per_column_affected: list[CleaningColumnImpact] | None = None
+    filled_rows: int | None = None
+
+
+class CleaningRunPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    operation: CleaningOperation
+    columns: list[str]
+    strategy: CleaningStrategy | None = None
+    constant_value: str | None = None
+    expected_parent_fingerprint: str
+
+
+class DatasetActivatePayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    snapshot_id: str
+
+
+class CleaningRecord(BaseModel):
+    id: str
+    project_id: str
+    dataset_id: str
+    created_at: datetime
+    job_id: str | None = None
+    parent_snapshot_id: str
+    parent_fingerprint: str
+    child_snapshot_id: str
+    child_fingerprint: str
+    operation: CleaningOperation
+    columns: list[str]
+    strategy: CleaningStrategy | None = None
+    constant_value: str | None = None
+    row_count_before: int
+    row_count_after: int
+    affected_rows: int
+    filled_rows: int | None = None
 
 
 class Kind(str, Enum):

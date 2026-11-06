@@ -51,6 +51,32 @@ CREATE TABLE IF NOT EXISTS profiles (
     column_count INTEGER NOT NULL,
     columns_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS snapshots (
+    snapshot_id TEXT PRIMARY KEY,
+    dataset_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    row_count INTEGER NOT NULL,
+    columns TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS cleanings (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    job_id TEXT,
+    parent_snapshot_id TEXT NOT NULL,
+    parent_fingerprint TEXT NOT NULL,
+    child_snapshot_id TEXT NOT NULL,
+    child_fingerprint TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    columns TEXT NOT NULL,
+    strategy TEXT,
+    constant_value TEXT,
+    row_count_before INTEGER NOT NULL,
+    row_count_after INTEGER NOT NULL,
+    affected_rows INTEGER NOT NULL,
+    filled_rows INTEGER
+);
 """
 
 
@@ -69,6 +95,95 @@ class Store:
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.executescript(SCHEMA)
         self.db.commit()
+        self._backfill_snapshots()
+
+    def _backfill_snapshots(self) -> None:
+        """Register pre-M3 dataset snapshots in the registry (idempotent)."""
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM datasets"
+            ).fetchall()
+            for row in rows:
+                self.db.execute(
+                    "INSERT OR IGNORE INTO snapshots VALUES (?,?,?,?,?)",
+                    (row["snapshot_id"], row["dataset_id"],
+                     row["fingerprint"], row["row_count"], row["columns"]),
+                )
+            self.db.commit()
+
+    def _insert_snapshot_no_commit(self, snapshot_id: str, dataset_id: str,
+                                   fingerprint: str, row_count: int,
+                                   columns: list | tuple[str, ...]) -> None:
+        self.db.execute(
+            "INSERT OR IGNORE INTO snapshots VALUES (?,?,?,?,?)",
+            (snapshot_id, dataset_id, fingerprint, row_count,
+             json.dumps(list(columns))),
+        )
+
+    def register_snapshot(self, snapshot_id: str, dataset_id: str,
+                          fingerprint: str, row_count: int,
+                          columns: list | tuple[str, ...]) -> None:
+        with self._lock:
+            self._insert_snapshot_no_commit(
+                snapshot_id, dataset_id, fingerprint, row_count, columns)
+            self.db.commit()
+
+    def get_snapshot(self, snapshot_id: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM snapshots WHERE snapshot_id = ?", (snapshot_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def _insert_cleaning_no_commit(self, record: dict) -> None:
+        self.db.execute(
+            "INSERT OR REPLACE INTO cleanings VALUES "
+            "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                record["id"], record["project_id"], record["dataset_id"],
+                record["created_at"], record["job_id"],
+                record["parent_snapshot_id"], record["parent_fingerprint"],
+                record["child_snapshot_id"], record["child_fingerprint"],
+                record["operation"], json.dumps(list(record["columns"])),
+                record.get("strategy"), record.get("constant_value"),
+                record["row_count_before"], record["row_count_after"],
+                record["affected_rows"], record.get("filled_rows"),
+            ),
+        )
+
+    def save_cleaning(self, record: dict) -> None:
+        with self._lock:
+            self._insert_cleaning_no_commit(record)
+            self.db.commit()
+
+    def save_child_snapshot_with_cleaning(
+        self, snapshot_id: str, data: bytes, dataset_id: str,
+        fingerprint: str, row_count: int,
+        columns: list | tuple[str, ...], cleaning_record: dict,
+    ) -> None:
+        """Persist child snapshot file + registry row + CleaningRecord.
+
+        The two DB rows are written in ONE transaction (single commit);
+        the record is inserted exactly once.
+        """
+        self.save_snapshot(snapshot_id, data)
+        with self._lock:
+            try:
+                self._insert_snapshot_no_commit(
+                    snapshot_id, dataset_id, fingerprint, row_count, columns)
+                self._insert_cleaning_no_commit(cleaning_record)
+                self.db.commit()
+            except Exception:
+                self.db.rollback()
+                raise
+
+    def list_cleanings(self, dataset_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM cleanings WHERE dataset_id = ? ORDER BY rowid",
+                (dataset_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
 
     # -- projects ---------------------------------------------------------
     def save_project(self, project: Project) -> None:
@@ -188,7 +303,10 @@ class Store:
     def list_snapshots(self, project_id: str) -> list[dict]:
         with self._lock:
             rows = self.db.execute(
-                "SELECT * FROM datasets WHERE project_id = ? ORDER BY rowid", (project_id,)
+                "SELECT s.*, d.name AS name FROM snapshots s "
+                "JOIN datasets d ON d.dataset_id = s.dataset_id "
+                "WHERE d.project_id = ? ORDER BY s.rowid",
+                (project_id,),
             ).fetchall()
         return [dict(r) for r in rows]
 

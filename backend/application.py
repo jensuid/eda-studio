@@ -6,7 +6,24 @@ the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
 
+from datetime import timezone
+from typing import Any
+
+UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
+
+from backend.cleaning import (
+    CleaningNotFoundError,
+    CleaningValidationError,
+    apply_cleaning,
+    preview_cleaning,
+)
 from backend.contracts import (
+    CleaningColumnImpact,
+    CleaningOperation,
+    CleaningPreviewPayload,
+    CleaningPreviewSummary,
+    CleaningRecord,
+    CleaningStrategy,
     ColumnProfile,
     DatasetRecord,
     HistogramBin,
@@ -34,11 +51,42 @@ from backend.persistence import Store
 from backend.profiling import profile_table
 from backend.quality import assess_quality, summarise
 
-__all__ = ["NotFoundError", "UnsupportedFormatError", "WorkbenchService"]
+__all__ = ["ConflictError", "NotFoundError", "UnsupportedFormatError",
+           "ValidationError", "WorkbenchService"]
 
 
 class NotFoundError(LookupError):
     pass
+
+
+def _cleaning_row(record: CleaningRecord) -> dict:
+    return {
+        "id": record.id,
+        "project_id": record.project_id,
+        "dataset_id": record.dataset_id,
+        "created_at": record.created_at.isoformat(),
+        "job_id": record.job_id,
+        "parent_snapshot_id": record.parent_snapshot_id,
+        "parent_fingerprint": record.parent_fingerprint,
+        "child_snapshot_id": record.child_snapshot_id,
+        "child_fingerprint": record.child_fingerprint,
+        "operation": record.operation.value,
+        "columns": list(record.columns),
+        "strategy": record.strategy.value if record.strategy else None,
+        "constant_value": record.constant_value,
+        "row_count_before": record.row_count_before,
+        "row_count_after": record.row_count_after,
+        "affected_rows": record.affected_rows,
+        "filled_rows": record.filled_rows,
+    }
+
+
+class ValidationError(ValueError):
+    """Operation invalid for this snapshot (FLOW-CLEAN-001 F2/F4)."""
+
+
+class ConflictError(ValueError):
+    """Optimistic-concurrency failure (expected_parent_fingerprint stale)."""
 
 
 class WorkbenchService:
@@ -69,6 +117,11 @@ class WorkbenchService:
             ),
         )
         self.store.save_dataset(dataset)
+        self.store.register_snapshot(
+            snapshot_id, dataset.dataset_id,
+            dataset.snapshot.fingerprint, dataset.snapshot.row_count,
+            dataset.snapshot.columns,
+        )
         return DatasetRecord(
             dataset_id=dataset.dataset_id, project_id=project_id, name=dataset_name,
             snapshot_id=snapshot_id, fingerprint=dataset.snapshot.fingerprint,
@@ -225,6 +278,143 @@ class WorkbenchService:
 
         self.jobs.run("dataset.quality.run", work, correlation_id)
         return holder["rec"]
+
+    # -- cleaning commands/queries ----------------------------------------------------
+
+    def cleaning_preview(self, payload: CleaningPreviewPayload) -> CleaningPreviewSummary:
+        """M3 Cleaning G2: read-only impact preview (no snapshot/record/job)."""
+        dataset = self.store.get_dataset(payload.dataset_id)
+        if dataset is None or dataset.project_id != payload.project_id:
+            raise NotFoundError(f"dataset not found: {payload.dataset_id}")
+        try:
+            summary = preview_cleaning(
+                self.store.read_snapshot(dataset.snapshot.snapshot_id),
+                payload.operation, payload.columns,
+                payload.strategy, payload.constant_value,
+            )
+        except CleaningNotFoundError as exc:
+            raise NotFoundError(str(exc)) from exc
+        except CleaningValidationError as exc:
+            raise ValidationError(str(exc)) from exc
+        per_column = summary.get("per_column_affected")
+        return CleaningPreviewSummary(
+            operation=payload.operation,
+            columns=payload.columns,
+            parent_fingerprint=dataset.snapshot.fingerprint,
+            row_count_before=summary["row_count_before"],
+            row_count_after=summary["row_count_after"],
+            affected_rows=summary["affected_rows"],
+            affected_pct=summary["affected_pct"],
+            per_column_affected=(
+                [CleaningColumnImpact(**c) for c in per_column]
+                if per_column is not None else None
+            ),
+            filled_rows=summary.get("filled_rows"),
+        )
+
+    def run_cleaning(self, project_id: str, dataset_id: str,
+                     operation: CleaningOperation, columns: list[str],
+                     strategy: CleaningStrategy | None = None,
+                     constant_value: str | None = None,
+                     expected_parent_fingerprint: str = "",
+                     correlation_id: str | None = None) -> CleaningRecord:
+        """M3 Cleaning G4: job-wrapped cleaning creating a child snapshot.
+
+        Parent snapshot bytes are never mutated. The cleaning computation
+        runs inside the JobManager lifecycle; the child snapshot registry
+        row and the CleaningRecord (with the real job_id) are then written
+        in a single DB transaction. A failure anywhere fails the job and
+        no completed cleaning is recorded.
+        """
+        from datetime import datetime
+
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, Any] = {}
+
+        def work() -> None:
+            # Optimistic concurrency: reject a stale parent (TOCTOU guard).
+            if (expected_parent_fingerprint
+                    != dataset.snapshot.fingerprint):
+                raise ConflictError(
+                    "Snapshot telah berubah. Hitung ulang dampak.")
+            try:
+                new_bytes, summary = apply_cleaning(
+                    self.store.read_snapshot(dataset.snapshot.snapshot_id),
+                    operation, columns, strategy, constant_value,
+                )
+            except CleaningNotFoundError as exc:
+                raise NotFoundError(str(exc)) from exc
+            except CleaningValidationError as exc:
+                raise ValidationError(str(exc)) from exc
+            if summary["row_count_after"] == 0:
+                raise ValidationError(
+                    "Hasil cleaning akan kosong (0 baris). Pilih kolom lain "
+                    "atau batalkan.")
+            holder["bytes"] = new_bytes
+            holder["summary"] = summary
+            holder["child_snapshot_id"] = new_id()
+            holder["child_fingerprint"] = fingerprint_bytes(new_bytes)
+
+        status = self.jobs.run("dataset.cleaning.run", work, correlation_id)
+        summary = holder["summary"]
+        rec = CleaningRecord(
+            id=new_id(),
+            project_id=project_id,
+            dataset_id=dataset.dataset_id,
+            created_at=datetime.now(UTC),
+            job_id=status.job_id,
+            parent_snapshot_id=dataset.snapshot.snapshot_id,
+            parent_fingerprint=dataset.snapshot.fingerprint,
+            child_snapshot_id=holder["child_snapshot_id"],
+            child_fingerprint=holder["child_fingerprint"],
+            operation=operation,
+            columns=list(columns),
+            strategy=strategy,
+            constant_value=constant_value,
+            row_count_before=summary["row_count_before"],
+            row_count_after=summary["row_count_after"],
+            affected_rows=summary["affected_rows"],
+            filled_rows=summary.get("filled_rows"),
+        )
+        # Child snapshot + record in one DB transaction, inserted once.
+        self.store.save_child_snapshot_with_cleaning(
+            rec.child_snapshot_id, holder["bytes"], dataset.dataset_id,
+            rec.child_fingerprint, summary["row_count_after"],
+            dataset.snapshot.columns, _cleaning_row(rec),
+        )
+        return rec
+
+    def activate_snapshot(self, project_id: str, dataset_id: str,
+                          snapshot_id: str) -> DatasetRecord:
+        """M3 Cleaning G4: make any snapshot of this dataset the active one."""
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        snapshot = self.store.get_snapshot(snapshot_id)
+        if snapshot is None or snapshot["dataset_id"] != dataset_id:
+            raise NotFoundError(f"snapshot not found: {snapshot_id}")
+        columns = snapshot["columns"]
+        if isinstance(columns, str):
+            import json as _json
+            columns = tuple(_json.loads(columns))
+        else:
+            columns = tuple(columns)
+        dataset.snapshot = Snapshot(
+            snapshot["snapshot_id"], snapshot["fingerprint"],
+            snapshot["row_count"], columns,
+        )
+        self.store.save_dataset(dataset)
+        return DatasetRecord(
+            dataset_id=dataset.dataset_id,
+            project_id=dataset.project_id,
+            name=dataset.name,
+            snapshot_id=dataset.snapshot.snapshot_id,
+            fingerprint=dataset.snapshot.fingerprint,
+            row_count=dataset.snapshot.row_count,
+            columns=list(dataset.snapshot.columns),
+        )
 
     def list_snapshots(self, project_id: str) -> SnapshotListRecord:
         if self.store.get_project(project_id) is None:

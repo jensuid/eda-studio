@@ -11,9 +11,20 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from backend.application import NotFoundError, UnsupportedFormatError, WorkbenchService
+from backend.application import (
+    ConflictError,
+    NotFoundError,
+    UnsupportedFormatError,
+    WorkbenchService,
+)
+from backend.application import (
+    ValidationError as ServiceValidationError,
+)
 from backend.contracts import (
+    CleaningPreviewPayload,
+    CleaningRunPayload,
     CreateProjectPayload,
+    DatasetActivatePayload,
     ErrorCode,
     ErrorContract,
     GetDatasetPreviewPayload,
@@ -39,6 +50,8 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dataset.profile.run": RunProfilePayload,  # G6: job-wrapped profiling
     "dataset.histogram.run": RunHistogramPayload,  # M2 histogram
     "dataset.quality.run": RunQualityPayload,  # M2 quality
+    "dataset.cleaning.run": CleaningRunPayload,
+    "dataset.snapshot.activate": DatasetActivatePayload,
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
@@ -47,6 +60,7 @@ _QUERIES: dict[str, type[BaseModel]] = {
     "dataset.profile.get": GetProfileByIdPayload,  # G6 history
     "dataset.profiles.list": ListProfilesPayload,  # G6 history
     "dataset.snapshots.list": ListSnapshotsPayload,  # G6
+    "dataset.cleaning.preview": CleaningPreviewPayload,
 }
 
 
@@ -104,10 +118,25 @@ class Bridge:
                 result = self.service.run_quality(
                     payload.project_id, payload.dataset_id,
                     req.correlation_id or req.request_id)
+            elif req.command == "dataset.cleaning.run":
+                # service.run_cleaning owns the JobManager lifecycle (SYS-015)
+                result = self.service.run_cleaning(
+                    payload.project_id, payload.dataset_id,
+                    payload.operation, payload.columns,
+                    payload.strategy, payload.constant_value,
+                    payload.expected_parent_fingerprint,
+                    req.correlation_id or req.request_id)
+            elif req.command == "dataset.snapshot.activate":
+                # service.activate_snapshot changes the active snapshot for a dataset
+                result = self.service.activate_snapshot(payload.project_id, payload.dataset_id, payload.snapshot_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError as exc:
             return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump()
+        except ServiceValidationError as exc:
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+        except ConflictError as exc:
+            return _error(ErrorCode.CONFLICT, str(exc), req.correlation_id).model_dump()
         except UnsupportedFormatError as exc:
             return _error(ErrorCode.UNSUPPORTED_FORMAT, str(exc), req.correlation_id).model_dump()
         except Exception as exc:  # noqa: BLE001 — boundary translation
@@ -141,10 +170,14 @@ class Bridge:
                     payload.project_id, payload.dataset_id)
             elif req.command == "dataset.snapshots.list":
                 result = self.service.list_snapshots(payload.project_id)
+            elif req.command == "dataset.cleaning.preview":
+                result = self.service.cleaning_preview(payload)
             else:  # pragma: no cover
                 raise AssertionError(req.command)
         except NotFoundError as exc:
             return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump()
+        except ServiceValidationError as exc:
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
         except Exception as exc:  # noqa: BLE001
             return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump()
         return Response(ok=True, data=result.model_dump(),

@@ -36,8 +36,10 @@ def test_unsupported_format(bridge, project_id, tmp_path):
 def test_protocol_info_lists_only_registered(bridge):
     info = bridge.get_protocol_info()
     assert info["commands"] == [
-        "dataset.histogram.run", "dataset.import",
-        "dataset.profile.run", "dataset.quality.run", "project.create"]
+        "dataset.cleaning.run", "dataset.histogram.run", "dataset.import",
+        "dataset.profile.run", "dataset.quality.run",
+        "dataset.snapshot.activate", "project.create"]
     assert info["queries"] == [
-        "dataset.preview", "dataset.profile", "dataset.profile.get",
-        "dataset.profiles.list", "dataset.snapshots.list", "project.open"]
+        "dataset.cleaning.preview", "dataset.preview", "dataset.profile",
+        "dataset.profile.get", "dataset.profiles.list",
+        "dataset.snapshots.list", "project.open"]

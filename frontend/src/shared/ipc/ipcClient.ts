@@ -4,6 +4,10 @@
  * TanStack Query owns server cache, Zustand is for ephemeral UI state.
  */
 import type {
+  CleaningOperation,
+  CleaningPreviewSummary,
+  CleaningRecord,
+  CleaningStrategy,
   DatasetRecord,
   HistogramRecord,
   JobEvent,
@@ -143,6 +147,52 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<QualityRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runQuality failed");
+    return res.data;
+  },
+  async previewCleaning(
+    projectId: string,
+    datasetId: string,
+    operation: CleaningOperation,
+    columns: string[],
+    strategy?: CleaningStrategy,
+    constantValue?: string,
+  ): Promise<CleaningPreviewSummary> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "dataset.cleaning.preview",
+      payload: {
+        project_id: projectId, dataset_id: datasetId, operation, columns,
+        strategy: strategy ?? null, constant_value: constantValue ?? null,
+      },
+    }) as BridgeResponse<CleaningPreviewSummary>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "previewCleaning failed");
+    return res.data;
+  },
+  async runCleaning(
+    projectId: string,
+    datasetId: string,
+    operation: CleaningOperation,
+    columns: string[],
+    expectedParentFingerprint: string,
+    strategy?: CleaningStrategy,
+    constantValue?: string,
+  ): Promise<CleaningRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.cleaning.run",
+      payload: {
+        project_id: projectId, dataset_id: datasetId, operation, columns,
+        strategy: strategy ?? null, constant_value: constantValue ?? null,
+        expected_parent_fingerprint: expectedParentFingerprint,
+      },
+    }) as BridgeResponse<CleaningRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runCleaning failed");
+    return res.data;
+  },
+  async activateSnapshot(projectId: string, datasetId: string, snapshotId: string): Promise<DatasetRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.snapshot.activate",
+      payload: { project_id: projectId, dataset_id: datasetId, snapshot_id: snapshotId },
+    }) as BridgeResponse<DatasetRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "activateSnapshot failed");
     return res.data;
   },
   async getEvents(sinceSeq = 0): Promise<JobEvent[]> {

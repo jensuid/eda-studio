@@ -5,17 +5,21 @@ export type JobState = "Created" | "Queued" | "Preparing" | "Running" | "Complet
 
 export type ErrorCode = "VALIDATION_ERROR" | "NOT_FOUND" | "PERMISSION_DENIED" | "CONFLICT" | "UNSUPPORTED_FORMAT" | "INTERNAL_ERROR";
 
+export type CleaningOperation = "drop_duplicates" | "drop_missing" | "impute";
+
+export type CleaningStrategy = "mean" | "median" | "mode" | "constant";
+
 export interface ErrorContract {
   code: ErrorCode;
   message: string;
-  correlation_id?: unknown;
+  correlation_id?: string;
   details?: Record<string, unknown>;
 }
 
 export interface Request {
   request_id: string;
-  idempotency_key?: unknown;
-  correlation_id?: unknown;
+  idempotency_key?: string;
+  correlation_id?: string;
   command: string;
   payload?: Record<string, unknown>;
 }
@@ -30,7 +34,7 @@ export interface ProtocolInfo {
 export interface JobEvent {
   event_id: string;
   job_id: string;
-  correlation_id?: unknown;
+  correlation_id?: string;
   state: JobState;
   seq: number;
   message?: string;
@@ -40,8 +44,8 @@ export interface JobStatus {
   job_id: string;
   command: string;
   state: JobState;
-  correlation_id?: unknown;
-  error?: unknown;
+  correlation_id?: string;
+  error?: ErrorContract;
 }
 
 export interface ProjectRecord {
@@ -73,15 +77,15 @@ export interface ColumnProfile {
   missing_count: number;
   missing_pct: number;
   distinct_count: number;
-  min_value?: unknown;
-  max_value?: unknown;
-  mean_value?: unknown;
-  top_value?: unknown;
+  min_value?: number;
+  max_value?: number;
+  mean_value?: number;
+  top_value?: string;
   status: string;
 }
 
 export interface ProfileRecord {
-  profile_id?: unknown;
+  profile_id?: string;
   dataset_id: string;
   snapshot_id: string;
   fingerprint: string;
@@ -117,7 +121,7 @@ export interface SnapshotListRecord {
 
 export interface CreateProjectPayload {
   name: string;
-  project_id?: unknown;
+  project_id?: string;
 }
 
 export interface ImportDatasetPayload {
@@ -181,10 +185,10 @@ export interface HistogramRecord {
   bins: HistogramBin[];
   bin_method: string;
   missing_pct: number;
-  min_value?: unknown;
-  max_value?: unknown;
-  mean_value?: unknown;
-  top_bin?: unknown;
+  min_value?: number;
+  max_value?: number;
+  mean_value?: number;
+  top_bin?: string;
   value_count: number;
 }
 
@@ -195,7 +199,7 @@ export interface RunQualityPayload {
 
 export interface QualityFindingRecord {
   rule_id: string;
-  column_name?: unknown;
+  column_name?: string;
   severity: string;
   message: string;
   evidence_count: number;
@@ -213,4 +217,66 @@ export interface QualityRecord {
   check_count: number;
   problem_count: number;
   summary: string;
+}
+
+export interface CleaningPreviewPayload {
+  project_id: string;
+  dataset_id: string;
+  operation: CleaningOperation;
+  columns: string[];
+  strategy?: CleaningStrategy;
+  constant_value?: string;
+}
+
+export interface CleaningColumnImpact {
+  column: string;
+  affected_rows: number;
+}
+
+export interface CleaningPreviewSummary {
+  operation: CleaningOperation;
+  columns: string[];
+  parent_fingerprint: string;
+  row_count_before: number;
+  row_count_after: number;
+  affected_rows: number;
+  affected_pct: number;
+  per_column_affected?: CleaningColumnImpact[];
+  filled_rows?: number;
+}
+
+export interface CleaningRunPayload {
+  project_id: string;
+  dataset_id: string;
+  operation: CleaningOperation;
+  columns: string[];
+  strategy?: CleaningStrategy;
+  constant_value?: string;
+  expected_parent_fingerprint: string;
+}
+
+export interface DatasetActivatePayload {
+  project_id: string;
+  dataset_id: string;
+  snapshot_id: string;
+}
+
+export interface CleaningRecord {
+  id: string;
+  project_id: string;
+  dataset_id: string;
+  created_at: string;
+  job_id?: string;
+  parent_snapshot_id: string;
+  parent_fingerprint: string;
+  child_snapshot_id: string;
+  child_fingerprint: string;
+  operation: CleaningOperation;
+  columns: string[];
+  strategy?: CleaningStrategy;
+  constant_value?: string;
+  row_count_before: number;
+  row_count_after: number;
+  affected_rows: number;
+  filled_rows?: number;
 }

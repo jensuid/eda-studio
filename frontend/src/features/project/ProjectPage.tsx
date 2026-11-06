@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { DatasetRecord, HistogramRecord, QualityRecord } from "../../shared/ipc/generated";
+import type { DatasetRecord, HistogramRecord, ProfileRecord, QualityRecord } from "../../shared/ipc/generated";
+import { CleaningSection } from "../cleaning/CleaningSection";
 import { HistogramChart } from "../histogram/HistogramChart";
 
 interface ProjectForm { name: string; sourcePath: string; datasetName: string }
@@ -72,6 +73,7 @@ export function ProjectPage() {
     mutationFn: () => ipcClient.runQuality(projectId!, dataset!.dataset_id),
     onSuccess: (r) => setQualityRecord(r),
   });
+  const refetchSnapshots = () => { void snapshots.refetch(); };
 
   return (
     <main>
@@ -212,10 +214,18 @@ export function ProjectPage() {
                   </tbody>
                 </table>
               </div>
-              <p><button disabled title="Cleaning tersedia di M3">Cleaning tersedia di M3</button></p>
             </>
           )}
         </section>
+      )}
+      {dataset && projectId && (
+        <CleaningSection
+          projectId={projectId}
+          dataset={dataset}
+          savedProfile={savedProfile}
+          qualityRecord={qualityRecord}
+          onDatasetChange={(d) => { setDataset(d); refetchSnapshots(); }}
+        />
       )}
       {preview.data && (
         <section>

@@ -24,6 +24,9 @@ MODELS = [
     "ListSnapshotsPayload",
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",
     "RunQualityPayload", "QualityFindingRecord", "QualityRecord",
+    "CleaningPreviewPayload",
+    "CleaningColumnImpact", "CleaningPreviewSummary", "CleaningRunPayload",
+    "DatasetActivatePayload", "CleaningRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",
@@ -33,6 +36,10 @@ _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",
 def _ts_type(schema: dict) -> str:
     if "enum" in schema:
         return " | ".join(json.dumps(v) for v in schema["enum"])
+    for key in ("anyOf", "oneOf"):
+        if key in schema:
+            parts = [_ts_type(s) for s in schema[key] if s.get("type") != "null"]
+            return " | ".join(parts) if parts else "unknown"
     ref = schema.get("$ref", "")
     if ref:
         return ref.rsplit("/", 1)[-1]
@@ -69,6 +76,8 @@ def main() -> None:
     enums = {
         "JobState": [s.value for s in contracts.JobState],
         "ErrorCode": [s.value for s in contracts.ErrorCode],
+        "CleaningOperation": [s.value for s in contracts.CleaningOperation],
+        "CleaningStrategy": [s.value for s in contracts.CleaningStrategy],
     }
     for name, values in enums.items():
         lines.append(f"export type {name} = " + " | ".join(json.dumps(v) for v in values) + ";")

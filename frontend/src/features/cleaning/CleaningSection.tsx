@@ -33,6 +33,9 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [completed, setCompleted] = useState<CleaningRecord | null>(null);
+  // Preview computed before the last successful run is stashed so it can be
+  // restored after activation — by then its parent fingerprint is stale.
+  const [stalePreview, setStalePreview] = useState<CleaningPreviewSummary | null>(null);
 
   const qualityStale = !!qualityRecord && qualityRecord.fingerprint !== dataset.fingerprint;
   const gated = !!qualityRecord && !qualityStale;
@@ -48,6 +51,7 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
       ),
     onSuccess: (r) => {
       setPreview(r);
+      setStalePreview(null);
       setCompleted(null);
       setCancelled(false);
     },
@@ -64,6 +68,7 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
     onSuccess: (rec) => {
       setCompleted(rec);
       setDialogOpen(false);
+      setStalePreview(preview);
       setPreview(null);
       void queryClient.invalidateQueries({ queryKey: ["snapshots", projectId] });
     },
@@ -75,6 +80,10 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
     onSuccess: (d) => {
       onDatasetChange(d);
       setCompleted(null);
+      // Restore the pre-apply preview: its parent fingerprint no longer
+      // matches the now-active snapshot, so the stale banner appears.
+      setPreview(stalePreview);
+      setStalePreview(null);
       void queryClient.invalidateQueries({ queryKey: ["snapshots", projectId] });
     },
   });

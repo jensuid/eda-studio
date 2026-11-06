@@ -26,7 +26,7 @@ def test_run_profile_job_persisted_and_reopened(bridge, project_id):
     assert prof["row_count"] == 5
     # job lifecycle events are durable
     events = bridge.get_events(0)
-    assert any(getattr(e["state"], "name", str(e["state"])) == "COMPLETED" for e in events)
+    assert any(e["state"] == "Completed" or getattr(e["state"], "name", "") == "COMPLETED" for e in events)
     # history list contains the run
     lst = bridge.execute_query({
         "request_id": "l1", "command": "dataset.profiles.list",

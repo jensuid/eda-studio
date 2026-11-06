@@ -77,17 +77,17 @@ class Bridge:
 
     # -- the 4 bridge methods --------------------------------------------
     def get_protocol_info(self) -> dict[str, Any]:
-        return ProtocolInfo(commands=sorted(_COMMANDS), queries=sorted(_QUERIES)).model_dump()
+        return ProtocolInfo(commands=sorted(_COMMANDS), queries=sorted(_QUERIES)).model_dump(mode="json")
 
     def execute_command(self, request: Request | dict) -> dict[str, Any]:
         req = Request(**request) if isinstance(request, dict) else request
         if req.command not in _COMMANDS:
             return _error(ErrorCode.PERMISSION_DENIED,
-                          f"command not allowed: {req.command}", req.correlation_id).model_dump()
+                          f"command not allowed: {req.command}", req.correlation_id).model_dump(mode="json")
         try:
             payload = _COMMANDS[req.command](**req.payload)
         except ValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
         try:
             if req.command == "project.create":
                 result = self.service.create_project(payload.name, payload.project_id)
@@ -132,27 +132,27 @@ class Bridge:
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError as exc:
-            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump(mode="json")
         except ServiceValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
         except ConflictError as exc:
-            return _error(ErrorCode.CONFLICT, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.CONFLICT, str(exc), req.correlation_id).model_dump(mode="json")
         except UnsupportedFormatError as exc:
-            return _error(ErrorCode.UNSUPPORTED_FORMAT, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.UNSUPPORTED_FORMAT, str(exc), req.correlation_id).model_dump(mode="json")
         except Exception as exc:  # noqa: BLE001 — boundary translation
-            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump()
-        return Response(ok=True, data=result.model_dump() if hasattr(result, "model_dump") else result,
-                        correlation_id=req.correlation_id).model_dump()
+            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump(mode="json")
+        return Response(ok=True, data=result.model_dump(mode="json") if hasattr(result, "model_dump") else result,
+                        correlation_id=req.correlation_id).model_dump(mode="json")
 
     def execute_query(self, request: Request | dict) -> dict[str, Any]:
         req = Request(**request) if isinstance(request, dict) else request
         if req.command not in _QUERIES:
             return _error(ErrorCode.PERMISSION_DENIED,
-                          f"query not allowed: {req.command}", req.correlation_id).model_dump()
+                          f"query not allowed: {req.command}", req.correlation_id).model_dump(mode="json")
         try:
             payload = _QUERIES[req.command](**req.payload)
         except ValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
         try:
             if req.command == "project.open":
                 result = self.service.open_project(payload.project_id)
@@ -175,16 +175,16 @@ class Bridge:
             else:  # pragma: no cover
                 raise AssertionError(req.command)
         except NotFoundError as exc:
-            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump(mode="json")
         except ServiceValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump()
+            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
         except Exception as exc:  # noqa: BLE001
-            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump()
-        return Response(ok=True, data=result.model_dump(),
-                        correlation_id=req.correlation_id).model_dump()
+            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump(mode="json")
+        return Response(ok=True, data=result.model_dump(mode="json"),
+                        correlation_id=req.correlation_id).model_dump(mode="json")
 
     def get_events(self, since_seq: int = 0) -> list[dict[str, Any]]:
-        return [e.model_dump() for e in self.jobs.events_since(since_seq)]
+        return [e.model_dump(mode="json") for e in self.jobs.events_since(since_seq)]
 
 def make_bridge(root: str) -> Bridge:
     """Composition Root (SYS-010): wire store -> jobs -> service -> bridge."""

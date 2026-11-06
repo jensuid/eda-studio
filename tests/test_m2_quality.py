@@ -48,7 +48,7 @@ def test_quality_clean_sample(bridge, project_id):
     for f in d["findings"]:
         assert f["message"] and f["evidence_detail"]
     events = bridge.get_events(0)
-    assert any(getattr(e["state"], "name", str(e["state"])) == "COMPLETED"
+    assert any(e["state"] == "Completed" or getattr(e["state"], "name", "") == "COMPLETED"
                for e in events)
 
 

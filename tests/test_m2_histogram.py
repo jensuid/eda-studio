@@ -35,7 +35,7 @@ def test_numeric_histogram(bridge, project_id):
     assert d["snapshot_id"] and d["fingerprint"]
     # job lifecycle durable
     events = bridge.get_events(0)
-    assert any(getattr(e["state"], "name", str(e["state"])) == "COMPLETED" for e in events)
+    assert any(e["state"] == "Completed" or getattr(e["state"], "name", "") == "COMPLETED" for e in events)
 
 
 def test_categorical_frequency_bar(bridge, project_id):

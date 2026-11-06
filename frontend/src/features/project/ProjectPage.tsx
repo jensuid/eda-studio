@@ -75,6 +75,14 @@ export function ProjectPage() {
   });
   const refetchSnapshots = () => { void snapshots.refetch(); };
 
+  // FLOW-CLEAN-001 §6: revert CTA ("Jadikan aktif") lives in the snapshot
+  // list — any snapshot, including the parent, becomes the active one.
+  // After activation, Profiling/Quality results are stale by fingerprint.
+  const activateSnapshot = useMutation({
+    mutationFn: (snapshotId: string) => ipcClient.activateSnapshot(projectId!, dataset!.dataset_id, snapshotId),
+    onSuccess: (d) => { setDataset(d); refetchSnapshots(); },
+  });
+
   return (
     <main>
       <h1>EDA Workbench — M1</h1>
@@ -148,8 +156,24 @@ export function ProjectPage() {
               <h3>Snapshots ({snapshots.data.snapshots.length})</h3>
               <ul>
                 {snapshots.data.snapshots.map((s) => (
-                  <li key={s.snapshot_id}>{s.dataset_name} · {s.snapshot_id.slice(0, 8)} · {s.row_count} rows · {s.fingerprint.slice(0, 12)}…</li>
+                  <li key={s.snapshot_id}>
+                    {s.dataset_name} · {s.snapshot_id.slice(0, 8)} · {s.row_count} rows · {s.fingerprint.slice(0, 12)}…
+                    {s.snapshot_id !== dataset.snapshot_id && (
+                      <>
+                        {" "}
+                        <button
+                          disabled={activateSnapshot.isPending}
+                          onClick={() => activateSnapshot.mutate(s.snapshot_id)}
+                        >
+                          Jadikan aktif
+                        </button>
+                      </>
+                    )}
+                  </li>
                 ))}
+                {activateSnapshot.isError && (
+                  <p role="alert">Gagal mengaktifkan snapshot: {activateSnapshot.error.message}</p>
+                )}
               </ul>
             </>
           )}

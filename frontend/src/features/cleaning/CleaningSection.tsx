@@ -154,9 +154,10 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
             <div role="status">
               <p>Cleaning selesai. Snapshot baru telah dibuat.</p>
               <p>Snapshot baru: {completed.child_snapshot_id.slice(0, 8)} &middot; {completed.child_fingerprint.slice(0, 12)}&hellip; &middot; {completed.row_count_before} &rarr; {completed.row_count_after} baris</p>
-              <button onClick={() => setCompleted(null)}>Gunakan snapshot baru</button>{" "}
+              {/* SCREEN-CLEAN-001: "Gunakan snapshot baru" is the activate
+                  CTA; revert ("Jadikan aktif") lives in the snapshot list. */}
               <button disabled={activateMutation.isPending} onClick={() => activateMutation.mutate(completed.child_snapshot_id)}>
-                Jadikan aktif
+                Gunakan snapshot baru
               </button>
               {completed.filled_rows != null && (
                 <p>Baris diisi: {completed.filled_rows} pada kolom {completed.columns.join(", ")}.</p>

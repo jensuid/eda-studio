@@ -219,6 +219,52 @@ export interface QualityRecord {
   summary: string;
 }
 
+export interface RunBivariatePayload {
+  project_id: string;
+  dataset_id: string;
+  column_a: string;
+  column_b: string;
+}
+
+export interface BivariateScatterPoint {
+  x: number;
+  y: number;
+}
+
+export interface BivariateGroup {
+  label: string;
+  count: number;
+  mean_value: number;
+  median_value: number;
+  min_value: number;
+  max_value: number;
+}
+
+export interface BivariateRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  column_a: string;
+  column_b: string;
+  mode: string;
+  type_a: string;
+  type_b: string;
+  pearson_r?: number;
+  spearman_rho?: number;
+  scatter_points?: BivariateScatterPoint[];
+  group_column?: string;
+  value_column?: string;
+  groups?: BivariateGroup[];
+  row_labels?: string[];
+  col_labels?: string[];
+  cells?: number[][];
+  n_pairs: number;
+  missing_pairs: number;
+  sampled: boolean;
+  sample_size: number;
+  constant_columns?: string[];
+}
+
 export interface CleaningPreviewPayload {
   project_id: string;
   dataset_id: string;

@@ -280,6 +280,64 @@ class HistogramRecord(BaseModel):
     value_count: int
 
 
+# ---- Bivariate descriptive analysis (M2, SCREEN-BIVAR-001) ----
+# A2 locked: scatter/sample payload capped at _BIVAR_SAMPLE_MAX points; the
+# full DataFrame is never stored in the record (only ringkasan + sampel).
+# A3 locked: no persistence in this slice — recompute is cheap (like
+# histogram/quality, not cleaning). Results live in job history only.
+_BIVAR_SAMPLE_MAX = 2000
+
+
+class RunBivariatePayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    column_a: str = Field(min_length=1)
+    column_b: str = Field(min_length=1)
+
+
+class BivariateScatterPoint(BaseModel):
+    x: float
+    y: float
+
+
+class BivariateGroup(BaseModel):
+    label: str  # category label ("Lainnya" for merged tail)
+    count: int
+    mean_value: float
+    median_value: float
+    min_value: float
+    max_value: float
+
+
+class BivariateRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    column_a: str
+    column_b: str
+    mode: str  # "num-num" | "cat-num" | "cat-cat" | "empty"
+    type_a: str  # "numeric" | "categorical" | "empty"
+    type_b: str
+    # B1 (num-num)
+    pearson_r: float | None = None
+    spearman_rho: float | None = None
+    scatter_points: list[BivariateScatterPoint] = []
+    # B2 (cat-num): group side + value side recorded explicitly
+    group_column: str | None = None
+    value_column: str | None = None
+    groups: list[BivariateGroup] = []
+    # B3 (cat-cat)
+    row_labels: list[str] = []
+    col_labels: list[str] = []
+    cells: list[list[int]] = []  # row-major counts: len(rows) x len(cols)
+    # shared
+    n_pairs: int
+    missing_pairs: int
+    sampled: bool
+    sample_size: int  # == len(scatter_points); <= _BIVAR_SAMPLE_MAX
+    constant_columns: list[str] = []
+
+
 class CleaningOperation(str, Enum):
     DROP_DUPLICATES = "drop_duplicates"
     DROP_MISSING = "drop_missing"

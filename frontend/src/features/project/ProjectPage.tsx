@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { DatasetRecord, HistogramRecord, ProfileRecord, QualityRecord } from "../../shared/ipc/generated";
+import { BivariateSection } from "../bivariate/BivariateSection";
 import { CleaningSection } from "../cleaning/CleaningSection";
 import { HistogramChart } from "../histogram/HistogramChart";
 
@@ -241,6 +242,9 @@ export function ProjectPage() {
             </>
           )}
         </section>
+      )}
+      {dataset && projectId && (
+        <BivariateSection projectId={projectId} dataset={dataset} savedProfile={savedProfile} />
       )}
       {dataset && projectId && (
         <CleaningSection

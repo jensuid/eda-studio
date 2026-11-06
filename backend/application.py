@@ -11,6 +11,7 @@ from typing import Any
 
 UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
 
+from backend.bivariate import describe_bivariate
 from backend.cleaning import (
     CleaningNotFoundError,
     CleaningValidationError,
@@ -18,6 +19,9 @@ from backend.cleaning import (
     preview_cleaning,
 )
 from backend.contracts import (
+    BivariateGroup,
+    BivariateRecord,
+    BivariateScatterPoint,
     CleaningColumnImpact,
     CleaningOperation,
     CleaningPreviewPayload,
@@ -277,6 +281,56 @@ class WorkbenchService:
             )
 
         self.jobs.run("dataset.quality.run", work, correlation_id)
+        return holder["rec"]
+
+    def run_bivariate(self, project_id: str, dataset_id: str,
+                      column_a: str, column_b: str,
+                      correlation_id: str | None = None) -> BivariateRecord:
+        """SCREEN-BIVAR-001: bivariate as a JobManager job (SYS-015).
+
+        Read-only + no persistence in this slice (A3) — recompute is cheap
+        (like histogram/quality). Validation per FLOW-BIVAR-001.
+        """
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        if column_a == column_b:
+            raise ValidationError("Pilih dua kolom yang berbeda.")
+        holder: dict[str, BivariateRecord] = {}
+
+        def work() -> None:
+            try:
+                d = describe_bivariate(
+                    self.store.read_snapshot(dataset.snapshot.snapshot_id),
+                    column_a, column_b)
+            except LookupError as exc:
+                raise NotFoundError(str(exc)) from exc
+            holder["rec"] = BivariateRecord(
+                dataset_id=dataset.dataset_id,
+                snapshot_id=dataset.snapshot.snapshot_id,
+                fingerprint=dataset.snapshot.fingerprint,
+                column_a=column_a,
+                column_b=column_b,
+                mode=d["mode"],
+                type_a=d["type_a"],
+                type_b=d["type_b"],
+                pearson_r=d.get("pearson_r"),
+                spearman_rho=d.get("spearman_rho"),
+                scatter_points=[BivariateScatterPoint(**p) for p in d.get("scatter_points", [])],
+                group_column=d.get("group_column"),
+                value_column=d.get("value_column"),
+                groups=[BivariateGroup(**g) for g in d.get("groups", [])],
+                row_labels=d.get("row_labels", []),
+                col_labels=d.get("col_labels", []),
+                cells=d.get("cells", []),
+                n_pairs=d["n_pairs"],
+                missing_pairs=d["missing_pairs"],
+                sampled=d["sampled"],
+                sample_size=d["sample_size"],
+                constant_columns=d.get("constant_columns", []),
+            )
+
+        self.jobs.run("dataset.bivariate.run", work, correlation_id)
         return holder["rec"]
 
     # -- cleaning commands/queries ----------------------------------------------------

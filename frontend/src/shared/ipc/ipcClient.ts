@@ -4,6 +4,7 @@
  * TanStack Query owns server cache, Zustand is for ephemeral UI state.
  */
 import type {
+  BivariateRecord,
   CleaningOperation,
   CleaningPreviewSummary,
   CleaningRecord,
@@ -147,6 +148,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<QualityRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runQuality failed");
+    return res.data;
+  },
+  async runBivariate(projectId: string, datasetId: string, columnA: string, columnB: string): Promise<BivariateRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.bivariate.run",
+      payload: { project_id: projectId, dataset_id: datasetId, column_a: columnA, column_b: columnB },
+    }) as BridgeResponse<BivariateRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runBivariate failed");
     return res.data;
   },
   async previewCleaning(

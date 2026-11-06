@@ -24,6 +24,7 @@ MODELS = [
     "ListSnapshotsPayload",
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",
     "RunQualityPayload", "QualityFindingRecord", "QualityRecord",
+    "RunBivariatePayload", "BivariateScatterPoint", "BivariateGroup", "BivariateRecord",
     "CleaningPreviewPayload",
     "CleaningColumnImpact", "CleaningPreviewSummary", "CleaningRunPayload",
     "DatasetActivatePayload", "CleaningRecord",

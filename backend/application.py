@@ -33,6 +33,8 @@ from backend.contracts import (
     CleaningStrategy,
     ColumnProfile,
     DatasetRecord,
+    ExportFormat,
+    ExportRecord,
     HistogramBin,
     HistogramRecord,
     PdfRecord,
@@ -786,4 +788,49 @@ class WorkbenchService:
             )
 
         self.jobs.run("project.restore", work, correlation_id)
+        return holder["rec"]
+
+    # -- dataset export (M3 P0) ------------------------------------------
+    def export_dataset(self, project_id: str, dataset_id: str,
+                       export_format: ExportFormat, dest_path: str,
+                       correlation_id: str | None = None) -> ExportRecord:
+        """Export the canonical snapshot to CSV/Parquet on disk."""
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, ExportRecord] = {}
+
+        def work() -> None:
+            import hashlib
+            import io
+
+            import pyarrow.csv as pacsv
+            import pyarrow.parquet as pq
+
+            table = pq.read_table(
+                io.BytesIO(self.store.read_snapshot(dataset.snapshot.snapshot_id)))
+            dest = Path(dest_path)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if export_format is ExportFormat.CSV:
+                sink = io.BytesIO()
+                pacsv.write_csv(table, sink)
+                artifact = sink.getvalue()
+            else:
+                sink = io.BytesIO()
+                pq.write_table(table, sink)
+                artifact = sink.getvalue()
+            dest.write_bytes(artifact)
+            holder["rec"] = ExportRecord(
+                dataset_id=dataset.dataset_id,
+                snapshot_id=dataset.snapshot.snapshot_id,
+                fingerprint=dataset.snapshot.fingerprint,
+                format=export_format,
+                file_path=str(dest.resolve()),
+                file_size_bytes=len(artifact),
+                row_count=table.num_rows,
+                file_fingerprint=hashlib.sha256(artifact).hexdigest(),
+                created_at=datetime.now(UTC),
+            )
+
+        self.jobs.run("dataset.export", work, correlation_id)
         return holder["rec"]

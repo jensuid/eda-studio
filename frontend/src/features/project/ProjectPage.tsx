@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { BackupRecord, DatasetRecord, HistogramRecord, ProfileRecord, QualityRecord, RestoreRecord } from "../../shared/ipc/generated";
+import type { BackupRecord, DatasetRecord, ExportFormat, ExportRecord, HistogramRecord, ProfileRecord, QualityRecord, RestoreRecord } from "../../shared/ipc/generated";
 import { BivariateSection } from "../bivariate/BivariateSection";
 import { CleaningSection } from "../cleaning/CleaningSection";
 import { HistogramChart } from "../histogram/HistogramChart";
@@ -103,6 +103,16 @@ export function ProjectPage() {
     onSuccess: (r) => setRestoreRecord(r),
   });
 
+  // M3 P0 dataset export (Doc16 §4.2): canonical snapshot → CSV/Parquet on disk.
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
+  const [exportPath, setExportPath] = useState("");
+  const [exportRecord, setExportRecord] = useState<ExportRecord | null>(null);
+  const exportDataset = useMutation({
+    mutationFn: (v: { format: ExportFormat; path: string }) =>
+      ipcClient.exportDataset(projectId!, dataset!.dataset_id, v.format, v.path),
+    onSuccess: (r) => setExportRecord(r),
+  });
+
   return (
     <main>
       <h1>EDA Workbench — M1</h1>
@@ -125,6 +135,24 @@ export function ProjectPage() {
           </form>
           {doImport.isError && <p role="alert">Gagal import: {doImport.error.message}</p>}
           {dataset && <p>Snapshot {dataset.snapshot_id} · {dataset.row_count} rows · sha256 {dataset.fingerprint.slice(0, 12)}…</p>}
+          {dataset && (
+            <>
+              <h3>Export Dataset (CSV/Parquet)</h3>
+              <form onSubmit={(e) => { e.preventDefault(); exportDataset.mutate({ format: exportFormat, path: exportPath }); }}>
+                <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value as ExportFormat)}>
+                  <option value="csv">CSV</option>
+                  <option value="parquet">Parquet</option>
+                </select>
+                <input value={exportPath} onChange={(e) => setExportPath(e.target.value)} placeholder="Path file tujuan export" required />
+                <button disabled={exportDataset.isPending}>Export</button>
+              </form>
+              {exportDataset.isPending && <p role="status">Mengekspor dataset…</p>}
+              {exportDataset.isError && <p role="alert">Export gagal: {exportDataset.error.message}</p>}
+              {exportRecord && (
+                <p>Ekspor: {exportRecord.file_path} · {(exportRecord.file_size_bytes / 1024).toFixed(1)} KB · {exportRecord.row_count} rows · sha256 {exportRecord.file_fingerprint.slice(0, 12)}…</p>
+              )}
+            </>
+          )}
         </section>
       )}
       {dataset && (

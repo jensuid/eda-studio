@@ -539,6 +539,34 @@ class RestoreRecord(BaseModel):
     version: str
 
 
+# ---- Dataset Export (M3 P0, Doc04/Doc16 §4.2) ----
+# Canonical-snapshot export to an explicit on-disk CSV/Parquet artifact.
+# The artifact lives on disk; IPC payload stays small (ExportRecord).
+
+class ExportFormat(str, Enum):
+    CSV = "csv"
+    PARQUET = "parquet"
+
+
+class ExportDatasetPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    format: ExportFormat
+    dest_path: str = Field(min_length=1)
+
+
+class ExportRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str  # snapshot fingerprint (provenance)
+    format: ExportFormat
+    file_path: str
+    file_size_bytes: int
+    row_count: int
+    file_fingerprint: str  # SHA-256 of artifact bytes
+    created_at: datetime
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

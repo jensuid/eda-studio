@@ -11,6 +11,8 @@ export type CleaningStrategy = "mean" | "median" | "mode" | "constant";
 
 export type ReportScope = "all" | "profile-quality" | "with-charts" | "with-visuals";
 
+export type ExportFormat = "csv" | "parquet";
+
 export interface ErrorContract {
   code: ErrorCode;
   message: string;
@@ -408,4 +410,23 @@ export interface RestoreRecord {
   project_db_sha256: string;
   counts?: Record<string, unknown>;
   version: string;
+}
+
+export interface ExportDatasetPayload {
+  project_id: string;
+  dataset_id: string;
+  format: ExportFormat;
+  dest_path: string;
+}
+
+export interface ExportRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  format: ExportFormat;
+  file_path: string;
+  file_size_bytes: number;
+  row_count: number;
+  file_fingerprint: string;
+  created_at: string;
 }

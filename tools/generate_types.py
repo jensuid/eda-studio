@@ -32,6 +32,8 @@ MODELS = [
     "DatasetActivatePayload", "CleaningRecord",
     "BackupCreatePayload", "BackupRestorePayload",
     "BackupRecord", "RestoreRecord",
+    "ExportDatasetPayload",
+    "ExportRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",
@@ -84,6 +86,7 @@ def main() -> None:
         "CleaningOperation": [s.value for s in contracts.CleaningOperation],
         "CleaningStrategy": [s.value for s in contracts.CleaningStrategy],
         "ReportScope": [s.value for s in contracts.ReportScope],
+        "ExportFormat": [s.value for s in contracts.ExportFormat],
     }
     for name, values in enums.items():
         lines.append(f"export type {name} = " + " | ".join(json.dumps(v) for v in values) + ";")

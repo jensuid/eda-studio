@@ -29,6 +29,7 @@ from backend.contracts import (
     DatasetActivatePayload,
     ErrorCode,
     ErrorContract,
+    ExportDatasetPayload,
     GetDatasetPreviewPayload,
     GetDatasetProfilePayload,
     GetProfileByIdPayload,
@@ -62,6 +63,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dataset.snapshot.activate": DatasetActivatePayload,
     "project.backup.create": BackupCreatePayload,  # M3 P0 backup (Doc04 §12)
     "project.restore": BackupRestorePayload,  # M3 P0 restore to new root
+    "dataset.export": ExportDatasetPayload,  # M3 P0 dataset export CSV/Parquet
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
@@ -165,6 +167,12 @@ class Bridge:
             elif req.command == "project.restore":
                 result = self.service.restore_project(
                     payload.archive_path, payload.dest_root,
+                    req.correlation_id or req.request_id)
+            elif req.command == "dataset.export":
+                # service.export_dataset owns the JobManager lifecycle (SYS-015)
+                result = self.service.export_dataset(
+                    payload.project_id, payload.dataset_id,
+                    payload.format, payload.dest_path,
                     req.correlation_id or req.request_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)

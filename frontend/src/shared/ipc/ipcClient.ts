@@ -12,6 +12,8 @@ import type {
   CleaningRecord,
   CleaningStrategy,
   DatasetRecord,
+  ExportFormat,
+  ExportRecord,
   HistogramRecord,
   JobEvent,
   PreviewRecord,
@@ -231,6 +233,14 @@ export const ipcClient = {
       payload: { archive_path: archivePath, dest_root: destRoot },
     }) as BridgeResponse<RestoreRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "restoreProject failed");
+    return res.data;
+  },
+  async exportDataset(projectId: string, datasetId: string, format: ExportFormat, destPath: string): Promise<ExportRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.export",
+      payload: { project_id: projectId, dataset_id: datasetId, format, dest_path: destPath },
+    }) as BridgeResponse<ExportRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "exportDataset failed");
     return res.data;
   },
   async activateSnapshot(projectId: string, datasetId: string, snapshotId: string): Promise<DatasetRecord> {

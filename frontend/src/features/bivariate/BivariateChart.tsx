@@ -16,13 +16,15 @@ export function summarySentence(record: BivariateRecord): string {
   const a = record.column_a;
   const b = record.column_b;
   if (record.mode === "num-num") {
-    return `Korelasi ${a} dengan ${b}: Pearson ${record.pearson_r ?? "-"}, Spearman ${record.spearman_rho ?? "-"}, ${record.n_pairs} pasangan.`;
+    const r = record.pearson_r == null ? "-" : record.pearson_r.toFixed(2);
+    const rho = record.spearman_rho == null ? "-" : record.spearman_rho.toFixed(2);
+    return `Korelasi ${a} dengan ${b}: Pearson ${r}, Spearman ${rho}, ${record.n_pairs} pasangan.`;
   }
   if (record.mode === "cat-num") {
     const gs = record.groups ?? [];
     const hi = gs.reduce((m, g) => (g.mean_value > (m?.mean_value ?? -Infinity) ? g : m), gs[0]);
     const lo = gs.reduce((m, g) => (g.mean_value < (m?.mean_value ?? Infinity) ? g : m), gs[0]);
-    return `Rata-rata ${record.value_column ?? b} per ${record.group_column ?? a}: tertinggi ${hi?.mean_value ?? "-"} pada ${hi?.label ?? "-"}, terendah ${lo?.mean_value ?? "-"} pada ${lo?.label ?? "-"}, ${gs.length} grup.`;
+    return `Rata-rata ${record.value_column ?? b} per ${record.group_column ?? a}: tertinggi ${hi?.mean_value.toFixed(2) ?? "-"} pada ${hi?.label ?? "-"}, terendah ${lo?.mean_value.toFixed(2) ?? "-"} pada ${lo?.label ?? "-"}, ${gs.length} grup.`;
   }
   const rows = record.row_labels?.length ?? 0;
   const cols = record.col_labels?.length ?? 0;
@@ -57,7 +59,7 @@ export function BivariateChart({ record }: Props) {
           trigger: "item",
           formatter: (p: { name: string; value: number; dataIndex: number }) => {
             const g = gs[p.dataIndex];
-            return g ? `${p.name}: mean ${g.mean_value} · median ${g.median_value} · n ${g.count}` : `${p.name}: ${p.value}`;
+            return g ? `${p.name}: mean ${g.mean_value.toFixed(2)} · median ${g.median_value.toFixed(2)} · n ${g.count}` : `${p.name}: ${p.value}`;
           },
         },
         xAxis: {
@@ -149,11 +151,25 @@ export function BivariateDataTable({ record }: Props) {
         )}
         {record.mode === "cat-cat" && (
           <table>
-            <thead><tr><th>{record.column_a} \\ {record.column_b}</th>{(record.col_labels ?? []).map((c) => <th key={c}>{c}</th>)}</tr></thead>
+            <thead><tr><th>{record.column_a} \\ {record.column_b}</th>{(record.col_labels ?? []).map((c) => <th key={c}>{c}</th>)}<th>Total</th></tr></thead>
             <tbody>
-              {(record.cells ?? []).map((row, i) => (
-                <tr key={i}><th>{record.row_labels?.[i]}</th>{row.map((c, j) => <td key={j}>{c}</td>)}</tr>
-              ))}
+              {(record.cells ?? []).map((row, i) => {
+                const rowTotal = row.reduce((s, v) => s + v, 0);
+                return (
+                  <tr key={i}>
+                    <th>{record.row_labels?.[i]}</th>
+                    {row.map((c, j) => <td key={j}>{c} ({rowTotal ? ((c / rowTotal) * 100).toFixed(1) : "0"}%)</td>)}
+                    <td><strong>{rowTotal}</strong></td>
+                  </tr>
+                );
+              })}
+              <tr>
+                <th>Total</th>
+                {(record.col_labels ?? []).map((c, j) => (
+                  <td key={c}><strong>{(record.cells ?? []).reduce((s, row) => s + (row[j] ?? 0), 0)}</strong></td>
+                ))}
+                <td><strong>{record.n_pairs}</strong></td>
+              </tr>
             </tbody>
           </table>
         )}

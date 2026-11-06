@@ -115,9 +115,6 @@ def _top_labels(labels: list[str]) -> tuple[list[str], dict[str, str]]:
     ordered = [lbl for lbl, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
     top = ordered[:_TOP_N]
     mapping = {lbl: (lbl if lbl in top else "Lainnya") for lbl in ordered}
-    if len(top) < len(ordered) and "Lainnya" not in top:
-        # ensure the merged tail stays distinguishable by label
-        pass
     return top, mapping
 
 

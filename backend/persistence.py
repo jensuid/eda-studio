@@ -77,6 +77,27 @@ CREATE TABLE IF NOT EXISTS cleanings (
     affected_rows INTEGER NOT NULL,
     filled_rows INTEGER
 );
+CREATE TABLE IF NOT EXISTS findings (
+    finding_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    status TEXT NOT NULL,
+    evidence_snapshot_id TEXT NOT NULL,
+    evidence_fingerprint TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hypotheses (
+    hypothesis_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    statement TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
@@ -307,6 +328,54 @@ class Store:
                 "JOIN datasets d ON d.dataset_id = s.dataset_id "
                 "WHERE d.project_id = ? ORDER BY s.rowid",
                 (project_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def save_finding(self, record: dict) -> None:
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO findings VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (record["finding_id"], record["project_id"], record["dataset_id"],
+                 record["title"], record["body"], record["status"],
+                 record["evidence_snapshot_id"], record["evidence_fingerprint"],
+                 record["created_at"], record["updated_at"]),
+            )
+            self.db.commit()
+
+    def get_finding(self, finding_id: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM findings WHERE finding_id = ?", (finding_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_findings(self, dataset_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM findings WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def save_hypothesis(self, record: dict) -> None:
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO hypotheses VALUES (?,?,?,?,?,?,?)",
+                (record["hypothesis_id"], record["project_id"], record["dataset_id"],
+                 record["statement"], record["status"], record["created_at"], record["updated_at"]),
+            )
+            self.db.commit()
+
+    def get_hypothesis(self, hypothesis_id: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM hypotheses WHERE hypothesis_id = ?", (hypothesis_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_hypotheses(self, dataset_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM hypotheses WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
             ).fetchall()
         return [dict(r) for r in rows]
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
 
@@ -35,8 +35,14 @@ from backend.contracts import (
     DatasetRecord,
     ExportFormat,
     ExportRecord,
+    FindingListRecord,
+    FindingRecord,
+    FindingStatus,
     HistogramBin,
     HistogramRecord,
+    HypothesisListRecord,
+    HypothesisRecord,
+    HypothesisStatus,
     PdfRecord,
     PreviewRecord,
     ProfileListRecord,
@@ -900,4 +906,128 @@ class WorkbenchService:
             snapshots=snapshots,
             profiles=profiles,
             lineage=lineage,
+        )
+
+    # --- Insights (M3 P1, Doc03 §4.8) ---
+    _FINDING_TRANSITIONS: ClassVar[dict[str, set[str]]] = {
+        FindingStatus.PROPOSED.value: {FindingStatus.ACCEPTED.value, FindingStatus.ARCHIVED.value},
+        FindingStatus.ACCEPTED.value: {FindingStatus.ARCHIVED.value},
+        FindingStatus.ARCHIVED.value: set(),
+    }
+    _HYPOTHESIS_TRANSITIONS: ClassVar[dict[str, set[str]]] = {
+        HypothesisStatus.PROPOSED.value: {HypothesisStatus.ACCEPTED.value, HypothesisStatus.ARCHIVED.value},
+        HypothesisStatus.ACCEPTED.value: {HypothesisStatus.INVESTIGATING.value, HypothesisStatus.ARCHIVED.value},
+        HypothesisStatus.INVESTIGATING.value: {
+            HypothesisStatus.SUPPORTED.value, HypothesisStatus.NOT_SUPPORTED.value,
+            HypothesisStatus.INCONCLUSIVE.value, HypothesisStatus.ARCHIVED.value,
+        },
+        HypothesisStatus.SUPPORTED.value: {HypothesisStatus.ARCHIVED.value},
+        HypothesisStatus.NOT_SUPPORTED.value: {HypothesisStatus.ARCHIVED.value},
+        HypothesisStatus.INCONCLUSIVE.value: {HypothesisStatus.ARCHIVED.value},
+        HypothesisStatus.ARCHIVED.value: set(),
+    }
+
+    def _require_dataset(self, project_id: str, dataset_id: str) -> Dataset:
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        return dataset
+
+    def create_finding(
+        self, project_id: str, dataset_id: str, title: str, body: str,
+        evidence_snapshot_id: str, evidence_fingerprint: str,
+    ) -> FindingRecord:
+        self._require_dataset(project_id, dataset_id)
+        if not title.strip() or not body.strip():
+            raise ValidationError("finding title and body must be non-empty")
+        if not evidence_snapshot_id.strip() or not evidence_fingerprint.strip():
+            raise ValidationError("finding must reference supporting evidence")
+        snap = self.store.get_snapshot(evidence_snapshot_id)
+        if snap is None or snap["dataset_id"] != dataset_id:
+            raise NotFoundError(f"evidence snapshot not found: {evidence_snapshot_id}")
+        now = now_iso()
+        record = {
+            "finding_id": new_id(), "project_id": project_id, "dataset_id": dataset_id,
+            "title": title, "body": body, "status": FindingStatus.PROPOSED.value,
+            "evidence_snapshot_id": evidence_snapshot_id,
+            "evidence_fingerprint": evidence_fingerprint,
+            "created_at": now, "updated_at": now,
+        }
+        self.store.save_finding(record)
+        return self._finding(record)
+
+    @staticmethod
+    def _finding(r: dict) -> FindingRecord:
+        return FindingRecord(
+            finding_id=r["finding_id"], project_id=r["project_id"], dataset_id=r["dataset_id"],
+            title=r["title"], body=r["body"], status=FindingStatus(r["status"]),
+            evidence_snapshot_id=r["evidence_snapshot_id"],
+            evidence_fingerprint=r["evidence_fingerprint"],
+            created_at=datetime.fromisoformat(r["created_at"]),
+            updated_at=datetime.fromisoformat(r["updated_at"]),
+        )
+
+    def transition_finding(
+        self, project_id: str, finding_id: str, to_status: FindingStatus,
+    ) -> FindingRecord:
+        row = self.store.get_finding(finding_id)
+        if row is None or row["project_id"] != project_id:
+            raise NotFoundError(f"finding not found: {finding_id}")
+        if to_status.value not in self._FINDING_TRANSITIONS.get(row["status"], set()):
+            raise ConflictError(
+                f"invalid finding transition: {row['status']} -> {to_status.value}")
+        row = {**row, "status": to_status.value, "updated_at": now_iso()}
+        self.store.save_finding(row)
+        return self._finding(row)
+
+    def list_findings(self, project_id: str, dataset_id: str) -> FindingListRecord:
+        self._require_dataset(project_id, dataset_id)
+        return FindingListRecord(
+            dataset_id=dataset_id,
+            findings=[self._finding(r) for r in self.store.list_findings(dataset_id)],
+        )
+
+    def create_hypothesis(
+        self, project_id: str, dataset_id: str, statement: str,
+    ) -> HypothesisRecord:
+        self._require_dataset(project_id, dataset_id)
+        if not statement.strip():
+            raise ValidationError("hypothesis statement must be non-empty")
+        now = now_iso()
+        record = {
+            "hypothesis_id": new_id(), "project_id": project_id, "dataset_id": dataset_id,
+            "statement": statement, "status": HypothesisStatus.PROPOSED.value,
+            "created_at": now, "updated_at": now,
+        }
+        self.store.save_hypothesis(record)
+        return self._hypothesis(record)
+
+    @staticmethod
+    def _hypothesis(r: dict) -> HypothesisRecord:
+        return HypothesisRecord(
+            hypothesis_id=r["hypothesis_id"], project_id=r["project_id"],
+            dataset_id=r["dataset_id"], statement=r["statement"],
+            status=HypothesisStatus(r["status"]),
+            created_at=datetime.fromisoformat(r["created_at"]),
+            updated_at=datetime.fromisoformat(r["updated_at"]),
+        )
+
+    def transition_hypothesis(
+        self, project_id: str, hypothesis_id: str, to_status: HypothesisStatus,
+    ) -> HypothesisRecord:
+        row = self.store.get_hypothesis(hypothesis_id)
+        if row is None or row["project_id"] != project_id:
+            raise NotFoundError(f"hypothesis not found: {hypothesis_id}")
+        if to_status.value not in self._HYPOTHESIS_TRANSITIONS.get(row["status"], set()):
+            raise ConflictError(
+                f"invalid hypothesis transition: {row['status']} -> {to_status.value}")
+        row = {**row, "status": to_status.value, "updated_at": now_iso()}
+        self.store.save_hypothesis(row)
+        return self._hypothesis(row)
+
+    def list_hypotheses(self, project_id: str, dataset_id: str) -> HypothesisListRecord:
+        self._require_dataset(project_id, dataset_id)
+        return HypothesisListRecord(
+            dataset_id=dataset_id,
+            hypotheses=[self._hypothesis(r) for r in self.store.list_hypotheses(dataset_id)],
         )

@@ -38,8 +38,11 @@ def test_protocol_info_lists_only_registered(bridge):
     assert info["commands"] == [
         "dataset.bivariate.run", "dataset.cleaning.run", "dataset.export", "dataset.histogram.run", "dataset.import",
         "dataset.pdf.generate", "dataset.profile.run", "dataset.quality.run", "dataset.report.generate",
-        "dataset.snapshot.activate", "project.backup.create", "project.create", "project.restore"]
+        "dataset.snapshot.activate", "insight.finding.create", "insight.finding.transition",
+        "insight.hypothesis.create", "insight.hypothesis.transition",
+        "project.backup.create", "project.create", "project.restore"]
     assert info["queries"] == [
         "dataset.cleaning.preview", "dataset.preview", "dataset.profile",
         "dataset.profile.get", "dataset.profiles.list",
-        "dataset.provenance", "dataset.snapshots.list", "project.open"]
+        "dataset.provenance", "dataset.snapshots.list", "insight.findings.list",
+        "insight.hypotheses.list", "project.open"]

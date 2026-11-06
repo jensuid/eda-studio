@@ -13,6 +13,10 @@ export type ReportScope = "all" | "profile-quality" | "with-charts" | "with-visu
 
 export type ExportFormat = "csv" | "parquet";
 
+export type FindingStatus = "proposed" | "accepted" | "archived";
+
+export type HypothesisStatus = "proposed" | "accepted" | "investigating" | "supported" | "not_supported" | "inconclusive" | "archived";
+
 export interface ErrorContract {
   code: ErrorCode;
   message: string;
@@ -461,4 +465,69 @@ export interface ProvenanceRecord {
   snapshots: SnapshotInfo[];
   profiles: ProfileSummary[];
   lineage: ProvenanceEdge[];
+}
+
+export interface CreateFindingPayload {
+  project_id: string;
+  dataset_id: string;
+  title: string;
+  body: string;
+  evidence_snapshot_id: string;
+  evidence_fingerprint: string;
+}
+
+export interface FindingRecord {
+  finding_id: string;
+  project_id: string;
+  dataset_id: string;
+  title: string;
+  body: string;
+  status: FindingStatus;
+  evidence_snapshot_id: string;
+  evidence_fingerprint: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransitionFindingPayload {
+  project_id: string;
+  finding_id: string;
+  to_status: FindingStatus;
+}
+
+export interface ListInsightsPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface FindingListRecord {
+  dataset_id: string;
+  findings: FindingRecord[];
+}
+
+export interface CreateHypothesisPayload {
+  project_id: string;
+  dataset_id: string;
+  statement: string;
+}
+
+export interface HypothesisRecord {
+  hypothesis_id: string;
+  project_id: string;
+  dataset_id: string;
+  statement: string;
+  status: HypothesisStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransitionHypothesisPayload {
+  project_id: string;
+  hypothesis_id: string;
+  to_status: HypothesisStatus;
+}
+
+export interface HypothesisListRecord {
+  dataset_id: string;
+  hypotheses: HypothesisRecord[];
 }

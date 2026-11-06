@@ -35,6 +35,10 @@ MODELS = [
     "ExportDatasetPayload",
     "ExportRecord",
     "GetDatasetProvenancePayload", "ProvenanceEdge", "ProvenanceRecord",
+    "CreateFindingPayload", "FindingRecord", "TransitionFindingPayload",
+    "ListInsightsPayload", "FindingListRecord",
+    "CreateHypothesisPayload", "HypothesisRecord",
+    "TransitionHypothesisPayload", "HypothesisListRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",
@@ -88,6 +92,8 @@ def main() -> None:
         "CleaningStrategy": [s.value for s in contracts.CleaningStrategy],
         "ReportScope": [s.value for s in contracts.ReportScope],
         "ExportFormat": [s.value for s in contracts.ExportFormat],
+        "FindingStatus": [s.value for s in contracts.FindingStatus],
+        "HypothesisStatus": [s.value for s in contracts.HypothesisStatus],
     }
     for name, values in enums.items():
         lines.append(f"export type {name} = " + " | ".join(json.dumps(v) for v in values) + ";")

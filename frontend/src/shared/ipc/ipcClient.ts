@@ -22,6 +22,12 @@ import type {
   ProfileRecord,
   ProjectRecord,
   ProvenanceRecord,
+  FindingRecord,
+  FindingListRecord,
+  HypothesisRecord,
+  HypothesisListRecord,
+  FindingStatus,
+  HypothesisStatus,
   QualityRecord,
   ReportRecord,
   ReportScope,
@@ -148,6 +154,54 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProvenanceRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProvenance failed");
+    return res.data;
+  },
+  async createFinding(projectId: string, datasetId: string, title: string, body: string, evidenceSnapshotId: string, evidenceFingerprint: string): Promise<FindingRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "insight.finding.create",
+      payload: { project_id: projectId, dataset_id: datasetId, title, body, evidence_snapshot_id: evidenceSnapshotId, evidence_fingerprint: evidenceFingerprint },
+    }) as BridgeResponse<FindingRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createFinding failed");
+    return res.data;
+  },
+  async transitionFinding(projectId: string, findingId: string, toStatus: FindingStatus): Promise<FindingRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "insight.finding.transition",
+      payload: { project_id: projectId, finding_id: findingId, to_status: toStatus },
+    }) as BridgeResponse<FindingRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "transitionFinding failed");
+    return res.data;
+  },
+  async listFindings(projectId: string, datasetId: string): Promise<FindingListRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "insight.findings.list",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<FindingListRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listFindings failed");
+    return res.data;
+  },
+  async createHypothesis(projectId: string, datasetId: string, statement: string): Promise<HypothesisRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "insight.hypothesis.create",
+      payload: { project_id: projectId, dataset_id: datasetId, statement },
+    }) as BridgeResponse<HypothesisRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createHypothesis failed");
+    return res.data;
+  },
+  async transitionHypothesis(projectId: string, hypothesisId: string, toStatus: HypothesisStatus): Promise<HypothesisRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "insight.hypothesis.transition",
+      payload: { project_id: projectId, hypothesis_id: hypothesisId, to_status: toStatus },
+    }) as BridgeResponse<HypothesisRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "transitionHypothesis failed");
+    return res.data;
+  },
+  async listHypotheses(projectId: string, datasetId: string): Promise<HypothesisListRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "insight.hypotheses.list",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<HypothesisListRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listHypotheses failed");
     return res.data;
   },
   async runHistogram(projectId: string, datasetId: string, columnName: string): Promise<HistogramRecord> {

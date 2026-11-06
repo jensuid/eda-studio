@@ -604,6 +604,93 @@ class ProvenanceRecord(BaseModel):
     lineage: list[ProvenanceEdge]
 
 
+# ---- Insights: Finding & Hypothesis lifecycle (M3 P1, Doc03 §4.8) ----
+# Finding and Hypothesis have SEPARATE lifecycles (Doc03). A Finding is an
+# evidence-grounded observation: it MUST reference supporting evidence
+# (snapshot_id + fingerprint). Hypothesis "Supported" means supported by
+# available evidence — not proven universally or causally.
+
+class FindingStatus(str, Enum):
+    PROPOSED = "proposed"
+    ACCEPTED = "accepted"
+    ARCHIVED = "archived"
+
+
+class HypothesisStatus(str, Enum):
+    PROPOSED = "proposed"
+    ACCEPTED = "accepted"
+    INVESTIGATING = "investigating"
+    SUPPORTED = "supported"
+    NOT_SUPPORTED = "not_supported"
+    INCONCLUSIVE = "inconclusive"
+    ARCHIVED = "archived"
+
+
+class CreateFindingPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    title: str = Field(min_length=1)
+    body: str = Field(min_length=1)
+    evidence_snapshot_id: str = Field(min_length=1)
+    evidence_fingerprint: str = Field(min_length=1)
+
+
+class FindingRecord(BaseModel):
+    finding_id: str
+    project_id: str
+    dataset_id: str
+    title: str
+    body: str
+    status: FindingStatus
+    evidence_snapshot_id: str
+    evidence_fingerprint: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class TransitionFindingPayload(BaseModel):
+    project_id: str
+    finding_id: str
+    to_status: FindingStatus
+
+
+class ListInsightsPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class FindingListRecord(BaseModel):
+    dataset_id: str
+    findings: list[FindingRecord]
+
+
+class CreateHypothesisPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    statement: str = Field(min_length=1)
+
+
+class HypothesisRecord(BaseModel):
+    hypothesis_id: str
+    project_id: str
+    dataset_id: str
+    statement: str
+    status: HypothesisStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class TransitionHypothesisPayload(BaseModel):
+    project_id: str
+    hypothesis_id: str
+    to_status: HypothesisStatus
+
+
+class HypothesisListRecord(BaseModel):
+    dataset_id: str
+    hypotheses: list[HypothesisRecord]
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

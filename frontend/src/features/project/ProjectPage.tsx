@@ -63,6 +63,40 @@ export function ProjectPage() {
     queryFn: () => ipcClient.getProvenance(projectId!, dataset!.dataset_id),
     enabled: !!projectId && !!dataset && showProvenance,
   });
+  // M3 P1 insights (Doc03 §4.8): Finding & Hypothesis lifecycle.
+  const [findingTitle, setFindingTitle] = useState("");
+  const [findingBody, setFindingBody] = useState("");
+  const [hypothesisStatement, setHypothesisStatement] = useState("");
+  const findings = useQuery({
+    queryKey: ["findings", projectId, dataset?.dataset_id],
+    queryFn: () => ipcClient.listFindings(projectId!, dataset!.dataset_id),
+    enabled: !!projectId && !!dataset,
+  });
+  const hypotheses = useQuery({
+    queryKey: ["hypotheses", projectId, dataset?.dataset_id],
+    queryFn: () => ipcClient.listHypotheses(projectId!, dataset!.dataset_id),
+    enabled: !!projectId && !!dataset,
+  });
+  const createFinding = useMutation({
+    mutationFn: (v: { title: string; body: string }) =>
+      ipcClient.createFinding(projectId!, dataset!.dataset_id, v.title, v.body,
+        dataset!.snapshot_id, dataset!.fingerprint),
+    onSuccess: () => { void findings.refetch(); },
+  });
+  const transitionFinding = useMutation({
+    mutationFn: (v: { id: string; to: "accepted" | "archived" }) =>
+      ipcClient.transitionFinding(projectId!, v.id, v.to),
+    onSuccess: () => { void findings.refetch(); },
+  });
+  const createHypothesis = useMutation({
+    mutationFn: (s: string) => ipcClient.createHypothesis(projectId!, dataset!.dataset_id, s),
+    onSuccess: () => { void hypotheses.refetch(); },
+  });
+  const transitionHypothesis = useMutation({
+    mutationFn: (v: { id: string; to: "accepted" | "investigating" | "supported" | "not_supported" | "inconclusive" | "archived" }) =>
+      ipcClient.transitionHypothesis(projectId!, v.id, v.to),
+    onSuccess: () => { void hypotheses.refetch(); },
+  });
   const openSaved = useMutation({
     mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
     onSuccess: (r) => { setSavedProfile(r); },
@@ -266,6 +300,49 @@ export function ProjectPage() {
               </ul>
             </>
           )}
+          <h3>Insights</h3>
+          <p>Finding wajib merujuk bukti (snapshot aktif). Hipotesis: proposed → accepted → investigating → supported / not_supported / inconclusive → archived.</p>
+          <div>
+            <input placeholder="Judul finding" value={findingTitle} onChange={(e) => setFindingTitle(e.target.value)} />
+            <input placeholder="Isi finding" value={findingBody} onChange={(e) => setFindingBody(e.target.value)} />
+            <button disabled={!findingTitle || !findingBody || createFinding.isPending}
+              onClick={() => createFinding.mutate({ title: findingTitle, body: findingBody })}>
+              Buat finding
+            </button>
+            <ul>
+              {findings.data?.findings.map((f) => (
+                <li key={f.finding_id}>
+                  {f.title} · {f.status} · bukti {f.evidence_snapshot_id.slice(0, 8)}
+                  {f.status === "proposed" && <button onClick={() => transitionFinding.mutate({ id: f.finding_id, to: "accepted" })}>Accept</button>}
+                  {f.status !== "archived" && <button onClick={() => transitionFinding.mutate({ id: f.finding_id, to: "archived" })}>Archive</button>}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <input placeholder="Statement hipotesis" value={hypothesisStatement} onChange={(e) => setHypothesisStatement(e.target.value)} />
+            <button disabled={!hypothesisStatement || createHypothesis.isPending}
+              onClick={() => createHypothesis.mutate(hypothesisStatement)}>
+              Buat hipotesis
+            </button>
+            <ul>
+              {hypotheses.data?.hypotheses.map((h) => (
+                <li key={h.hypothesis_id}>
+                  {h.statement} · {h.status}
+                  {h.status === "proposed" && <button onClick={() => transitionHypothesis.mutate({ id: h.hypothesis_id, to: "accepted" })}>Accept</button>}
+                  {h.status === "accepted" && <button onClick={() => transitionHypothesis.mutate({ id: h.hypothesis_id, to: "investigating" })}>Investigate</button>}
+                  {h.status === "investigating" && (
+                    <>
+                      <button onClick={() => transitionHypothesis.mutate({ id: h.hypothesis_id, to: "supported" })}>Supported</button>
+                      <button onClick={() => transitionHypothesis.mutate({ id: h.hypothesis_id, to: "not_supported" })}>Not supported</button>
+                      <button onClick={() => transitionHypothesis.mutate({ id: h.hypothesis_id, to: "inconclusive" })}>Inconclusive</button>
+                    </>
+                  )}
+                  {h.status !== "archived" && <button onClick={() => transitionHypothesis.mutate({ id: h.hypothesis_id, to: "archived" })}>Archive</button>}
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
       {dataset && (

@@ -25,6 +25,8 @@ from backend.contracts import (
     BackupRestorePayload,
     CleaningPreviewPayload,
     CleaningRunPayload,
+    CreateFindingPayload,
+    CreateHypothesisPayload,
     CreateProjectPayload,
     DatasetActivatePayload,
     ErrorCode,
@@ -35,6 +37,7 @@ from backend.contracts import (
     GetDatasetProvenancePayload,
     GetProfileByIdPayload,
     ImportDatasetPayload,
+    ListInsightsPayload,
     ListProfilesPayload,
     ListSnapshotsPayload,
     OpenProjectPayload,
@@ -47,6 +50,8 @@ from backend.contracts import (
     RunProfilePayload,
     RunQualityPayload,
     RunReportPayload,
+    TransitionFindingPayload,
+    TransitionHypothesisPayload,
 )
 from backend.execution import JobManager
 
@@ -65,6 +70,10 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "project.backup.create": BackupCreatePayload,  # M3 P0 backup (Doc04 §12)
     "project.restore": BackupRestorePayload,  # M3 P0 restore to new root
     "dataset.export": ExportDatasetPayload,  # M3 P0 dataset export CSV/Parquet
+    "insight.finding.create": CreateFindingPayload,  # M3 P1 insights
+    "insight.finding.transition": TransitionFindingPayload,
+    "insight.hypothesis.create": CreateHypothesisPayload,
+    "insight.hypothesis.transition": TransitionHypothesisPayload,
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
@@ -74,6 +83,8 @@ _QUERIES: dict[str, type[BaseModel]] = {
     "dataset.profiles.list": ListProfilesPayload,  # G6 history
     "dataset.snapshots.list": ListSnapshotsPayload,  # G6
     "dataset.provenance": GetDatasetProvenancePayload,  # M3 P1 SEC-012
+    "insight.findings.list": ListInsightsPayload,
+    "insight.hypotheses.list": ListInsightsPayload,
     "dataset.cleaning.preview": CleaningPreviewPayload,
 }
 
@@ -176,6 +187,19 @@ class Bridge:
                     payload.project_id, payload.dataset_id,
                     payload.format, payload.dest_path,
                     req.correlation_id or req.request_id)
+            elif req.command == "insight.finding.create":
+                result = self.service.create_finding(
+                    payload.project_id, payload.dataset_id, payload.title,
+                    payload.body, payload.evidence_snapshot_id, payload.evidence_fingerprint)
+            elif req.command == "insight.finding.transition":
+                result = self.service.transition_finding(
+                    payload.project_id, payload.finding_id, payload.to_status)
+            elif req.command == "insight.hypothesis.create":
+                result = self.service.create_hypothesis(
+                    payload.project_id, payload.dataset_id, payload.statement)
+            elif req.command == "insight.hypothesis.transition":
+                result = self.service.transition_hypothesis(
+                    payload.project_id, payload.hypothesis_id, payload.to_status)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError as exc:
@@ -222,6 +246,12 @@ class Bridge:
                     payload.project_id, payload.dataset_id)
             elif req.command == "dataset.cleaning.preview":
                 result = self.service.cleaning_preview(payload)
+            elif req.command == "insight.findings.list":
+                result = self.service.list_findings(
+                    payload.project_id, payload.dataset_id)
+            elif req.command == "insight.hypotheses.list":
+                result = self.service.list_hypotheses(
+                    payload.project_id, payload.dataset_id)
             else:  # pragma: no cover
                 raise AssertionError(req.command)
         except NotFoundError as exc:

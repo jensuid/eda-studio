@@ -12,7 +12,7 @@ Checklist berbasis evidence. Status diisi dari gate yang benar-benar dijalankan.
 - [x] Diagnostic bundle + redaction — `project.diagnostic.create`, `tests/test_m3_diagnostic.py`
 - [x] SBOM + checksums — `tools/generate_sbom.py`, CycloneDX dari `uv.lock`
 - [x] Performance envelope baseline — `tools/benchmark.py`, `tests/test_benchmark.py`
-- [ ] Cross-platform evidence — macOS observed; Windows/Linux belum dijalankan ([cross-platform-evidence.md](cross-platform-evidence.md))
+- [ ] Cross-platform evidence — macOS observed locally; Windows/Linux via CI matrix ([cross-platform-evidence.md](cross-platform-evidence.md), [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)); remote runs pending git remote
 - [ ] Packaging + signing installer — perlu build host bertanda tangan (manual; bukan kode)
 - [ ] Release compatibility documentation — [operational-runbook.md](operational-runbook.md) draft, sentence 1 bagian
 

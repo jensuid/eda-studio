@@ -1,0 +1,79 @@
+# Cross-platform CI matrix — M3 P2 (Doc16 §4.3 exit criteria).
+#
+# Runs the full quality gate on Windows/macOS/Ubuntu so that
+# docs/cross-platform-evidence.md can cite observed results per OS.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: backend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install deps
+        run: python -m pip install -e ".[dev]"
+      - name: Pytest
+        run: python -m pytest -q
+      - name: Ruff
+        run: python -m ruff check backend tests tools
+      - name: SBOM
+        run: python tools/generate_sbom.py dist
+
+  frontend:
+    name: frontend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        working-directory: frontend
+        run: pnpm exec tsc --noEmit
+      - name: Build
+        working-directory: frontend
+        run: pnpm run build
+
+  benchmark:
+    name: benchmark (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: python -m pip install -e ".[dev]"
+      - name: Performance envelope
+        run: python tools/benchmark.py 10000 dist/perf.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: perf-${{ matrix.os }}
+          path: dist/perf.json

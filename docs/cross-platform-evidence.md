@@ -7,9 +7,20 @@ Doc16 §4.3 exit criteria + §21.2: *"Packaging berhasil pada target OS"* dan
 
 | OS | Status | Evidence |
 |----|--------|----------|
-| macOS (Apple Silicon) | **Observed** (dev host) | pytest 69 passed, frontend build ok, backup/restore + diagnostic zip verified |
-| Windows 10/11 | Not yet run | — |
-| Linux (Ubuntu 22.04+) | Not yet run | — |
+| macOS (Apple Silicon) | **Observed** (dev host, 2026-11-06) | pytest 70 passed, frontend build ok, backup/restore + diagnostic zip verified |
+| Windows 10/11 | Needs CI run | `.github/workflows/ci.yml` matrix — runs on push after remote is set; no results yet |
+| Linux (Ubuntu 22.04+) | Needs CI run | same workflow |
+
+## CI matrix (`.github/workflows/ci.yml`)
+
+Jobs per OS (`ubuntu-latest`, `windows-latest`, `macos-latest`):
+- `backend`: pip install `.[dev]`, pytest, ruff, SBOM generation (Python 3.11 + 3.12 matrix).
+- `frontend`: pnpm install --frozen-lockfile, tsc --noEmit, build.
+- `benchmark`: `tools/benchmark.py 10000`, artifact `perf.json` per OS.
+
+Local verification (2026-11-07, macOS) of every CI step passed:
+pytest 70 passed, ruff clean, SBOM 16 components, benchmark 10k rows total 0.38s, tsc clean.
+Actual remote runs are pending until this repo has a git remote.
 
 ## Per-platform procedure (run on each target)
 

@@ -37,7 +37,7 @@ def test_protocol_info_lists_only_registered(bridge):
     info = bridge.get_protocol_info()
     assert info["commands"] == [
         "dataset.bivariate.run", "dataset.cleaning.run", "dataset.histogram.run", "dataset.import",
-        "dataset.profile.run", "dataset.quality.run",
+        "dataset.profile.run", "dataset.quality.run", "dataset.report.generate",
         "dataset.snapshot.activate", "project.create"]
     assert info["queries"] == [
         "dataset.cleaning.preview", "dataset.preview", "dataset.profile",

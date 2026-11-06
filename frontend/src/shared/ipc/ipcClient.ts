@@ -17,6 +17,8 @@ import type {
   ProfileRecord,
   ProjectRecord,
   QualityRecord,
+  ReportRecord,
+  ReportScope,
   ProtocolInfo,
   SnapshotListRecord,
 } from "./generated";
@@ -156,6 +158,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId, column_a: columnA, column_b: columnB },
     }) as BridgeResponse<BivariateRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runBivariate failed");
+    return res.data;
+  },
+  async runReport(projectId: string, datasetId: string, scope: ReportScope): Promise<ReportRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.report.generate",
+      payload: { project_id: projectId, dataset_id: datasetId, scope },
+    }) as BridgeResponse<ReportRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runReport failed");
     return res.data;
   },
   async previewCleaning(

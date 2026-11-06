@@ -39,6 +39,9 @@ from backend.contracts import (
     ProjectRecord,
     QualityFindingRecord,
     QualityRecord,
+    ReportRecord,
+    ReportScope,
+    ReportSection,
     SnapshotInfo,
     SnapshotListRecord,
 )
@@ -54,6 +57,7 @@ from backend.ingestion import (
 from backend.persistence import Store
 from backend.profiling import profile_table
 from backend.quality import assess_quality, summarise
+from backend.reporting import _RENDERER_VERSION, now_iso, render_html
 
 __all__ = ["ConflictError", "NotFoundError", "UnsupportedFormatError",
            "ValidationError", "WorkbenchService"]
@@ -331,6 +335,105 @@ class WorkbenchService:
             )
 
         self.jobs.run("dataset.bivariate.run", work, correlation_id)
+        return holder["rec"]
+
+    def run_report(self, project_id: str, dataset_id: str, scope: ReportScope,
+                   correlation_id: str | None = None) -> ReportRecord:
+        """SCREEN-REPORT-001: HTML report as a JobManager job (SYS-015).
+
+        Backend is the sole HTML author (never frontend string-building).
+        Sections reference existing records (REP-003); stale sections are
+        included and labelled (A1: optional-but-disclosed, is_final=False).
+        File artifact lives on disk; IPC carries only ReportRecord.
+        """
+        import hashlib
+
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, ReportRecord] = {}
+
+        def work() -> None:
+            snap = dataset.snapshot
+            parquet_bytes = self.store.read_snapshot(snap.snapshot_id)
+            row_count, _cols = profile_table(parquet_bytes)
+            profile_row = None
+            for r in reversed(self.store.list_profiles(dataset.dataset_id)):
+                if r["snapshot_id"] == snap.snapshot_id:
+                    profile_row = r
+                    break
+            sections: list[ReportSection] = []
+            profile: dict | None = None
+            if profile_row is not None:
+                rec = ProfileRecord.model_validate_json(profile_row["columns_json"])
+                profile = {
+                    "kind": "profile", "record_id": profile_row["profile_id"],
+                    "fingerprint": rec.fingerprint,
+                    "snapshot_id": rec.snapshot_id, "stale": rec.fingerprint != snap.fingerprint,
+                    "columns": [c.model_dump() for c in rec.columns],
+                }
+                sections.append(ReportSection(
+                    kind="profile", record_id=profile_row["profile_id"],
+                    fingerprint=rec.fingerprint, stale=rec.fingerprint != snap.fingerprint))
+            # Quality is always recomputed for the section (deterministic,
+            # cheap) but its fingerprint labels freshness (A1 disclosure).
+            _q_row_count, findings = assess_quality(parquet_bytes)
+            # NOTE: quality is recomputed read-only; there is no persisted
+            # QualityRecord table in this codebase, so the section discloses
+            # staleness by comparing the recomputation fingerprint.
+            quality: dict = {
+                "kind": "quality", "record_id": dataset.dataset_id,
+                "fingerprint": snap.fingerprint, "snapshot_id": snap.snapshot_id,
+                "stale": False,
+                "findings": findings,
+            }
+            if scope in (ReportScope.ALL, ReportScope.PROFILE_QUALITY, ReportScope.WITH_CHARTS, ReportScope.WITH_VISUALS):
+                sections.append(ReportSection(
+                    kind="quality", record_id=dataset.dataset_id,
+                    fingerprint=snap.fingerprint, stale=False))
+            # Cleaning provenance (when present) is a section too.
+            cleanings_list: list[dict] = []
+            for cl in self.store.list_cleanings(dataset.dataset_id):
+                cleanings_list.append({
+                    "kind": "cleaning", "record_id": cl["id"],
+                    "fingerprint": cl["child_fingerprint"],
+                    "snapshot_id": cl["child_snapshot_id"],
+                    "stale": cl["child_snapshot_id"] != snap.snapshot_id,
+                    "operation": cl["operation"], "row_count_before": cl["row_count_before"],
+                    "row_count_after": cl["row_count_after"],
+                })
+            generated = now_iso()
+            charts: list[dict] = []
+            html_doc = render_html(
+                dataset_name=dataset.name, fingerprint=snap.fingerprint,
+                snapshot_id=snap.snapshot_id, row_count=row_count,
+                generated_at=generated, profile=profile, quality=quality,
+                charts=charts, cleanings=cleanings_list,
+            )
+            data = html_doc.encode("utf-8")
+            from pathlib import Path as _P
+            out_dir = self.store.root / "reports"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in dataset.name) or "dataset"
+            file_path = str(out_dir / f"{safe_name}-{snap.snapshot_id[:8]}-report.html")
+            _P(file_path).write_bytes(data)
+            stale_any = any(s.stale for s in sections) or any(c["stale"] for c in cleanings_list)
+            is_final = not stale_any
+            validation_summary = (
+                "OK — semua section Current." if is_final else
+                "PARTIAL — ada section usang (dilabeli di HTML); bukan final export."
+            )
+            holder["rec"] = ReportRecord(
+                dataset_id=dataset.dataset_id, snapshot_id=snap.snapshot_id,
+                fingerprint=snap.fingerprint, scope=scope, sections=sections,
+                file_path=file_path, file_size_bytes=len(data),
+                renderer_version=_RENDERER_VERSION,
+                content_fingerprint=hashlib.sha256(data).hexdigest(),
+                is_final=is_final, validation_summary=validation_summary,
+                created_at=__import__("datetime").datetime.fromisoformat(generated),
+            )
+
+        self.jobs.run("dataset.report.generate", work, correlation_id)
         return holder["rec"]
 
     # -- cleaning commands/queries ----------------------------------------------------

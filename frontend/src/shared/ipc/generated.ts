@@ -9,6 +9,8 @@ export type CleaningOperation = "drop_duplicates" | "drop_missing" | "impute";
 
 export type CleaningStrategy = "mean" | "median" | "mode" | "constant";
 
+export type ReportScope = "all" | "profile-quality" | "with-charts" | "with-visuals";
+
 export interface ErrorContract {
   code: ErrorCode;
   message: string;
@@ -263,6 +265,35 @@ export interface BivariateRecord {
   sampled: boolean;
   sample_size: number;
   constant_columns?: string[];
+}
+
+export interface RunReportPayload {
+  project_id: string;
+  dataset_id: string;
+  scope?: ReportScope;
+}
+
+export interface ReportSection {
+  kind: string;
+  record_id: string;
+  fingerprint: string;
+  stale: boolean;
+  required?: boolean;
+}
+
+export interface ReportRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  scope: ReportScope;
+  sections: ReportSection[];
+  file_path: string;
+  file_size_bytes: number;
+  renderer_version: string;
+  content_fingerprint: string;
+  is_final: boolean;
+  validation_summary: string;
+  created_at: string;
 }
 
 export interface CleaningPreviewPayload {

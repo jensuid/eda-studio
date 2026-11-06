@@ -6,6 +6,7 @@ import type { DatasetRecord, HistogramRecord, ProfileRecord, QualityRecord } fro
 import { BivariateSection } from "../bivariate/BivariateSection";
 import { CleaningSection } from "../cleaning/CleaningSection";
 import { HistogramChart } from "../histogram/HistogramChart";
+import { ReportSection } from "../reporting/ReportSection";
 
 interface ProjectForm { name: string; sourcePath: string; datasetName: string }
 
@@ -245,6 +246,9 @@ export function ProjectPage() {
       )}
       {dataset && projectId && (
         <BivariateSection projectId={projectId} dataset={dataset} savedProfile={savedProfile} />
+      )}
+      {dataset && projectId && (
+        <ReportSection projectId={projectId} dataset={dataset} savedProfile={savedProfile} />
       )}
       {dataset && projectId && (
         <CleaningSection

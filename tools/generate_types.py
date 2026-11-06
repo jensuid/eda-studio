@@ -25,6 +25,7 @@ MODELS = [
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",
     "RunQualityPayload", "QualityFindingRecord", "QualityRecord",
     "RunBivariatePayload", "BivariateScatterPoint", "BivariateGroup", "BivariateRecord",
+    "RunReportPayload", "ReportSection", "ReportRecord",
     "CleaningPreviewPayload",
     "CleaningColumnImpact", "CleaningPreviewSummary", "CleaningRunPayload",
     "DatasetActivatePayload", "CleaningRecord",
@@ -79,6 +80,7 @@ def main() -> None:
         "ErrorCode": [s.value for s in contracts.ErrorCode],
         "CleaningOperation": [s.value for s in contracts.CleaningOperation],
         "CleaningStrategy": [s.value for s in contracts.CleaningStrategy],
+        "ReportScope": [s.value for s in contracts.ReportScope],
     }
     for name, values in enums.items():
         lines.append(f"export type {name} = " + " | ".join(json.dumps(v) for v in values) + ";")

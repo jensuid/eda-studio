@@ -338,6 +338,56 @@ class BivariateRecord(BaseModel):
     constant_columns: list[str] = []
 
 
+# ---- HTML Reporting (M3, SCREEN-REPORT-001) ----
+# A1 locked: every section is OPTIONAL-but-disclosed — stale sections are
+# included and explicitly labelled, never silently dropped. A report whose
+# sections include stale records is still a valid partial report (NOT a
+# "final export"); it carries is_final=False + validation_summary so no
+# stale report can be mistaken for final. The UI partial banner IS the
+# explicit user confirmation (Doc12 §10.2 / §18.3) and the report_execute_
+# id makes that confirmation traceable in provenance.
+# A3 locked: renderer_version + content_fingerprint (SHA-256 of the HTML
+# artifact bytes) + validation_summary + job history correlation.
+# File artifact lives on disk; IPC payload stays small (ReportRecord only).
+_REPORT_RENDERER_VERSION = "report-html/1.0"
+
+
+class ReportScope(str, Enum):
+    ALL = "all"
+    PROFILE_QUALITY = "profile-quality"
+    WITH_CHARTS = "with-charts"
+    WITH_VISUALS = "with-visuals"
+
+
+class RunReportPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    scope: ReportScope = ReportScope.ALL
+
+
+class ReportSection(BaseModel):
+    kind: str  # "profile" | "quality" | "histogram" | "bivariate" | "cleaning"
+    record_id: str
+    fingerprint: str
+    stale: bool
+    required: bool = False  # A1: all sections optional-but-disclosed
+
+
+class ReportRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    scope: ReportScope
+    sections: list[ReportSection]
+    file_path: str
+    file_size_bytes: int
+    renderer_version: str
+    content_fingerprint: str  # SHA-256 of HTML artifact bytes
+    is_final: bool  # A1: False iff any section is stale
+    validation_summary: str
+    created_at: datetime
+
+
 class CleaningOperation(str, Enum):
     DROP_DUPLICATES = "drop_duplicates"
     DROP_MISSING = "drop_missing"

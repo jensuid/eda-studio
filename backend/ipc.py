@@ -41,6 +41,7 @@ from backend.contracts import (
     RunHistogramPayload,
     RunProfilePayload,
     RunQualityPayload,
+    RunReportPayload,
 )
 from backend.execution import JobManager
 
@@ -52,6 +53,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dataset.histogram.run": RunHistogramPayload,  # M2 histogram
     "dataset.quality.run": RunQualityPayload,  # M2 quality
     "dataset.bivariate.run": RunBivariatePayload,  # M2 bivariate
+    "dataset.report.generate": RunReportPayload,  # M3 reporting
     "dataset.cleaning.run": CleaningRunPayload,
     "dataset.snapshot.activate": DatasetActivatePayload,
 }
@@ -125,6 +127,12 @@ class Bridge:
                 result = self.service.run_bivariate(
                     payload.project_id, payload.dataset_id,
                     payload.column_a, payload.column_b,
+                    req.correlation_id or req.request_id)
+            elif req.command == "dataset.report.generate":
+                # service.run_report owns the JobManager lifecycle (SYS-015)
+                result = self.service.run_report(
+                    payload.project_id, payload.dataset_id,
+                    payload.scope,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.cleaning.run":
                 # service.run_cleaning owns the JobManager lifecycle (SYS-015)

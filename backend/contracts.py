@@ -390,6 +390,45 @@ class ReportRecord(BaseModel):
     created_at: datetime
 
 
+# ---- PDF Report (M3, SCREEN-PDF-001) ----
+# A-L1 locked: reportlab is the SOLE primary renderer; the stdlib fallback
+# (tables-only, no images) carries a DIFFERENT renderer_version and is
+# labelled in PdfSummary + PDF metadata (never silently).
+# A-L2 locked: payload is {project_id, dataset_id, scope} (ReportRecord is
+# NOT persisted in store — run_report returns only), so PDF sections are
+# recomputed deterministically from the same scope and the SAME fingerprint
+# algorithm as HTML; report_id in PdfRecord = the HTML artifact's
+# content_fingerprint, which makes PDF<->HTML provenance traceable without
+# inventing a persisted report table.
+# A-L3 locked: tables paginate across pages — header rows repeat on every
+# page (Table repeatRows=1); charts in fallback are tables only.
+_PDF_RENDERER_PRIMARY = "reportlab/1.0"
+_PDF_RENDERER_FALLBACK = "stdlib-tables/1.0"
+
+
+class RunPdfPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    scope: ReportScope = ReportScope.ALL
+
+
+class PdfRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    report_id: str  # content_fingerprint of source HTML artifact (A-L2)
+    sections: list[ReportSection]
+    page_count: int
+    file_path: str
+    file_size_bytes: int
+    renderer_version: str  # A-L1: primary vs fallback are distinct
+    pdf_fingerprint: str  # SHA-256 of PDF artifact bytes
+    source_html_fingerprint: str  # == report_id (kept for clarity)
+    is_final: bool
+    validation_summary: str
+    created_at: datetime
+
+
 class CleaningOperation(str, Enum):
     DROP_DUPLICATES = "drop_duplicates"
     DROP_MISSING = "drop_missing"

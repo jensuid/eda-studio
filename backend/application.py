@@ -32,6 +32,7 @@ from backend.contracts import (
     DatasetRecord,
     HistogramBin,
     HistogramRecord,
+    PdfRecord,
     PreviewRecord,
     ProfileListRecord,
     ProfileRecord,
@@ -54,6 +55,7 @@ from backend.ingestion import (
     read_source,
     to_parquet_bytes,
 )
+from backend.pdf_renderer import render_pdf
 from backend.persistence import Store
 from backend.profiling import profile_table
 from backend.quality import assess_quality, summarise
@@ -460,6 +462,127 @@ class WorkbenchService:
             )
 
         self.jobs.run("dataset.report.generate", work, correlation_id)
+        return holder["rec"]
+
+    def run_pdf(self, project_id: str, dataset_id: str, scope: ReportScope,
+                correlation_id: str | None = None) -> PdfRecord:
+        """SCREEN-PDF-001: PDF distribution mirror of the HTML report.
+
+        Payload stays small; the PDF file lives on disk (A-L2/A-L3).
+        report_id in PdfRecord = content_fingerprint of the HTML artifact
+        (traceable without a persisted report table).
+        """
+        import hashlib
+
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, PdfRecord] = {}
+
+        def work() -> None:
+            snap = dataset.snapshot
+            parquet_bytes = self.store.read_snapshot(snap.snapshot_id)
+            row_count, _cols = profile_table(parquet_bytes)
+            profile_row = None
+            for r in reversed(self.store.list_profiles(dataset.dataset_id)):
+                if r["snapshot_id"] == snap.snapshot_id:
+                    profile_row = r
+                    break
+            sections: list = []
+            profile: dict | None = None
+            if profile_row is not None:
+                rec = ProfileRecord.model_validate_json(profile_row["columns_json"])
+                profile = {
+                    "kind": "profile", "record_id": profile_row["profile_id"],
+                    "fingerprint": rec.fingerprint,
+                    "snapshot_id": rec.snapshot_id, "stale": rec.fingerprint != snap.fingerprint,
+                    "columns": [c.model_dump() for c in rec.columns],
+                }
+                sections.append({"kind": "profile", "record_id": profile_row["profile_id"],
+                                 "fingerprint": rec.fingerprint, "stale": rec.fingerprint != snap.fingerprint})
+            _q_row_count, findings = assess_quality(parquet_bytes)
+            quality: dict = {
+                "kind": "quality", "record_id": dataset.dataset_id,
+                "fingerprint": snap.fingerprint, "snapshot_id": snap.snapshot_id,
+                "stale": False, "findings": findings,
+            }
+            if scope in (ReportScope.ALL, ReportScope.PROFILE_QUALITY, ReportScope.WITH_CHARTS, ReportScope.WITH_VISUALS):
+                sections.append({"kind": "quality", "record_id": dataset.dataset_id,
+                                 "fingerprint": snap.fingerprint, "stale": False})
+            cleanings_list: list[dict] = []
+            for cl in self.store.list_cleanings(dataset.dataset_id):
+                cleanings_list.append({
+                    "kind": "cleaning", "record_id": cl["id"],
+                    "fingerprint": cl["child_fingerprint"],
+                    "snapshot_id": cl["child_snapshot_id"],
+                    "stale": cl["child_snapshot_id"] != snap.snapshot_id,
+                    "operation": cl["operation"], "row_count_before": cl["row_count_before"],
+                    "row_count_after": cl["row_count_after"],
+                })
+            # Charts follow the HTML scope (with-charts adds per-column histograms)
+            charts: list[dict] = []
+            if scope in (ReportScope.ALL, ReportScope.WITH_CHARTS, ReportScope.WITH_VISUALS):
+                for c in (profile.get("columns") or []) if profile else []:
+                    col_name = c.get("name")
+                    if not col_name:
+                        continue
+                    try:
+                        d = describe_column(parquet_bytes, col_name)
+                    except LookupError:
+                        continue
+                    charts.append({
+                        "kind": "histogram", "record_id": dataset.dataset_id,
+                        "fingerprint": snap.fingerprint,
+                        "snapshot_id": snap.snapshot_id,
+                        "stale": d.get("inferred_type") == "empty",
+                        "summary": (f"{col_name}: {d.get('value_count', 0)} nilai, "
+                                    f"tipe {d.get('inferred_type', '?')}, "
+                                    f"bins {len(d.get('bins', []))}"),
+                    })
+                sections.append({"kind": "histogram", "record_id": dataset.dataset_id,
+                                 "fingerprint": snap.fingerprint, "stale": False})
+            generated = now_iso()
+            # Source HTML fingerprint (A-L2): render HTML artifact bytes hash
+            html_doc = render_html(
+                dataset_name=dataset.name, fingerprint=snap.fingerprint,
+                snapshot_id=snap.snapshot_id, row_count=row_count,
+                generated_at=generated, profile=profile, quality=quality,
+                charts=charts, cleanings=cleanings_list,
+            )
+            source_html_fp = __import__("hashlib").sha256(html_doc.encode("utf-8")).hexdigest()
+            stale_any = any(s["stale"] for s in sections) or any(c["stale"] for c in cleanings_list)
+            is_final = not stale_any
+            pdf_bytes, page_count, renderer_ver = render_pdf(
+                dataset_name=dataset.name, fingerprint=snap.fingerprint,
+                snapshot_id=snap.snapshot_id, row_count=row_count,
+                generated_at=generated, profile=profile, quality=quality,
+                charts=charts, cleanings=cleanings_list,
+                is_final=is_final, source_html_fingerprint=source_html_fp,
+            )
+            from pathlib import Path as _P
+            out_dir = self.store.root / "reports"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in dataset.name) or "dataset"
+            file_path = str(out_dir / f"{safe_name}-{snap.snapshot_id[:8]}-report.pdf")
+            _P(file_path).write_bytes(pdf_bytes)
+            validation_summary = (
+                "OK — semua section Current." if is_final else
+                "PARTIAL — ada section usang (dilabeli di PDF); bukan final export."
+            )
+            holder["rec"] = PdfRecord(
+                dataset_id=dataset.dataset_id, snapshot_id=snap.snapshot_id,
+                fingerprint=snap.fingerprint, report_id=source_html_fp,
+                sections=[ReportSection(kind=s["kind"], record_id=s["record_id"],
+                                        fingerprint=s["fingerprint"], stale=s["stale"]) for s in sections],
+                page_count=page_count, file_path=file_path,
+                file_size_bytes=len(pdf_bytes), renderer_version=renderer_ver,
+                pdf_fingerprint=hashlib.sha256(pdf_bytes).hexdigest(),
+                source_html_fingerprint=source_html_fp,
+                is_final=is_final, validation_summary=validation_summary,
+                created_at=__import__("datetime").datetime.fromisoformat(generated),
+            )
+
+        self.jobs.run("dataset.pdf.generate", work, correlation_id)
         return holder["rec"]
 
     # -- cleaning commands/queries ----------------------------------------------------

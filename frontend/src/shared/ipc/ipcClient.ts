@@ -14,6 +14,7 @@ import type {
   JobEvent,
   PreviewRecord,
   ProfileListRecord,
+  PdfRecord,
   ProfileRecord,
   ProjectRecord,
   QualityRecord,
@@ -166,6 +167,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId, scope },
     }) as BridgeResponse<ReportRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runReport failed");
+    return res.data;
+  },
+  async runPdf(projectId: string, datasetId: string, scope: ReportScope): Promise<PdfRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.pdf.generate",
+      payload: { project_id: projectId, dataset_id: datasetId, scope },
+    }) as BridgeResponse<PdfRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runPdf failed");
     return res.data;
   },
   async previewCleaning(

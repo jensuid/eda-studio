@@ -26,6 +26,7 @@ MODELS = [
     "RunQualityPayload", "QualityFindingRecord", "QualityRecord",
     "RunBivariatePayload", "BivariateScatterPoint", "BivariateGroup", "BivariateRecord",
     "RunReportPayload", "ReportSection", "ReportRecord",
+    "RunPdfPayload", "PdfRecord",
     "CleaningPreviewPayload",
     "CleaningColumnImpact", "CleaningPreviewSummary", "CleaningRunPayload",
     "DatasetActivatePayload", "CleaningRecord",

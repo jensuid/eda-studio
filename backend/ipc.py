@@ -39,6 +39,7 @@ from backend.contracts import (
     Response,
     RunBivariatePayload,
     RunHistogramPayload,
+    RunPdfPayload,
     RunProfilePayload,
     RunQualityPayload,
     RunReportPayload,
@@ -54,6 +55,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dataset.quality.run": RunQualityPayload,  # M2 quality
     "dataset.bivariate.run": RunBivariatePayload,  # M2 bivariate
     "dataset.report.generate": RunReportPayload,  # M3 reporting
+    "dataset.pdf.generate": RunPdfPayload,  # M3 PDF
     "dataset.cleaning.run": CleaningRunPayload,
     "dataset.snapshot.activate": DatasetActivatePayload,
 }
@@ -131,6 +133,12 @@ class Bridge:
             elif req.command == "dataset.report.generate":
                 # service.run_report owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_report(
+                    payload.project_id, payload.dataset_id,
+                    payload.scope,
+                    req.correlation_id or req.request_id)
+            elif req.command == "dataset.pdf.generate":
+                # service.run_pdf owns the JobManager lifecycle (SYS-015)
+                result = self.service.run_pdf(
                     payload.project_id, payload.dataset_id,
                     payload.scope,
                     req.correlation_id or req.request_id)

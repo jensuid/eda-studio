@@ -296,6 +296,29 @@ export interface ReportRecord {
   created_at: string;
 }
 
+export interface RunPdfPayload {
+  project_id: string;
+  dataset_id: string;
+  scope?: ReportScope;
+}
+
+export interface PdfRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  report_id: string;
+  sections: ReportSection[];
+  page_count: number;
+  file_path: string;
+  file_size_bytes: number;
+  renderer_version: string;
+  pdf_fingerprint: string;
+  source_html_fingerprint: string;
+  is_final: boolean;
+  validation_summary: string;
+  created_at: string;
+}
+
 export interface CleaningPreviewPayload {
   project_id: string;
   dataset_id: string;

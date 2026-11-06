@@ -76,9 +76,9 @@ Catatan arah: B2/B3 tidak simetris — urutan kolom pertama = baris/grup. Kontra
   4. Toggle `BivariateDataTable` (alternatif non-visual): untuk B1 = tabel ringkas (bukan titik mentah, lihat V6); B2 = tabel per grup; B3 = cross-tab penuh.
 - **removed:** uji statistik, regresi, interpretasi kausal, export PNG, pivot >2 kolom — semua bukan kebutuhan JOB-BIVAR-001.
 - **regions & states (8 wajib):**
-  - `loading`: `BivariateSkeleton` (bentuk chart) + status job "Menghitung bivariat…"; selector + tombol primer disabled.
+  - `loading`: `BivariateSkeleton` (bentuk chart) + status job "Menghitung bivariat…"; selector + tombol primer disabled. (Transient <1 detik pada dataset kecil — diverifikasi via mutation state, tidak wajib screenshot.)
   - `empty_first_run`: belum ada profil → ajakan "Jalankan profiling terlebih dahulu" + CTA.
-  - `empty_filtered`: n pasangan = 0 → "Tidak ada pasangan nilai untuk dihitung." + CTA ganti pasangan.
+  - `empty_filtered`: n pasangan = 0 → "Tidak ada pasangan nilai untuk dihitung." + CTA ganti pasangan. (Unreachable-by-design pada dataset dengan ≥1 record — diverifikasi via state test, tidak wajib screenshot.)
   - `partial`: fingerprint record ≠ snapshot terkini → banner "Hasil mungkin usang — jalankan ulang"; kolom konstan → label "Kolom ini konstan."
   - `error`: ErrorContract literal + "Coba lagi".
   - `long_content`: banyak kategori/pasangan → scroll hanya di dalam chart area; selector + ringkasan tetap terlihat.

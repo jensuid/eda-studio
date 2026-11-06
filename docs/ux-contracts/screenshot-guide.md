@@ -46,16 +46,17 @@ docs/ux-contracts/bivariate/bivariate-b2-cat-num-900.png
 docs/ux-contracts/bivariate/bivariate-b2-cat-num-1440.png
 docs/ux-contracts/bivariate/bivariate-b3-cat-cat-900.png
 docs/ux-contracts/bivariate/bivariate-b3-cat-cat-1440.png
-docs/ux-contracts/bivariate/bivariate-loading-900.png
-docs/ux-contracts/bivariate/bivariate-loading-1440.png
 
 docs/ux-contracts/reporting/report-done-900.png
 docs/ux-contracts/reporting/report-done-1440.png
-docs/ux-contracts/reporting/report-loading-900.png
-docs/ux-contracts/reporting/report-loading-1440.png
-docs/ux-contracts/reporting/report-empty-900.png
-docs/ux-contracts/reporting/report-empty-1440.png
+docs/ux-contracts/reporting/report-empty-first-run-900.png
+docs/ux-contracts/reporting/report-empty-first-run-1440.png
 ```
+
+> **Putusan 2026-11-06 (Opsi B):** `loading` adalah transient (<1 detik) dan `empty_filtered`
+> unreachable-by-design (radio selalu terpilih) — keduanya **tidak wajib screenshot**,
+> diverifikasi via mutation state + unit test + log. Screenshot wajib = state done +
+> empty_first_run di atas. Lihat DS-BIVAR-001:59 dan DS-REPORT-001:62.
 
 Precedens cleaning (12 PNG di `docs/ux-contracts/cleaning/`) adalah pola penamaan yang dipakai Critic untuk verifikasi visual (OCR + mata).
 

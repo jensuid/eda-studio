@@ -64,3 +64,6 @@ Folder `reporting/` hanya 4 `.md` (tanpa `.png`). **Follow-up desktop, BUKAN blo
 - **A3:** test stale lemah (struktural, bukan perilaku).
 - **A4:** copy/state minor (stale singkat, error raw message, empty_filtered/unduh belum ada, mount order).
 - **A5:** 8 states konsisten pola slice sebelumnya (empty_filtered unreachable-by-design, restricted/long_content n/a sesuai kontrak).
+
+## Addendum 2026-11-06 (Opsi B — putusan PO)
+`loading` (transient <1 detik) dan `empty_filtered` (unreachable-by-design, radio selalu terpilih) dinyatakan **tidak wajib screenshot**; diverifikasi via mutation state + unit test + log. Screenshot wajib tersisa = state done + empty_first_run. Kontrak diperbarui di `DS-REPORT-001.md:62` dan `JOB-FLOW-SCREEN-REPORT.md` (loading + empty_filtered).

@@ -64,9 +64,9 @@ not_in_scope:
   - R5: **setiap angka direferensikan** — footer tiap tabel/angka: "Sumber: ProfileRecord {id} · fingerprint {fp} · snapshot {snapshot}" (REP-003/REP-007).
   - R6: **stale ditandai eksplisit** — record stale dilabeli di HTML (bukan disembunyikan) per REP-006.
 - **regions & states (8 wajib):**
-  - `loading`: skeleton ringan + status job "Membuat report…"; radio + tombol primer disabled.
+  - `loading`: skeleton ringan + status job "Membuat report…"; radio + tombol primer disabled. (Transient <1 detik pada dataset kecil — diverifikasi via mutation state, tidak wajib screenshot.)
   - `empty_first_run`: belum ada analisis → ajakan "Jalankan profiling terlebih dahulu." + CTA.
-  - `empty_filtered`: cakupan dipilih kosong → "Pilih setidaknya satu analisis." + lihat daftar.
+  - `empty_filtered`: cakupan dipilih kosong → "Pilih setidaknya satu analisis." + lihat daftar. (Unreachable-by-design: radio selalu terpilih default "all" — diverifikasi via state test, tidak wajib screenshot.)
   - `partial`: ada record stale → banner "Ada hasil usang — lihat daftar sebelum mengunduh." + badge per record.
   - `error`: ErrorContract literal + "Coba lagi".
   - `long_content`: banyak findings → scroll hanya di dalam ringkasan; file HTML tidak dibatasi.

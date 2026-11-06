@@ -57,3 +57,6 @@ Putusan: **blocker untuk penutupan formal G5, bukan untuk PASS kode maupun memul
 3. Marginal totals + % baris B3 hilang dari tabel.
 4. Blok `pass` mati `bivariate.py:118-120`.
 5. Warning chunk-size ECharts pre-existing — kandidat code-split nanti.
+
+## Addendum 2026-11-06 (Opsi B — putusan PO)
+`loading` (transient <1 detik) dan `empty_filtered` (unreachable-by-design) dinyatakan **tidak wajib screenshot**; diverifikasi via mutation state + unit test + log. Screenshot wajib tersisa = state done per mode (B1/B2/B3) + empty_first_run. Kontrak diperbarui di `DS-BIVAR-001.md:59` dan `JOB-FLOW-SCREEN-BIVAR.md` (loading + empty_filtered).

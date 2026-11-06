@@ -59,7 +59,7 @@ Larangan warisan DS-CORE-001: raw hex dilarang di komponen aplikasi; **di dalam 
 
 - Review checklist: token report terpakai di tema terpusat; file HTML dibuka offline tanpa network; footer sumber lengkap.
 - Uji aksesibel: daftar record + ringkasan dapat diakses keyboard; file HTML semantic.
-- Screenshot 900px & 1440px pada state done/loading/empty untuk Critic (G5) — **tidak ada screenshot HTML diambil dari browser sebagai bukti visual G5** (file diuji via parse HTML + uji isi, bukan screenshot).
+- Screenshot 900px & 1440px pada state **done** + **empty_first_run** untuk Critic (G5) — **tidak ada screenshot HTML diambil dari browser sebagai bukti visual G5** (file diuji via parse HTML + uji isi, bukan screenshot). `loading` transient (<1 detik) dan `empty_filtered` unreachable-by-design (radio selalu terpilih) — tidak wajib screenshot; diverifikasi via state/unit test + log (putusan 2026-11-06).
 
 ## Exit G4 (untuk review PO)
 

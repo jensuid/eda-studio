@@ -56,7 +56,7 @@ Larangan warisan DS-CORE-001/DS-HIST-001: raw hex dilarang di komponen chart; ti
 
 - Review checklist: token chart terpakai di tema terpusat; tidak ada hex literal di komponen chart; tidak ada bahasa kausal di copy.
 - Uji aksesibel: chart container punya aria-label + tabel data dapat diakses keyboard; pembeda tidak hanya warna.
-- Screenshot 900px & 1440px pada state done/loading/empty per mode (B1/B2/B3) untuk Critic (G5).
+- Screenshot 900px & 1440px pada state **done** per mode (B1/B2/B3) + **empty_first_run** untuk Critic (G5). `loading` adalah transient (<1 detik pada dataset kecil) dan `empty_filtered` unreachable-by-design (radio selalu terpilih) — keduanya **tidak wajib screenshot**; diverifikasi via state/unit test + log (putusan 2026-11-06, mengikuti preseden Critic A5).
 
 ## Exit G4 (untuk review PO)
 

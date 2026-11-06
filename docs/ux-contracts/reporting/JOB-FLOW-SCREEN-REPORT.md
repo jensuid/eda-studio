@@ -22,7 +22,7 @@ not_in_scope:
   - item: "PDF export (REP-005)"
     reason: "PDF = format distribusi M3-slice berikutnya; M3 slice pertama = HTML saja (REP-004 primer)"
   - item: "Dataset/Project Export (REP-008/REP-009)"
-    reason: "Tiga jalur export ayrı (Report/Dataset/Project); slice ini hanya Report"
+    reason: "Tiga jalur export terpisah (Report/Dataset/Project); slice ini hanya Report"
   - item: "AI summary/narrative di dalam report (REP-007 deterministic)"
     reason: "Klaim di report wajib bukti deterministik dari record; narasi AI bukan source of truth — daftar isi struktural saja"
   - item: "Template builder / custom CSS / branding engine"
@@ -102,4 +102,4 @@ not_in_scope:
 
 ## Exit G1–G3 (untuk review PO)
 
-Tidak ada perilaku penting yang ditinggalkan ke penemuan implementasi: isi HTML, cakupan radio, referensi artifact, freshness, inline-CSS, copy, dan a11y sudah diputuskan (R1–R7 Ratified). Exit G4 lulus — builder boleh mulai G5 slice (backend contract lock → slice) pada kerangka kontrak ini.
+Tidak ada perilaku penting yang ditinggalkan ke penemuan implementasi: isi HTML, cakupan radio, referensi artifact, freshness, inline-CSS, copy, dan a11y sudah diputuskan (R1–R7 Ratified). Exit G4 lulus — builder boleh mulai G5 setelah Critic PASS (backend contract lock → slice).

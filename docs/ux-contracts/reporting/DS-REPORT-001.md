@@ -13,7 +13,7 @@ Token & komponen di DS-CORE-001 + DS-HIST-001 + DS-BIVAR-001 tetap berlaku; kont
 | `report-badge-stale` | Badge "Usang" (UI + HTML) | Teks "Usang — jalankan ulang", bukan warna saja |
 | `report-badge-source` | Badge sumber record | Teks "Profiling"/"Quality"/… + fingerprint singkat |
 
-Larangan warisan DS-CORE-001: raw hex dilarang di komponen aplikasi; **di dalam file HTML, nilai warna inline-PERHITUNGAN tetap semantic** (didefinisikan sekali sebagai CSS custom properties di `<style>` — bukan hex tersebar yang tidak terlacak). Radius 6/8px & spacing base 4px tetap di UI.
+Larangan warisan DS-CORE-001: raw hex dilarang di komponen aplikasi; **di dalam file HTML, nilai warna didefinisikan sekali sebagai CSS custom properties di `<style>`** (bukan hex tersebar yang tidak terlacak). Radius 6/8px & spacing base 4px tetap di UI.
 
 ## Komponen baru (UI aplikasi)
 

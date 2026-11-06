@@ -349,7 +349,9 @@ class BivariateRecord(BaseModel):
 # A3 locked: renderer_version + content_fingerprint (SHA-256 of the HTML
 # artifact bytes) + validation_summary + job history correlation.
 # File artifact lives on disk; IPC payload stays small (ReportRecord only).
-_REPORT_RENDERER_VERSION = "report-html/1.0"
+# Single source of truth for the renderer version (A1 follow-up).
+REPORT_RENDERER_VERSION = "report-html/1.0"
+_REPORT_RENDERER_VERSION = REPORT_RENDERER_VERSION  # alias, do not add new consts
 
 
 class ReportScope(str, Enum):

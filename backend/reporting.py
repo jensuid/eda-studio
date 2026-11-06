@@ -12,9 +12,11 @@ from __future__ import annotations
 import html
 from datetime import datetime, timezone
 
+from backend.contracts import REPORT_RENDERER_VERSION
+
 UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
 
-_RENDERER_VERSION = "report-html/1.0"
+_RENDERER_VERSION = REPORT_RENDERER_VERSION  # single source (contracts.py)
 
 _STALE_LABEL = "Hasil mungkin usang — jalankan ulang."
 

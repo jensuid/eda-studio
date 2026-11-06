@@ -402,8 +402,34 @@ class WorkbenchService:
                     "operation": cl["operation"], "row_count_before": cl["row_count_before"],
                     "row_count_after": cl["row_count_after"],
                 })
-            generated = now_iso()
+            # A2 follow-up: charts reflect the current snapshot's histograms
+            # (recomputed read-only, like quality) — the radio scope labels
+            # now match the HTML content: with-charts includes per-column
+            # ringkasan; with-visuals additionally includes the latest
+            # bivariate ringkasan (honest label, not empty).
             charts: list[dict] = []
+            if scope in (ReportScope.ALL, ReportScope.WITH_CHARTS, ReportScope.WITH_VISUALS):
+                for c in (profile.get("columns") or []) if profile else []:
+                    col_name = c.get("name")
+                    if not col_name:
+                        continue
+                    try:
+                        d = describe_column(parquet_bytes, col_name)
+                    except LookupError:
+                        continue
+                    stale_c = d.get("inferred_type", "") == "empty"
+                    charts.append({
+                        "kind": "histogram", "record_id": dataset.dataset_id,
+                        "fingerprint": snap.fingerprint,
+                        "snapshot_id": snap.snapshot_id, "stale": stale_c,
+                        "summary": (f"{col_name}: {d.get('value_count', 0)} nilai, "
+                                    f"tipe {d.get('inferred_type', '?')}, "
+                                    f"bins {len(d.get('bins', []))}"),
+                    })
+                sections.append(ReportSection(
+                    kind="histogram", record_id=dataset.dataset_id,
+                    fingerprint=snap.fingerprint, stale=False))
+            generated = now_iso()
             html_doc = render_html(
                 dataset_name=dataset.name, fingerprint=snap.fingerprint,
                 snapshot_id=snap.snapshot_id, row_count=row_count,

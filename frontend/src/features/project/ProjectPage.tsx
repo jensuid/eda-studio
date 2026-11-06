@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { BackupRecord, DatasetRecord, ExportFormat, ExportRecord, HistogramRecord, ProfileRecord, QualityRecord, RestoreRecord } from "../../shared/ipc/generated";
+import type { BackupRecord, DatasetRecord, DiagnosticRecord, ExportFormat, ExportRecord, HistogramRecord, ProfileRecord, QualityRecord, RestoreRecord } from "../../shared/ipc/generated";
 import { BivariateSection } from "../bivariate/BivariateSection";
 import { CleaningSection } from "../cleaning/CleaningSection";
 import { HistogramChart } from "../histogram/HistogramChart";
@@ -141,6 +141,14 @@ export function ProjectPage() {
     mutationFn: (v: { archive: string; root: string }) =>
       ipcClient.restoreProject(v.archive, v.root),
     onSuccess: (r) => setRestoreRecord(r),
+  });
+
+  // M3 P2 diagnostic bundle (Doc15 §10): Basic level, redacted.
+  const [diagnosticPath, setDiagnosticPath] = useState("");
+  const [diagnosticRecord, setDiagnosticRecord] = useState<DiagnosticRecord | null>(null);
+  const createDiagnostic = useMutation({
+    mutationFn: (dest: string) => ipcClient.createDiagnostic(projectId!, dest),
+    onSuccess: (r) => setDiagnosticRecord(r),
   });
 
   // M3 P0 dataset export (Doc16 §4.2): canonical snapshot → CSV/Parquet on disk.
@@ -447,6 +455,21 @@ export function ProjectPage() {
           {restoreProject.isError && <p role="alert">Restore gagal: {restoreProject.error.message}</p>}
           {restoreRecord && (
             <p>Restore selesai: {restoreRecord.project_id} → {restoreRecord.dest_root} · db sha256 {restoreRecord.project_db_sha256.slice(0, 12)}…</p>
+          )}
+        </section>
+      )}
+      {projectId && (
+        <section>
+          <h2>Diagnostic Bundle (Doc15 §10)</h2>
+          <p>Bundle Basic yang ter-redaksi: metadata, health check, recent errors. Tanpa data mentah/DB.</p>
+          <form onSubmit={(e) => { e.preventDefault(); createDiagnostic.mutate(diagnosticPath); }}>
+            <input value={diagnosticPath} onChange={(e) => setDiagnosticPath(e.target.value)} placeholder="Path file bundle (.zip)" required />
+            <button disabled={createDiagnostic.isPending}>Buat Diagnostic</button>
+          </form>
+          {createDiagnostic.isPending && <p role="status">Membuat diagnostic bundle…</p>}
+          {createDiagnostic.isError && <p role="alert">Diagnostic gagal: {createDiagnostic.error.message}</p>}
+          {diagnosticRecord && (
+            <p>Diagnostic: {diagnosticRecord.path} · {diagnosticRecord.file_count} file · paths redacted {diagnosticRecord.paths_redacted} · sha256 {diagnosticRecord.sha256.slice(0, 12)}…</p>
           )}
         </section>
       )}

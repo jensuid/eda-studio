@@ -33,6 +33,8 @@ from backend.contracts import (
     CleaningStrategy,
     ColumnProfile,
     DatasetRecord,
+    DiagnosticLevel,
+    DiagnosticRecord,
     ExportFormat,
     ExportRecord,
     FindingListRecord,
@@ -60,6 +62,7 @@ from backend.contracts import (
     SnapshotInfo,
     SnapshotListRecord,
 )
+from backend.diagnostics import DiagnosticError, create_diagnostic_bundle
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes, new_id
 from backend.execution import JobManager
 from backend.histograms import describe_column
@@ -796,6 +799,33 @@ class WorkbenchService:
             )
 
         self.jobs.run("project.restore", work, correlation_id)
+        return holder["rec"]
+
+    # -- diagnostics (M3 P2, Doc15 §10) -----------------------------------
+    def create_diagnostic(self, project_id: str, dest_path: str,
+                          correlation_id: str | None = None) -> DiagnosticRecord:
+        """User-initiated Basic diagnostic bundle, redacted (OBS-007)."""
+        if self.store.get_project(project_id) is None:
+            raise NotFoundError(f"project not found: {project_id}")
+        holder: dict[str, DiagnosticRecord] = {}
+
+        def work() -> None:
+            try:
+                manifest = create_diagnostic_bundle(self.store.root, Path(dest_path))
+            except DiagnosticError as exc:
+                raise ValidationError(str(exc)) from exc
+            holder["rec"] = DiagnosticRecord(
+                bundle_id=new_id(),
+                project_id=project_id,
+                path=manifest["path"],
+                level=DiagnosticLevel.BASIC,
+                file_count=len(manifest["files"]),
+                paths_redacted=int(manifest["redaction"]["paths_redacted"]),
+                created_at=datetime.fromisoformat(manifest["created_at"]),
+                sha256=manifest["sha256"],
+            )
+
+        self.jobs.run("project.diagnostic.create", work, correlation_id)
         return holder["rec"]
 
     # -- dataset export (M3 P0) ------------------------------------------

@@ -29,6 +29,7 @@ from backend.contracts import (
     CreateHypothesisPayload,
     CreateProjectPayload,
     DatasetActivatePayload,
+    DiagnosticCreatePayload,
     ErrorCode,
     ErrorContract,
     ExportDatasetPayload,
@@ -68,6 +69,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dataset.cleaning.run": CleaningRunPayload,
     "dataset.snapshot.activate": DatasetActivatePayload,
     "project.backup.create": BackupCreatePayload,  # M3 P0 backup (Doc04 §12)
+    "project.diagnostic.create": DiagnosticCreatePayload,  # M3 P2 bundle (Doc15 §10)
     "project.restore": BackupRestorePayload,  # M3 P0 restore to new root
     "dataset.export": ExportDatasetPayload,  # M3 P0 dataset export CSV/Parquet
     "insight.finding.create": CreateFindingPayload,  # M3 P1 insights
@@ -175,6 +177,11 @@ class Bridge:
             elif req.command == "project.backup.create":
                 # service.create_backup owns the JobManager lifecycle (SYS-015)
                 result = self.service.create_backup(
+                    payload.project_id, payload.dest_path,
+                    req.correlation_id or req.request_id)
+            elif req.command == "project.diagnostic.create":
+                # service.create_diagnostic owns the JobManager lifecycle (SYS-015)
+                result = self.service.create_diagnostic(
                     payload.project_id, payload.dest_path,
                     req.correlation_id or req.request_id)
             elif req.command == "project.restore":

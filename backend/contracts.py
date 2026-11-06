@@ -691,6 +691,29 @@ class HypothesisListRecord(BaseModel):
     hypotheses: list[HypothesisRecord]
 
 
+# ---- Diagnostics: user-initiated redacted bundle (M3 P2, Doc15 §10) ----
+
+class DiagnosticLevel(str, Enum):
+    BASIC = "basic"
+
+
+class DiagnosticCreatePayload(BaseModel):
+    project_id: str
+    dest_path: str = Field(min_length=1)
+    level: DiagnosticLevel = DiagnosticLevel.BASIC
+
+
+class DiagnosticRecord(BaseModel):
+    bundle_id: str
+    project_id: str
+    path: str
+    level: DiagnosticLevel
+    file_count: int
+    paths_redacted: int
+    created_at: datetime
+    sha256: str
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

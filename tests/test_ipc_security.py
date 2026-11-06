@@ -40,7 +40,8 @@ def test_protocol_info_lists_only_registered(bridge):
         "dataset.pdf.generate", "dataset.profile.run", "dataset.quality.run", "dataset.report.generate",
         "dataset.snapshot.activate", "insight.finding.create", "insight.finding.transition",
         "insight.hypothesis.create", "insight.hypothesis.transition",
-        "project.backup.create", "project.create", "project.restore"]
+        "project.backup.create", "project.create", "project.diagnostic.create",
+        "project.restore"]
     assert info["queries"] == [
         "dataset.cleaning.preview", "dataset.preview", "dataset.profile",
         "dataset.profile.get", "dataset.profiles.list",

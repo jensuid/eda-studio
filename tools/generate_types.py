@@ -35,6 +35,7 @@ MODELS = [
     "ExportDatasetPayload",
     "ExportRecord",
     "GetDatasetProvenancePayload", "ProvenanceEdge", "ProvenanceRecord",
+    "DiagnosticCreatePayload", "DiagnosticRecord",
     "CreateFindingPayload", "FindingRecord", "TransitionFindingPayload",
     "ListInsightsPayload", "FindingListRecord",
     "CreateHypothesisPayload", "HypothesisRecord",
@@ -92,6 +93,7 @@ def main() -> None:
         "CleaningStrategy": [s.value for s in contracts.CleaningStrategy],
         "ReportScope": [s.value for s in contracts.ReportScope],
         "ExportFormat": [s.value for s in contracts.ExportFormat],
+        "DiagnosticLevel": [s.value for s in contracts.DiagnosticLevel],
         "FindingStatus": [s.value for s in contracts.FindingStatus],
         "HypothesisStatus": [s.value for s in contracts.HypothesisStatus],
     }

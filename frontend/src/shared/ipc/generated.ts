@@ -13,6 +13,8 @@ export type ReportScope = "all" | "profile-quality" | "with-charts" | "with-visu
 
 export type ExportFormat = "csv" | "parquet";
 
+export type DiagnosticLevel = "basic";
+
 export type FindingStatus = "proposed" | "accepted" | "archived";
 
 export type HypothesisStatus = "proposed" | "accepted" | "investigating" | "supported" | "not_supported" | "inconclusive" | "archived";
@@ -465,6 +467,23 @@ export interface ProvenanceRecord {
   snapshots: SnapshotInfo[];
   profiles: ProfileSummary[];
   lineage: ProvenanceEdge[];
+}
+
+export interface DiagnosticCreatePayload {
+  project_id: string;
+  dest_path: string;
+  level?: DiagnosticLevel;
+}
+
+export interface DiagnosticRecord {
+  bundle_id: string;
+  project_id: string;
+  path: string;
+  level: DiagnosticLevel;
+  file_count: number;
+  paths_redacted: number;
+  created_at: string;
+  sha256: string;
 }
 
 export interface CreateFindingPayload {

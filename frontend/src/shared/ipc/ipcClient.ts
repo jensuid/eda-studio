@@ -5,6 +5,7 @@
  */
 import type {
   BackupRecord,
+  DiagnosticRecord,
   RestoreRecord,
   BivariateRecord,
   CleaningOperation,
@@ -288,6 +289,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dest_path: destPath },
     }) as BridgeResponse<BackupRecord>;
     if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createBackup failed");
+    return res.data;
+  },
+  async createDiagnostic(projectId: string, destPath: string): Promise<DiagnosticRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "project.diagnostic.create",
+      payload: { project_id: projectId, dest_path: destPath },
+    }) as BridgeResponse<DiagnosticRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createDiagnostic failed");
     return res.data;
   },
   async restoreProject(archivePath: string, destRoot: string): Promise<RestoreRecord> {

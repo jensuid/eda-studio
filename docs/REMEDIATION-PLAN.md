@@ -174,6 +174,38 @@ P0-2 K2+K1 (kode) ─┘        │
 
 ---
 
+## P4 — Tindak lanjut pasca-evaluasi 2026-11-07
+
+Sumber: `docs/EVALUATION-REMEDIATION-2026-11-07.md` (evaluator independen). Signing/notarisasi
+**bukan blocker** (kredensial belum ada) — dicatat sebagai P4-4 `todo` ditunda, non-blocking.
+
+### P4-1 — Dependency hygiene: reportlab + uv.lock
+- **Berkas:** `pyproject.toml`, `uv.lock`, `backend/pdf_renderer.py` (verifikasi), `.github/workflows/ci.yml` (verifikasi).
+- **Langkah:** (1) Deklarasikan `reportlab` ke `project.dependencies` (dipakai `backend/pdf_renderer.py:24` tapi tak terdeklarasi — clean install/packaging PDF mati tanpanya). (2) Regen `uv.lock` (`uv lock`) — kini 0 hit `pytest-cov` (SBOM drift, ditutup CI via pip). (3) Verifikasi clean-venv: `pip install -e .` lalu `import reportlab` + `pytest -q` hijau.
+- **Kriteria diterima:** `grep -c reportlab uv.lock` > 0 dan `grep -c pytest-cov uv.lock` > 0; gate §10 hijau; SBOM CI hijau.
+
+### P4-2 — K7 path hardening (source_path/dest_path arbitrer)
+- **Berkas:** `backend/application.py` (`import_dataset`, `create_backup`, `restore_project`, `create_diagnostic`, `export_dataset`), `docs/security-threat-model.md` (baru), `tests/`.
+- **Langkah:** (1) Dokumentasikan asumsi ancaman (desktop lokal, single-user; path dari dialog user vs input manual). (2) Batasi `source_path`/`dest_path`: tolak path absolut di luar root yang diizinkan (dir proyek + path hasil `dialog.pick_file`); traversal `..` ditolak. (3) Test: traversal + absolut-luar-root ditolak; path dari dialog tetap lolos.
+- **Kriteria diterima:** test baru hijau; gate §10 hijau; dokumen asumsi ancaman ter-commit.
+
+### P4-3 — K8 ketegangan versi Python (shim 3.9)
+- **Berkas:** `pyproject.toml` (`requires-python`), `backend/application.py:13` (shim), CI matrix.
+- **Langkah:** (1) Audit semua shim kompatibilitas 3.9 di `backend/`. (2) Putuskan lantai versi runtime (3.11/3.12 per audit) dan hapus shim yang tak perlu; selaraskan `requires-python` + CI. (3) Gate §10 hijau di versi lantai baru.
+- **Kriteria diterima:** tidak ada sisa shim 3.9 tanpa alasan terdokumentasi; gate §10 hijau.
+
+### P4-4 — Signing/notarisasi (ditunda, non-blocking)
+- **Catatan:** kredensial signing belum ada — kartu ini `todo` ditunda; **jangan jadikan blocker** untuk merge P4-1 s/d P4-3.
+- **Langkah (saat kredensial tersedia):** jalankan `tools/build_packaging.py --sign` per OS, tandatangani `docs/release-checklist.md`, catat bukti di `docs/cross-platform-evidence.md`.
+- **Kriteria diterima:** build bertanda tangan per OS + checklist bertanda tangan; sampai saat itu status tetap `todo` (ditunda).
+
+### P4-5 — Perbaikan kecil pasca-evaluasi
+- **Berkas:** `backend/ipc.py`, `docs/status-register.md`, `docs/release-checklist.md`.
+- **Langkah:** (1) Sanitasi `str(exc)` di jalur `VALIDATION/NOT_FOUND/CONFLICT` (`ipc.py:160,264-268`) agar detail Pydantic tak bocor, setara jalur generik (K2 sisa P0-2a). (2) Koreksi label commit P1-2 di register (`1fb5f4d` → `408a02a`). (3) Perbarui `release-checklist.md` yang stale ("remote runs pending" padahal P0-1 done).
+- **Kriteria diterima:** grep detail path di respons = 0 untuk semua jalur error; gate §10 hijau.
+
+---
+
 ## 10. Gate wajib sebelum tugas dinyatakan selesai
 
 ```

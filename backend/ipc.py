@@ -141,7 +141,10 @@ def default_file_dialog(payload: DialogPickFilePayload) -> DialogPickFileRecord:
         return DialogPickFileRecord(path=None, available=False)
     window = windows[0]
     types = [t.lstrip(".") for t in (payload.file_types or []) if t]
-    file_types = (("Files", ";".join(f"*.{t}" for t in types)),) if types else None
+    # PyWebView expects a tuple of single filter strings, e.g.
+    # ("Images (*.png;*.jpg)",). The previous nested-tuple form made
+    # parse_file_type() raise ValueError, so the dialog always failed.
+    file_types = (f"Files ({';'.join(f'*.{t}' for t in types)})",) if types else ()
     try:
         if payload.mode == "save":
             result = window.create_file_dialog(
@@ -152,7 +155,14 @@ def default_file_dialog(payload: DialogPickFilePayload) -> DialogPickFileRecord:
     except Exception:
         log.warning("native file dialog failed", exc_info=True)
         return DialogPickFileRecord(path=None, available=False)
-    path = result if isinstance(result, str) and result else None
+    # PyWebView returns a tuple/list of selected paths (or None on cancel),
+    # not a plain string. Extract the first path for single-file dialogs.
+    if isinstance(result, str):
+        path = result or None
+    elif isinstance(result, (tuple, list)):
+        path = next((p for p in result if isinstance(p, str) and p), None)
+    else:
+        path = None
     return DialogPickFileRecord(path=path, available=True)
 
 

@@ -6,9 +6,9 @@ Entry point: desktop/main.py. Frontend assets are bundled from frontend/dist
 (BUILD-003: served through PyWebView, never file://). The bundle contains an
 application-controlled Python runtime and no global Python/Node is required
 (BUILD-015, ES-14.2). Per-OS flags branch below on sys.platform:
-  darwin  -> onefile windowed .app via BUNDLE (Developer ID sign + notarize
-             are applied by tools/build_packaging.py --sign on a signed host;
-             unsigned builds stay `manual` per P3-1).
+  darwin  -> onedir windowed .app via COLLECT + BUNDLE (Developer ID sign +
+             notarize are applied by tools/build_packaging.py --sign on a
+             signed host; unsigned builds stay `manual` per P3-1).
   win32   -> onedir console=False (.exe installer finished by Inno Setup in
              tools/build_packaging.py on a signed host, BUILD-017).
   linux   -> onedir (AppImage finished by tools/build_packaging.py, BUILD-017).
@@ -78,8 +78,20 @@ exe = EXE(  # noqa: F821
 )
 
 if sys.platform == "darwin":
-    app = BUNDLE(  # noqa: F821
+    # macOS must be onedir: BUNDLE(exe) with exclude_binaries=True drops the
+    # collected binaries (libpython3.15.dylib etc.), so the app cannot launch.
+    coll = COLLECT(  # noqa: F821
         exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=False,
+        upx_exclude=[],
+        name="eda-workbench",
+    )
+    app = BUNDLE(  # noqa: F821
+        coll,
         name="EDA Workbench.app",
         icon=None,
         bundle_identifier="com.jensuid.eda-workbench",

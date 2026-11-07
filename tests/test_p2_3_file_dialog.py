@@ -97,6 +97,34 @@ def test_dialog_pick_file_default_unavailable_without_window(bridge):
     assert rec.path is None
 
 
+def test_dialog_pick_file_default_handles_tuple_result(monkeypatch):
+    """Regression: PyWebView returns a tuple of paths and expects single
+    string file filters; the old nested-tuple filter always raised."""
+    import sys
+    import types as _types
+
+    from backend.ipc import default_file_dialog
+
+    seen = {}
+
+    class FakeWindow:
+        def create_file_dialog(self, dialog_type, allow_multiple=False,
+                               file_types=(), save_filename=""):
+            seen["file_types"] = file_types
+            return ("/tmp/picked.csv",)
+
+    fake_webview = _types.ModuleType("webview")
+    fake_webview.OPEN_DIALOG = 10
+    fake_webview.SAVE_DIALOG = 20
+    fake_webview.windows = [FakeWindow()]
+    monkeypatch.setitem(sys.modules, "webview", fake_webview)
+
+    rec = default_file_dialog(DialogPickFilePayload(mode="open", file_types=["csv", "parquet"]))
+    assert rec.available is True
+    assert rec.path == "/tmp/picked.csv"
+    assert seen["file_types"] == ("Files (*.csv;*.parquet)",)
+
+
 # -- path validation through the bridge -------------------------------------
 
 def test_import_missing_file_is_not_found(bridge, project_id, tmp_path):

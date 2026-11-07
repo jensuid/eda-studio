@@ -6,6 +6,7 @@ the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
@@ -19,10 +20,14 @@ from backend.cleaning import (
     preview_cleaning,
 )
 from backend.contracts import (
+    CHART_SPEC_MAX_BYTES,
     BackupRecord,
     BivariateGroup,
     BivariateRecord,
     BivariateScatterPoint,
+    ChartSpecListRecord,
+    ChartSpecRecord,
+    ChartType,
     CleaningColumnImpact,
     CleaningOperation,
     CleaningPreviewPayload,
@@ -1115,6 +1120,85 @@ class WorkbenchService:
         return FindingListRecord(
             dataset_id=dataset_id,
             findings=[self._finding(r) for r in self.store.list_findings(dataset_id)],
+        )
+
+    # --- ChartSpec persistence (NXT-1, gap G1) ---
+    _CHART_Y_REQUIRED: ClassVar[set[str]] = {
+        ChartType.BAR.value, ChartType.LINE.value,
+        ChartType.SCATTER.value, ChartType.HEATMAP.value,
+    }
+
+    def save_chart_spec(
+        self, project_id: str, dataset_id: str, snapshot_id: str,
+        fingerprint: str, chart_type: ChartType, x: str,
+        y: str | None = None, group: str | None = None,
+        encodings: dict | None = None, options: dict | None = None,
+        chart_id: str | None = None,
+    ) -> ChartSpecRecord:
+        self._require_dataset(project_id, dataset_id)
+        if not x.strip():
+            raise ValidationError("chart spec requires x field")
+        if chart_type.value in self._CHART_Y_REQUIRED and not (y or "").strip():
+            raise ValidationError(f"chart spec type {chart_type.value} requires y field")
+        enc = dict(encodings or {})
+        opts = dict(options or {})
+        size = len(json.dumps({"x": x, "y": y, "group": group,
+                               "encodings": enc, "options": opts}))
+        if size >= CHART_SPEC_MAX_BYTES:
+            raise ValidationError("chart spec exceeds size cap")
+        snap = self.store.get_snapshot(snapshot_id)
+        if snap is None or snap["dataset_id"] != dataset_id:
+            raise NotFoundError(f"evidence snapshot not found: {snapshot_id}")
+        if snap["fingerprint"] != fingerprint:
+            raise ConflictError(f"stale fingerprint for snapshot {snapshot_id}")
+        now = now_iso()
+        if chart_id:
+            row = self.store.get_chart_spec(chart_id)
+            if row is None or row["project_id"] != project_id:
+                raise NotFoundError(f"chart spec not found: {chart_id}")
+            version = int(row["version"]) + 1
+            created_at = row["created_at"]
+        else:
+            chart_id = new_id()
+            version = 1
+            created_at = now
+        record = {
+            "chart_id": chart_id, "project_id": project_id,
+            "dataset_id": dataset_id, "snapshot_id": snapshot_id,
+            "fingerprint": fingerprint, "chart_type": chart_type.value,
+            "x": x, "y": y, "group": group,
+            "encodings": enc, "options": opts,
+            "version": version, "created_at": created_at, "updated_at": now,
+        }
+        self.store.save_chart_spec(record)
+        stored = self.store.get_chart_spec(chart_id)
+        return self._chart_spec(stored if stored is not None else record)
+
+    @staticmethod
+    def _chart_spec(r: dict) -> ChartSpecRecord:
+        return ChartSpecRecord(
+            chart_id=r["chart_id"], project_id=r["project_id"],
+            dataset_id=r["dataset_id"], snapshot_id=r["snapshot_id"],
+            fingerprint=r["fingerprint"], chart_type=ChartType(r["chart_type"]),
+            x=r["x"], y=r["y"], group=r.get("group", r.get("grp")),
+            encodings=json.loads(r["encodings_json"]),
+            options=json.loads(r["options_json"]),
+            version=int(r["version"]),
+            created_at=datetime.fromisoformat(r["created_at"]),
+            updated_at=datetime.fromisoformat(r["updated_at"]),
+        )
+
+    def get_chart_spec(self, project_id: str, chart_id: str) -> ChartSpecRecord:
+        row = self.store.get_chart_spec(chart_id)
+        if row is None or row["project_id"] != project_id:
+            raise NotFoundError(f"chart spec not found: {chart_id}")
+        return self._chart_spec(row)
+
+    def list_chart_specs(self, project_id: str, dataset_id: str) -> ChartSpecListRecord:
+        self._require_dataset(project_id, dataset_id)
+        return ChartSpecListRecord(
+            dataset_id=dataset_id,
+            specs=[self._chart_spec(r) for r in self.store.list_chart_specs(dataset_id)],
         )
 
     def create_hypothesis(

@@ -46,6 +46,8 @@ MODELS = [
     "ListInsightsPayload", "FindingListRecord",
     "CreateHypothesisPayload", "HypothesisRecord",
     "TransitionHypothesisPayload", "HypothesisListRecord",
+    "SaveChartSpecPayload", "ChartSpecRecord", "GetChartSpecPayload",
+    "ListChartSpecsPayload", "ChartSpecListRecord",
     "DialogPickFilePayload", "DialogPickFileRecord",
 ]
 
@@ -111,6 +113,7 @@ def main() -> None:
         "DiagnosticLevel": [s.value for s in contracts.DiagnosticLevel],
         "FindingStatus": [s.value for s in contracts.FindingStatus],
         "HypothesisStatus": [s.value for s in contracts.HypothesisStatus],
+        "ChartType": [s.value for s in contracts.ChartType],
     }
     for name, values in enums.items():
         lines.append(f"export type {name} = " + " | ".join(json.dumps(v) for v in values) + ";")

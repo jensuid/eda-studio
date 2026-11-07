@@ -38,11 +38,13 @@ from backend.contracts import (
     ErrorCode,
     ErrorContract,
     ExportDatasetPayload,
+    GetChartSpecPayload,
     GetDatasetPreviewPayload,
     GetDatasetProfilePayload,
     GetDatasetProvenancePayload,
     GetProfileByIdPayload,
     ImportDatasetPayload,
+    ListChartSpecsPayload,
     ListInsightsPayload,
     ListProfilesPayload,
     ListSnapshotsPayload,
@@ -56,6 +58,7 @@ from backend.contracts import (
     RunProfilePayload,
     RunQualityPayload,
     RunReportPayload,
+    SaveChartSpecPayload,
     TransitionFindingPayload,
     TransitionHypothesisPayload,
 )
@@ -81,6 +84,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "insight.finding.transition": TransitionFindingPayload,
     "insight.hypothesis.create": CreateHypothesisPayload,
     "insight.hypothesis.transition": TransitionHypothesisPayload,
+    "chart.spec.save": SaveChartSpecPayload,  # NXT-1 chart-spec persistence
     "dialog.pick_file": DialogPickFilePayload,  # P2-3 native file dialog
 }
 _QUERIES: dict[str, type[BaseModel]] = {
@@ -93,6 +97,8 @@ _QUERIES: dict[str, type[BaseModel]] = {
     "dataset.provenance": GetDatasetProvenancePayload,  # M3 P1 SEC-012
     "insight.findings.list": ListInsightsPayload,
     "insight.hypotheses.list": ListInsightsPayload,
+    "chart.spec.get": GetChartSpecPayload,  # NXT-1
+    "chart.spec.list": ListChartSpecsPayload,  # NXT-1
     "dataset.cleaning.preview": CleaningPreviewPayload,
 }
 
@@ -278,6 +284,12 @@ class Bridge:
             elif req.command == "insight.hypothesis.transition":
                 result = self.service.transition_hypothesis(
                     payload.project_id, payload.hypothesis_id, payload.to_status)
+            elif req.command == "chart.spec.save":
+                result = self.service.save_chart_spec(
+                    payload.project_id, payload.dataset_id, payload.snapshot_id,
+                    payload.fingerprint, payload.chart_type, payload.x,
+                    payload.y, payload.group, payload.encodings, payload.options,
+                    payload.chart_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError:
@@ -342,6 +354,12 @@ class Bridge:
                     payload.project_id, payload.dataset_id)
             elif req.command == "insight.hypotheses.list":
                 result = self.service.list_hypotheses(
+                    payload.project_id, payload.dataset_id)
+            elif req.command == "chart.spec.get":
+                result = self.service.get_chart_spec(
+                    payload.project_id, payload.chart_id)
+            elif req.command == "chart.spec.list":
+                result = self.service.list_chart_specs(
                     payload.project_id, payload.dataset_id)
             else:  # pragma: no cover
                 raise AssertionError(req.command)

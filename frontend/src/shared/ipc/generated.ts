@@ -19,6 +19,8 @@ export type FindingStatus = "proposed" | "accepted" | "archived";
 
 export type HypothesisStatus = "proposed" | "accepted" | "investigating" | "supported" | "not_supported" | "inconclusive" | "archived";
 
+export type ChartType = "bar" | "line" | "scatter" | "hist" | "box" | "heatmap";
+
 export interface ErrorContract {
   code: ErrorCode;
   message: string;
@@ -549,6 +551,52 @@ export interface TransitionHypothesisPayload {
 export interface HypothesisListRecord {
   dataset_id: string;
   hypotheses: HypothesisRecord[];
+}
+
+export interface SaveChartSpecPayload {
+  project_id: string;
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  chart_type: ChartType;
+  x: string;
+  y?: string;
+  group?: string;
+  encodings?: Record<string, unknown>;
+  options?: Record<string, unknown>;
+  chart_id?: string;
+}
+
+export interface ChartSpecRecord {
+  chart_id: string;
+  project_id: string;
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  chart_type: ChartType;
+  x: string;
+  y?: string;
+  group?: string;
+  encodings?: Record<string, unknown>;
+  options?: Record<string, unknown>;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetChartSpecPayload {
+  project_id: string;
+  chart_id: string;
+}
+
+export interface ListChartSpecsPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface ChartSpecListRecord {
+  dataset_id: string;
+  specs: ChartSpecRecord[];
 }
 
 export interface DialogPickFilePayload {

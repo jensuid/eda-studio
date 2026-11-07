@@ -111,6 +111,22 @@ CREATE TABLE IF NOT EXISTS hypotheses (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS chart_specs (
+    chart_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    chart_type TEXT NOT NULL,
+    x TEXT NOT NULL,
+    y TEXT,
+    grp TEXT,
+    encodings_json TEXT NOT NULL,
+    options_json TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS idempotency (
     key TEXT NOT NULL,
     command TEXT NOT NULL,
@@ -453,6 +469,32 @@ class Store:
         with self._lock:
             rows = self.db.execute(
                 "SELECT * FROM findings WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def save_chart_spec(self, record: dict) -> None:
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO chart_specs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (record["chart_id"], record["project_id"], record["dataset_id"],
+                 record["snapshot_id"], record["fingerprint"], record["chart_type"],
+                 record["x"], record["y"], record["group"],
+                 json.dumps(record["encodings"]), json.dumps(record["options"]),
+                 record["version"], record["created_at"], record["updated_at"]),
+            )
+            self.db.commit()
+
+    def get_chart_spec(self, chart_id: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM chart_specs WHERE chart_id = ?", (chart_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_chart_specs(self, dataset_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM chart_specs WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
             ).fetchall()
         return [dict(r) for r in rows]
 

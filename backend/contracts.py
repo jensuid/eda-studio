@@ -691,6 +691,70 @@ class HypothesisListRecord(BaseModel):
     hypotheses: list[HypothesisRecord]
 
 
+# ---- ChartSpec persistence (NXT-1, gap G1): render-only specs ----
+# A ChartSpec is a SMALL, declarative description of a chart (which columns
+# map to x/y/group, plus small encodings/options). It never carries data
+# rows — no whole-DataFrame JSON (ADR-003). Bindings are grounded in an
+# immutable snapshot (snapshot_id + fingerprint) like Findings.
+
+CHART_SPEC_MAX_BYTES = 50 * 1024  # hard cap: spec payload < 50 KB
+
+
+class ChartType(str, Enum):
+    BAR = "bar"
+    LINE = "line"
+    SCATTER = "scatter"
+    HIST = "hist"
+    BOX = "box"
+    HEATMAP = "heatmap"
+
+
+class SaveChartSpecPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    snapshot_id: str = Field(min_length=1)
+    fingerprint: str = Field(min_length=1)
+    chart_type: ChartType
+    x: str = Field(min_length=1)
+    y: str | None = None
+    group: str | None = None
+    encodings: dict[str, Any] = Field(default_factory=dict, max_length=20)
+    options: dict[str, Any] = Field(default_factory=dict, max_length=20)
+    chart_id: str | None = None  # present => overwrite (version increments)
+
+
+class ChartSpecRecord(BaseModel):
+    chart_id: str
+    project_id: str
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    chart_type: ChartType
+    x: str
+    y: str | None = None
+    group: str | None = None
+    encodings: dict[str, Any] = Field(default_factory=dict)
+    options: dict[str, Any] = Field(default_factory=dict)
+    version: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class GetChartSpecPayload(BaseModel):
+    project_id: str
+    chart_id: str
+
+
+class ListChartSpecsPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class ChartSpecListRecord(BaseModel):
+    dataset_id: str
+    specs: list[ChartSpecRecord]
+
+
 # ---- Diagnostics: user-initiated redacted bundle (M3 P2, Doc15 §10) ----
 
 class DiagnosticLevel(str, Enum):

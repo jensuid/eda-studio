@@ -8,11 +8,23 @@ arrives with the pyarrow adapter without changing this port.
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import threading
 from pathlib import Path
 
-from backend.domain import Dataset, Project, Snapshot
+from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes
+
+log = logging.getLogger(__name__)
+
+
+class ConflictError(ValueError):
+    """Integrity / optimistic-concurrency conflict.
+
+    Raised for opaque fingerprint mismatch on verify-on-read (K5) and
+    re-exported by `backend.application` so `ipc.py` translates it to the
+    CONFLICT ErrorContract.
+    """
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS projects (
@@ -56,7 +68,8 @@ CREATE TABLE IF NOT EXISTS snapshots (
     dataset_id TEXT NOT NULL,
     fingerprint TEXT NOT NULL,
     row_count INTEGER NOT NULL,
-    columns TEXT NOT NULL
+    columns TEXT NOT NULL,
+    file_fingerprint TEXT
 );
 CREATE TABLE IF NOT EXISTS cleanings (
     id TEXT PRIMARY KEY,
@@ -122,8 +135,26 @@ class Store:
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.executescript(SCHEMA)
+        self._migrate_snapshots_file_fingerprint()
         self.db.commit()
         self._backfill_snapshots()
+
+    def _migrate_snapshots_file_fingerprint(self) -> None:
+        """Add snapshots.file_fingerprint to pre-existing databases (K5).
+
+        Existing rows keep NULL: their stored bytes predate file-hash
+        registration, so verify-on-read skips them instead of failing
+        spuriously (the registered `fingerprint` is the source-bytes hash
+        at import, not the stored Parquet hash).
+        """
+        cols = {
+            r[1]
+            for r in self.db.execute("PRAGMA table_info(snapshots)").fetchall()
+        }
+        if "file_fingerprint" not in cols:
+            self.db.execute(
+                "ALTER TABLE snapshots ADD COLUMN file_fingerprint TEXT"
+            )
 
     def _backfill_snapshots(self) -> None:
         """Register pre-M3 dataset snapshots in the registry (idempotent)."""
@@ -133,7 +164,9 @@ class Store:
             ).fetchall()
             for row in rows:
                 self.db.execute(
-                    "INSERT OR IGNORE INTO snapshots VALUES (?,?,?,?,?)",
+                    "INSERT OR IGNORE INTO snapshots"
+                    " (snapshot_id, dataset_id, fingerprint, row_count, columns)"
+                    " VALUES (?,?,?,?,?)",
                     (row["snapshot_id"], row["dataset_id"],
                      row["fingerprint"], row["row_count"], row["columns"]),
                 )
@@ -141,19 +174,25 @@ class Store:
 
     def _insert_snapshot_no_commit(self, snapshot_id: str, dataset_id: str,
                                    fingerprint: str, row_count: int,
-                                   columns: list | tuple[str, ...]) -> None:
+                                   columns: list | tuple[str, ...],
+                                   file_fingerprint: str | None = None) -> None:
         self.db.execute(
-            "INSERT OR IGNORE INTO snapshots VALUES (?,?,?,?,?)",
+            "INSERT OR IGNORE INTO snapshots"
+            " (snapshot_id, dataset_id, fingerprint, row_count, columns,"
+            "  file_fingerprint)"
+            " VALUES (?,?,?,?,?,?)",
             (snapshot_id, dataset_id, fingerprint, row_count,
-             json.dumps(list(columns))),
+             json.dumps(list(columns)), file_fingerprint),
         )
 
     def register_snapshot(self, snapshot_id: str, dataset_id: str,
                           fingerprint: str, row_count: int,
-                          columns: list | tuple[str, ...]) -> None:
+                          columns: list | tuple[str, ...],
+                          file_fingerprint: str | None = None) -> None:
         with self._lock:
             self._insert_snapshot_no_commit(
-                snapshot_id, dataset_id, fingerprint, row_count, columns)
+                snapshot_id, dataset_id, fingerprint, row_count, columns,
+                file_fingerprint)
             self.db.commit()
 
     def get_snapshot(self, snapshot_id: str) -> dict | None:
@@ -198,7 +237,8 @@ class Store:
         with self._lock:
             try:
                 self._insert_snapshot_no_commit(
-                    snapshot_id, dataset_id, fingerprint, row_count, columns)
+                    snapshot_id, dataset_id, fingerprint, row_count, columns,
+                    fingerprint_bytes(data))
                 self._insert_cleaning_no_commit(cleaning_record)
                 self.db.commit()
             except Exception:
@@ -294,8 +334,33 @@ class Store:
             ),
         )
 
-    def read_snapshot(self, snapshot_id: str) -> bytes:
-        return (self.root / "snapshots" / f"{snapshot_id}.parquet").read_bytes()
+    def read_snapshot(self, snapshot_id: str, strict: bool = False) -> bytes:
+        """Read snapshot bytes, verifying the stored-file fingerprint (K5).
+
+        Verification compares SHA-256 of the bytes on disk against the
+        registry's `file_fingerprint` (hash of the stored Parquet payload —
+        distinct from `fingerprint`, which at import is the source-bytes
+        hash). Snapshots without a registry row or with NULL
+        `file_fingerprint` (pre-K5 databases) cannot be verified and are
+        returned as-is.
+
+        strict=True raises ConflictError on mismatch (export/report/pdf
+        paths); strict=False logs a warning and returns the bytes.
+        """
+        data = (self.root / "snapshots" / f"{snapshot_id}.parquet").read_bytes()
+        row = self.get_snapshot(snapshot_id)
+        expected = row.get("file_fingerprint") if row else None
+        if expected is None:
+            log.debug("snapshot %s: no file_fingerprint registered; "
+                      "skipping verify-on-read", snapshot_id)
+            return data
+        actual = fingerprint_bytes(data)
+        if actual != expected:
+            if strict:
+                raise ConflictError(f"snapshot fingerprint mismatch: {snapshot_id}")
+            log.warning("snapshot %s: fingerprint mismatch on read "
+                        "(verify-on-read, non-strict)", snapshot_id)
+        return data
 
     # -- jobs (durable lifecycle, OBS-009) --------------------------------
     def save_job(self, job_id: str, command: str, state: str, correlation_id: str | None) -> None:
@@ -321,6 +386,14 @@ class Store:
                 "SELECT * FROM job_events WHERE seq > ? ORDER BY seq", (seq,)
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def max_event_seq(self) -> int:
+        """Highest persisted job-event seq (K4 durable seq seed)."""
+        with self._lock:
+            row = self.db.execute(
+                "SELECT COALESCE(MAX(seq), 0) AS m FROM job_events"
+            ).fetchone()
+        return int(row["m"])
 
     # -- profiles (G6) ----------------------------------------------------
     def save_profile(self, profile_id: str, dataset_id: str, snapshot_id: str,

@@ -73,7 +73,7 @@ from backend.ingestion import (
     to_parquet_bytes,
 )
 from backend.pdf_renderer import render_pdf
-from backend.persistence import Store
+from backend.persistence import ConflictError, Store
 from backend.profiling import profile_table
 from backend.quality import assess_quality, summarise
 from backend.reporting import _RENDERER_VERSION, now_iso, render_html
@@ -112,10 +112,6 @@ class ValidationError(ValueError):
     """Operation invalid for this snapshot (FLOW-CLEAN-001 F2/F4)."""
 
 
-class ConflictError(ValueError):
-    """Optimistic-concurrency failure (expected_parent_fingerprint stale)."""
-
-
 class WorkbenchService:
     def __init__(self, store: Store, jobs: JobManager) -> None:
         self.store = store
@@ -132,7 +128,8 @@ class WorkbenchService:
             raise NotFoundError(f"project not found: {project_id}")
         table, source_bytes = read_source(source_path)
         snapshot_id = new_id()
-        self.store.save_snapshot(snapshot_id, to_parquet_bytes(table))
+        parquet_bytes = to_parquet_bytes(table)
+        self.store.save_snapshot(snapshot_id, parquet_bytes)
         columns = tuple(table.column_names)
         dataset = Dataset(
             dataset_id=new_id(),
@@ -148,6 +145,7 @@ class WorkbenchService:
             snapshot_id, dataset.dataset_id,
             dataset.snapshot.fingerprint, dataset.snapshot.row_count,
             dataset.snapshot.columns,
+            file_fingerprint=fingerprint_bytes(parquet_bytes),
         )
         return DatasetRecord(
             dataset_id=dataset.dataset_id, project_id=project_id, name=dataset_name,
@@ -374,7 +372,7 @@ class WorkbenchService:
 
         def work() -> None:
             snap = dataset.snapshot
-            parquet_bytes = self.store.read_snapshot(snap.snapshot_id)
+            parquet_bytes = self.store.read_snapshot(snap.snapshot_id, strict=True)
             row_count, _cols = profile_table(parquet_bytes)
             profile_row = None
             for r in reversed(self.store.list_profiles(dataset.dataset_id)):
@@ -498,7 +496,7 @@ class WorkbenchService:
 
         def work() -> None:
             snap = dataset.snapshot
-            parquet_bytes = self.store.read_snapshot(snap.snapshot_id)
+            parquet_bytes = self.store.read_snapshot(snap.snapshot_id, strict=True)
             row_count, _cols = profile_table(parquet_bytes)
             profile_row = None
             for r in reversed(self.store.list_profiles(dataset.dataset_id)):
@@ -846,7 +844,8 @@ class WorkbenchService:
             import pyarrow.parquet as pq
 
             table = pq.read_table(
-                io.BytesIO(self.store.read_snapshot(dataset.snapshot.snapshot_id)))
+                io.BytesIO(self.store.read_snapshot(
+                    dataset.snapshot.snapshot_id, strict=True)))
             dest = Path(dest_path)
             dest.parent.mkdir(parents=True, exist_ok=True)
             if export_format is ExportFormat.CSV:

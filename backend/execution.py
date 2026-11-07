@@ -31,14 +31,18 @@ _TRANSITIONS: dict[JobState, set[JobState]] = {
 class JobManager:
     def __init__(self, store: Store) -> None:
         self.store = store
-        self._seq = 0
+        # K4: durable seq — seed from the persisted max so a restarted
+        # manager never reuses a seq already in job_events.
+        self._seq = store.max_event_seq()
 
     def _transition(self, job: JobStatus, to: JobState, message: str = "") -> None:
         allowed = _TRANSITIONS[job.state]
         if to not in allowed:
             raise ValueError(f"illegal job transition {job.state.value} -> {to.value}")
         job.state = to
-        self._seq += 1
+        # Never regress below the persisted max (covers a second manager
+        # instance writing through the same Store).
+        self._seq = max(self._seq, self.store.max_event_seq()) + 1
         event = JobEvent(
             event_id=new_id(),
             job_id=job.job_id,

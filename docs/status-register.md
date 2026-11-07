@@ -31,7 +31,7 @@ Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 | P0-2c | K6 generator fail-loud | done | regen diff kosong | tools/generate_types.py introspeksi model publik |
 | P0-3 | Sinkron dokumen basi + untracked | done | — | final-roadmap.md, README-M1.md, status-register dibuat 2026-11-07 |
 | P1-1 | ADR-003 Arrow/structure/Pyright | done | gate §10 lokal hijau 2026-11-07: 74 passed, ruff clean, tsc clean, gen diff kosong | `docs/ADR-003.md` Accepted (format ADR-001/002); AGENTS.md footnote ADR-003; klaim terverifikasi via grep (cap di contracts.py:118/288, bivariate.py:24, histograms.py:22; pyarrow hanya Parquet/CSV internal; pyright nol); Pyright diputuskan di P1-4 |
-| P1-2 | Seq durable K4 + verify K5 | todo | — | — |
+| P1-2 | Seq durable K4 + verify K5 | done | commit 1fb5f4d (P1-1) | gate §10 lokal hijau: pytest 80 passed (6 test baru `tests/test_p1_seq_snapshot.py`), ruff ✅, tsc ✅, generator ✅. K4: `JobManager.__init__` seed `_seq` dari `Store.max_event_seq()` + guard anti-regresi. K5: kolom `snapshots.file_fingerprint` (migrasi ALTER TABLE, baris lama NULL → verify dilewati) karena fingerprint import = hash source-bytes ≠ hash file Parquet; verify-on-read strict/non-strict; strict di export/report/pdf; `ConflictError` pindah ke `persistence.py` (diekspor ulang application, ipc tak berubah). |
 | P1-3 | Round-trip test + coverage | todo | — | — |
 | P1-4 | Pyright strict | todo | — | — |
 | P2-1 | tokens.css | todo | — | — |

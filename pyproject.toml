@@ -12,6 +12,7 @@ dependencies = [
     "pydantic>=2.9",
     "pyarrow>=14",   # canonical Parquet snapshots (Doc04)
     "openpyxl>=3.1", # Excel import adapter (M1-next)
+    "reportlab>=4.0", # PDF export renderer (backend/pdf_renderer.py)
 ]
 # NOTE: local dev interpreter is Python 3.9, so the venv pins numpy<2 for
 # pyarrow 14 compat; target runtime 3.12+ uses current pyarrow + numpy 2.

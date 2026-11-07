@@ -206,6 +206,19 @@ Sumber: `docs/EVALUATION-REMEDIATION-2026-11-07.md` (evaluator independen). Sign
 
 ---
 
+## NXT — Fase implementasi (post-remediasi)
+
+Sumber: `docs/ROADMAP-STATUS-2026-11-07.md` (audit vs Doc16 §3/§4.1). Remediasi P0–P4 selesai; M1 ✅ done, M2 sebagian besar done, M3 code-complete (signing P4-4 ditunda). Arrow IPC tetap ditunda (trigger ADR-003 belum terpenuhi); Phase 5 di luar MVP.
+
+### NXT-1 — Chart Specification Persistence (penutupan sisa M2 / Phase 3)
+- **Mengapa:** gap G1 — deliverable Phase 3 "membuat dan menyimpan visualizations" yang belum ada implementasinya sama sekali; tanpa artefak chart yang tersimpan, exit criteria M2/Phase 3 tidak terpenuhi dan Phase 4 tidak memiliki artefak deterministik untuk klaim statistik.
+- **Berkas:** `backend/contracts.py` (payload/record baru), `backend/persistence.py` (tabel `chart_specs` + repository pola `save_finding`), `backend/application.py` (`save_chart_spec` + `list_chart_specs`), `backend/ipc.py` (`chart.spec.save` command + `chart.specs.list` query), `tools/generate_types.py` MODELS + regen TS, `frontend/src/features/bivariate/BivariatePage.tsx` + `frontend/src/features/histogram/HistogramChart.tsx` (tombol Simpan + daftar spec), `tests/test_chart_spec.py` (baru).
+- **Langkah:** (1) Model kontrak; (2) service: verifikasi `snapshot_id` milik dataset + fingerprint cocok (tolak stale `CONFLICT`), list kembalikan spec + status stale; (3) daftarkan command/query + MODELS generator + regen TS (diff run kedua kosong); (4) frontend: tombol simpan + daftar spec + banner stale, tanpa ubah visual chart; (5) test: save→list round-trip, stale ditandai, fingerprint mismatch `CONFLICT`, command tak-terdaftar `PERMISSION_DENIED`.
+- **Kriteria diterima:** chart tersimpan dapat dilihat kembali setelah reopen project; spec snapshot basi ditandai stale; `grep -n "chart.spec" backend/ipc.py` ≥ 2; generator diff kosong; payload hanya spec kecil (patuh ADR-003).
+- **Urutan lanjut:** G2 Analysis Plan/DAG → G3 Phase 4 anomaly/modeling-readiness → G4 Pyright staged. Arrow IPC (G5) ditunda sampai trigger ADR-003 terukur.
+
+---
+
 ## 10. Gate wajib sebelum tugas dinyatakan selesai
 
 ```

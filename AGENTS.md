@@ -9,7 +9,7 @@
 - Immutable snapshots: source bytes are fingerprinted (SHA-256) and never mutated.
 - No whole-DataFrame JSON over IPC; analytics payloads use Arrow IPC (M2+).
   [^1]: Arrow IPC status: **belum diterapkan** per ADR-003 (2026-11-07) — JSON + cap
-  aktif (preview ≤ 200, scatter ≤ 2000, bin ≤ 30). PyArrow hanya untuk
+  aktif (preview ≤ 200, scatter ≤ 1500, bin ≤ 30). PyArrow hanya untuk
   Parquet/CSV di dalam backend. Revisit trigger: payload agregat > 100 KB,
   scatter > 2000, atau data tabular mentah baru.
 - Run gates before declaring done: `.venv/bin/python -m pytest -q` and `.venv/bin/ruff check backend tests`.

@@ -66,3 +66,17 @@ tumbuh seiring baris karena cap sudah menahan semua jalur.
 .venv/bin/python tools/benchmark.py --payloads 10000 /tmp/p.json
 .venv/bin/python tools/benchmark.py --payloads 100000 /tmp/p.json
 ```
+
+## Addendum NXT-4 (2026-11-07): cap scatter 2000 → 1500
+
+Mitigasi pemilik: cap scatter bivariate diturunkan ke 1500 titik
+(`backend/bivariate.py` `_SAMPLE_MAX`, `backend/contracts.py`
+`_BIVAR_SAMPLE_MAX`). Re-ukur 10.000 baris:
+
+- scatter ≤1500: **76,182 B (74.4% trigger)**, margin kini **26,218 B**
+- Jalur lain tidak berubah (preview 15,986 B adalah terbesar berikutnya)
+
+Margin trigger kembali nyaman (≈26 KB, bukan <1 KB). Cap adalah kontrak:
+menurunkannya tidak memerlukan amandemen ADR-003. Catatan: bentuk endpoint
+tidak berubah — `sampled` flag dan `sample_size` tetap mengumumkan
+sampling, tidak ada downgrade diam-diam.

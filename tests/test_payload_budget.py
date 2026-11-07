@@ -34,7 +34,7 @@ def test_payload_scan_covers_capped_paths() -> None:
     result = run_payloads(2500)
     names = {e["name"] for e in result["entries"]}
     for required in (
-        "dataset.bivariate.run(scatter≤2000)",
+        "dataset.bivariate.run(scatter≤1500)",
         "dataset.preview(limit=200)",
         "dataset.histogram.run",
         "dataset.quality.run",

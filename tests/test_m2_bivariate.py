@@ -88,4 +88,4 @@ def test_payload_shape_small(bridge, project_id):
     res = _bivar(bridge, project_id, ds, "id", "sales")
     assert res["ok"], res
     assert len(json.dumps(res["data"])) < 10000
-    assert len(res["data"]["scatter_points"]) <= 2000
+    assert len(res["data"]["scatter_points"]) <= 1500

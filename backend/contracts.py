@@ -319,7 +319,7 @@ class HistogramRecord(BaseModel):
 # full DataFrame is never stored in the record (only ringkasan + sampel).
 # A3 locked: no persistence in this slice — recompute is cheap (like
 # histogram/quality, not cleaning). Results live in job history only.
-_BIVAR_SAMPLE_MAX = 2000
+_BIVAR_SAMPLE_MAX = 1500
 
 
 class RunBivariatePayload(BaseModel):

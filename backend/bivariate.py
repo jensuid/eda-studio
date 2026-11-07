@@ -7,7 +7,7 @@ for exactly two columns (Ratified V1-V7, 2026-11-06):
   - B3 categorical x categorical -> cross-tab counts top-10 + "Lainnya" (V4)
 
 Rules: pairwise-complete pairs only, deterministic first-n sampling capped
-at 2000 points (V3, no silent downgrade), no causal claims, no full
+at 1500 points (V3, no silent downgrade), no causal claims, no full
 DataFrame in the record (V6/A2). Types reuse profiling's inference
 (numeric iff every non-missing value parses as float).
 """
@@ -21,7 +21,7 @@ import pyarrow.parquet as pq
 
 from backend.profiling import _is_missing
 
-_SAMPLE_MAX = 2000
+_SAMPLE_MAX = 1500
 _TOP_N = 10
 
 

@@ -117,7 +117,7 @@ def run_payloads(rows: int) -> dict:
     Each entry measures the full `Response` envelope (exactly what
     crosses the pywebview boundary). Scenario = worst-case capped
     payloads: preview at limit 200, histogram on a 30-bin cap,
-    scatter at the 2000-point cap, quality/readiness aggregates,
+    scatter at the 1500-point cap, quality/readiness aggregates,
     cleaning preview, export, report, and every list/get query
     (snapshots, provenance, profiles, findings, chart specs, plans).
     """
@@ -180,7 +180,7 @@ def run_payloads(rows: int) -> dict:
             {"project_id": pid, "dataset_id": did})
     measure("dataset.histogram.run", raw_cmd, "dataset.histogram.run",
             {"project_id": pid, "dataset_id": did, "column_name": "x"})
-    measure("dataset.bivariate.run(scatter≤2000)", raw_cmd,
+    measure("dataset.bivariate.run(scatter≤1500)", raw_cmd,
             "dataset.bivariate.run",
             {"project_id": pid, "dataset_id": did, "column_a": "x", "column_b": "y"})
     measure("dataset.quality.run", raw_cmd, "dataset.quality.run",

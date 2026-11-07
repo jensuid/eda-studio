@@ -123,7 +123,7 @@ def default_file_dialog(payload: DialogPickFilePayload) -> DialogPickFileRecord:
     fallback. A cancelled dialog returns ``path=None``.
     """
     try:
-        import webview
+        import webview  # pyright: ignore[reportMissingImports] -- optional dep; absent = headless fallback
     except Exception:  # noqa: BLE001 -- absent webview = headless, unavailable
         return DialogPickFileRecord(path=None, available=False)
     windows = getattr(webview, "windows", None) or []

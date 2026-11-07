@@ -16,7 +16,7 @@ folder, Linux → folder). Semua perintah dijalankan dari root repo.
 | Python + dependensi proyek | sesuai repo (`uv sync` atau `pip install -e .`) |
 | PyInstaller | `pip install pyinstaller` (hanya di build host) |
 | Node.js | `pnpm` (dipakai otomatis bila ada) atau `npm` — frontend dibangun oleh tool |
-| pywebview runtime | sudah termasuk dependensi proyek |
+| pywebview | `pip install pywebview` — **opsional** di backend (import lazy, fallback headless), tapi **wajib** di build host desktop karena `desktop/main.py` + spec PyInstaller membutuhkannya |
 
 Cek kesiapan tanpa membangun apa pun:
 

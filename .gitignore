@@ -14,4 +14,4 @@ eda_workbench.egg-info/
 frontend/.playwright-browsers/
 frontend/test-results/
 .pnpm-store/
-.gh-config/  # token gh (plaintext) — jangan pernah di-commit
+.gh-config/

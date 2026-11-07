@@ -2,7 +2,7 @@
  * BivariateSection — SCREEN-BIVAR-001 + FLOW-BIVAR-001.
  * Two-column selector + mode label, JobManager-wrapped run via ipcClient
  * (mutation-driven feedback, never query isPending), 8 states, stale
- * banner, exact/sampled badge. Mounted below Quality in ProjectPage.
+ * banner, exact/sampled badge. Komposisi di BivariatePage (P2-2).
  */
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";

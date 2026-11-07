@@ -2,7 +2,7 @@
  * PdfSection — SCREEN-PDF-001 + FLOW-PDF-001.
  * Primary action "Buat PDF" (JobManager-wrapped dataset.pdf.generate via
  * ipcClient), PdfSummary after done, partial (stale) banner, draft badge,
- * error copy. Mounted below ReportSection in ProjectPage.
+ * error copy. Komposisi di ReportPage (P2-2).
  */
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";

@@ -2,7 +2,7 @@
  * ReportSection — SCREEN-REPORT-001 + FLOW-REPORT-001.
  * Scope radio + source list, JobManager-wrapped generate via ipcClient
  * (mutation-driven feedback, never query isPending), 8 states, stale
- * banner, draft/final badge. Mounted below Bivariate in ProjectPage.
+ * banner, draft/final badge. Komposisi di ReportPage (P2-2).
  */
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";

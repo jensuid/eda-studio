@@ -177,3 +177,169 @@ button {
   margin-block: var(--space-1);
   font-size: var(--font-size-md);
 }
+
+/* ---------- App shell P2-2 (grid mockup 210/1fr/240) --------------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 210px 1fr 240px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "header header header"
+    "rail main aside";
+  min-height: 100vh;
+}
+
+.app-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.app-header h1 {
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+.app-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.app-main {
+  grid-area: main;
+  padding: var(--space-5);
+  overflow-y: auto;
+}
+
+.app-aside {
+  grid-area: aside;
+  padding: var(--space-3);
+  border-left: 1px solid var(--color-border-subtle);
+  overflow-y: auto;
+}
+
+.nav-item {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: var(--font-size-md);
+}
+
+.nav-item-active {
+  border-color: var(--color-border-subtle);
+  background: var(--color-surface-raised);
+  font-weight: 600;
+}
+
+.protocol-banner {
+  color: var(--color-status-danger);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+/* ---------- Job Center ----------------------------------------------- */
+.job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.job-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.job-progress {
+  height: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.job-progress-fill {
+  height: 100%;
+  background: var(--color-chart-scatter-point);
+}
+
+/* ---------- Toast ------------------------------------------------------ */
+.toast-region {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 100;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-md);
+  max-width: 360px;
+}
+
+.toast-success {
+  border-left: 3px solid var(--color-status-success);
+}
+
+.toast-error {
+  border-left: 3px solid var(--color-status-danger);
+}
+
+.toast-info {
+  border-left: 3px solid var(--color-chart-scatter-point);
+}
+
+/* ---------- Skeleton (DS-CORE-001: berlabel, bukan spinner) ----------- */
+.skeleton-block {
+  height: 14px;
+  margin-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* ---------- Error boundary --------------------------------------------- */
+.error-boundary {
+  padding: var(--space-4);
+  border: 1px solid var(--color-status-danger);
+  border-radius: var(--radius-md);
+}
+
+/* ---------- Responsif shell (visual-only P2-2; review penuh P2-4) ----- */
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 64px 1fr;
+    grid-template-areas:
+      "header header"
+      "rail main";
+  }
+
+  .app-aside {
+    display: none;
+  }
+
+  .nav-label {
+    display: none;
+  }
+}

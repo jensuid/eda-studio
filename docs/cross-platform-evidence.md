@@ -39,3 +39,22 @@ pytest 74 passed, ruff clean, SBOM 16 components, frontend SBOM 122 components, 
 7. Record: date, OS/build, python version, commit hash, pass/fail per step in the table above.
 
 Manual packaging/signing ( installer) requires a signed build host — not automatable in this repo; tracked as release-blocker in [release-checklist.md](release-checklist.md).
+
+## P3-1 final (2026-11-07, Beta)
+
+Config packaging per-OS kini terdaftar di repo: PyInstaller spec
+`desktop/eda-workbench.spec` (BUILD-016/017: `BUNDLE` di macOS, `COLLECT`
+di Windows/Linux; frontend/dist dibundel, runtime aplikasi terkontrol
+BUILD-002/015) + build script `tools/build_packaging.py`
+(`--check-only` / unsigned / `--sign` via env `EDA_SIGN_IDENTITY` /
+`EDA_SIGN_THUMBPRINT` + notarisasi macOS). Build bertanda tangan tetap
+**blocker manual** — kredensial signing tidak masuk repo (Doc14 §6) dan
+tidak ada build host bertanda tangan di lingkungan ini; unsigned build
+saja yang dapat diverifikasi dari sini.
+
+Dokumen beta (P3-1 langkah 2–3): [beta-validation-script.md](beta-validation-script.md)
+(7 skenario end-to-end + kanal feedback GitHub Issues `beta-feedback`),
+[release-notes-template.md](release-notes-template.md),
+[bug-report-template.md](bug-report-template.md). Checklist rilis mendapat
+blok sign-off pemilik di [release-checklist.md](release-checklist.md)
+(belum ditandatangani — menandatangani adalah langkah manual pemilik).

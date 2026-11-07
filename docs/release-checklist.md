@@ -23,6 +23,20 @@ Checklist berbasis evidence. Status diisi dari gate yang benar-benar dijalankan.
 - `tsc --noEmit`: clean
 - frontend `npm run build`: sukses (warning chunk-size saja)
 
+## Sign-off rilis (P3-1, manual)
+
+Packaging per-OS terdaftar: `desktop/eda-workbench.spec` (PyInstaller
+BUILD-016/017) + `tools/build_packaging.py` (`--sign` butuh host bertanda
+tangan; kredensial tidak di repo). Beta validation script:
+[beta-validation-script.md](beta-validation-script.md) (7 skenario).
+Dokumen ini **belum ditandatangani** — tanda tangan adalah langkah manual
+pemilik setelah build bertanda tangan + 7 skenario lolos.
+
+| Peran | Nama | Tanggal | Tanda tangan |
+|---|---|---|---|
+| Release owner | | | |
+| Tester beta (≥2) | | | |
+
 ## Non-MVP (tidak masuk RC — sesuai §4.2)
 
 AI integration, plugin marketplace, collaboration, cloud platform.

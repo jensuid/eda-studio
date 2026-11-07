@@ -105,7 +105,11 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: Performance envelope
         run: python tools/benchmark.py 10000 dist/perf.json
+      - name: Payload measurement (ADR-003 trigger monitoring)
+        run: python tools/benchmark.py --payloads 10000 dist/payload.json
       - uses: actions/upload-artifact@v4
         with:
           name: perf-${{ matrix.os }}
-          path: dist/perf.json
+          path: |
+            dist/perf.json
+            dist/payload.json

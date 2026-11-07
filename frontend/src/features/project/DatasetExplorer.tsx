@@ -29,6 +29,7 @@ const PLAN_STEP_TYPES: PlanStepType[] = [
   "bivariate",
   "report",
   "pdf",
+  "readiness",
 ];
 
 const PLAN_STEP_DEFAULTS: Record<PlanStepType, Record<string, unknown>> = {
@@ -38,6 +39,7 @@ const PLAN_STEP_DEFAULTS: Record<PlanStepType, Record<string, unknown>> = {
   bivariate: { column_a: "", column_b: "" },
   report: { scope: "all" },
   pdf: { scope: "all" },
+  readiness: {},
 };
 
 function planStatusClass(status: PlanStatus): string {

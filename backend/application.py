@@ -66,6 +66,8 @@ from backend.contracts import (
     ProvenanceRecord,
     QualityFindingRecord,
     QualityRecord,
+    ReadinessItemRecord,
+    ReadinessRecord,
     ReportRecord,
     ReportScope,
     ReportSection,
@@ -83,6 +85,7 @@ from backend.ingestion import (
     read_source,
     to_parquet_bytes,
 )
+from backend.modeling_readiness import assess_readiness
 from backend.pdf_renderer import render_pdf
 from backend.persistence import ConflictError, Store
 from backend.profiling import profile_table
@@ -402,6 +405,40 @@ class WorkbenchService:
             )
 
         self.jobs.run("dataset.quality.run", work, correlation_id)
+        return holder["rec"]
+
+    def run_readiness(self, project_id: str, dataset_id: str,
+                      correlation_id: str | None = None) -> ReadinessRecord:
+        """G3: deterministic anomaly + modeling-readiness as a job (SYS-015).
+
+        Read-only like run_quality: never modifies the snapshot, no
+        persistence in this slice — recompute is cheap.
+        """
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        holder: dict[str, ReadinessRecord] = {}
+
+        def work() -> None:
+            r = assess_readiness(
+                self.store.read_snapshot(dataset.snapshot.snapshot_id))
+            holder["rec"] = ReadinessRecord(
+                dataset_id=dataset.dataset_id,
+                snapshot_id=dataset.snapshot.snapshot_id,
+                fingerprint=dataset.snapshot.fingerprint,
+                row_count=r["row_count"],
+                column_count=r["column_count"],
+                numeric_count=r["numeric_count"],
+                categorical_count=r["categorical_count"],
+                items=[ReadinessItemRecord(**i) for i in r["items"]],
+                ok_count=r["ok_count"],
+                check_count=r["check_count"],
+                problem_count=r["problem_count"],
+                score=r["score"],
+                summary=r["summary"],
+            )
+
+        self.jobs.run("dataset.readiness.run", work, correlation_id)
         return holder["rec"]
 
     def run_bivariate(self, project_id: str, dataset_id: str,
@@ -1222,6 +1259,7 @@ class WorkbenchService:
         PlanStepType.BIVARIATE.value: frozenset({"column_a", "column_b"}),
         PlanStepType.REPORT.value: frozenset({"scope"}),
         PlanStepType.PDF.value: frozenset({"scope"}),
+        PlanStepType.READINESS.value: frozenset(),
     }
 
     @classmethod
@@ -1323,6 +1361,8 @@ class WorkbenchService:
             self.run_profile(project_id, dataset_id, correlation_id)
         elif kind == PlanStepType.QUALITY.value:
             self.run_quality(project_id, dataset_id, correlation_id)
+        elif kind == PlanStepType.READINESS.value:
+            self.run_readiness(project_id, dataset_id, correlation_id)
         elif kind == PlanStepType.HISTOGRAM.value:
             self.run_histogram(project_id, dataset_id, params["column_name"], correlation_id)
         elif kind == PlanStepType.BIVARIATE.value:

@@ -30,6 +30,7 @@ MODELS = [
     "ListSnapshotsPayload",
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",
     "RunQualityPayload", "QualityFindingRecord", "QualityRecord",
+    "RunReadinessPayload", "ReadinessItemRecord", "ReadinessRecord",
     "RunBivariatePayload", "BivariateScatterPoint", "BivariateGroup", "BivariateRecord",
     "RunReportPayload", "ReportSection", "ReportRecord",
     "RunPdfPayload", "PdfRecord",

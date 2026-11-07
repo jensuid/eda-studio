@@ -10,6 +10,7 @@ import type {
   DatasetRecord,
   ProfileRecord,
   QualityRecord,
+  ReadinessRecord,
 } from "../shared/ipc/generated";
 
 interface ProjectValue {
@@ -21,6 +22,8 @@ interface ProjectValue {
   setSavedProfile: (p: ProfileRecord) => void;
   qualityRecord: QualityRecord | null;
   setQualityRecord: (q: QualityRecord) => void;
+  readinessRecord: ReadinessRecord | null;
+  setReadinessRecord: (r: ReadinessRecord) => void;
 }
 
 const ProjectContext = createContext<ProjectValue | null>(null);
@@ -30,6 +33,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [dataset, setDataset] = useState<DatasetRecord | null>(null);
   const [savedProfile, setSavedProfile] = useState<ProfileRecord | null>(null);
   const [qualityRecord, setQualityRecord] = useState<QualityRecord | null>(null);
+  const [readinessRecord, setReadinessRecord] = useState<ReadinessRecord | null>(null);
 
   const value: ProjectValue = {
     projectId,
@@ -40,6 +44,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setSavedProfile,
     qualityRecord,
     setQualityRecord,
+    readinessRecord,
+    setReadinessRecord,
   };
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

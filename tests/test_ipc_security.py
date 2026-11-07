@@ -38,7 +38,8 @@ def test_protocol_info_lists_only_registered(bridge):
     assert info["commands"] == [
         "chart.spec.save",
         "dataset.bivariate.run", "dataset.cleaning.run", "dataset.export", "dataset.histogram.run", "dataset.import",
-        "dataset.pdf.generate", "dataset.profile.run", "dataset.quality.run", "dataset.report.generate",
+        "dataset.pdf.generate", "dataset.profile.run", "dataset.quality.run", "dataset.readiness.run",
+        "dataset.report.generate",
         "dataset.snapshot.activate", "dialog.pick_file", "insight.finding.create", "insight.finding.transition",
         "insight.hypothesis.create", "insight.hypothesis.transition",
         "plan.approve", "plan.create", "plan.execute", "project.backup.create",

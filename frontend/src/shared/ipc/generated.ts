@@ -21,7 +21,7 @@ export type HypothesisStatus = "proposed" | "accepted" | "investigating" | "supp
 
 export type ChartType = "bar" | "line" | "scatter" | "hist" | "box" | "heatmap";
 
-export type PlanStepType = "profile" | "histogram" | "quality" | "bivariate" | "report" | "pdf";
+export type PlanStepType = "profile" | "histogram" | "quality" | "bivariate" | "report" | "pdf" | "readiness";
 
 export type PlanStatus = "draft" | "approved" | "executed";
 
@@ -234,6 +234,39 @@ export interface QualityRecord {
   ok_count: number;
   check_count: number;
   problem_count: number;
+  summary: string;
+}
+
+export interface RunReadinessPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface ReadinessItemRecord {
+  check_id: string;
+  category: string;
+  column_name?: string;
+  status: string;
+  message: string;
+  evidence_count: number;
+  evidence_pct: number;
+  evidence_detail: string;
+  example_row_indexes?: number[];
+}
+
+export interface ReadinessRecord {
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  row_count: number;
+  column_count: number;
+  numeric_count: number;
+  categorical_count: number;
+  items: ReadinessItemRecord[];
+  ok_count: number;
+  check_count: number;
+  problem_count: number;
+  score: number;
   summary: string;
 }
 

@@ -15,6 +15,7 @@ import { ProjectSetup } from "../features/project/ProjectSetup";
 import { DatasetExplorer } from "../features/project/DatasetExplorer";
 import { ProfilingPage } from "../features/profiling/ProfilingPage";
 import { QualityPage } from "../features/quality/QualityPage";
+import { ReadinessPage } from "../features/readiness/ReadinessPage";
 import { BivariatePage } from "../features/bivariate/BivariatePage";
 import { CleaningPage } from "../features/cleaning/CleaningPage";
 import { ReportPage } from "../features/reporting/ReportPage";
@@ -30,6 +31,7 @@ const ROUTE_PAGES: Record<RouteId, () => React.JSX.Element> = {
   explorer: DatasetExplorer,
   profiling: ProfilingPage,
   quality: QualityPage,
+  readiness: ReadinessPage,
   bivariate: BivariatePage,
   cleaning: CleaningPage,
   report: ReportPage,

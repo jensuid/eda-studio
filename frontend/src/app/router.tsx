@@ -11,6 +11,7 @@ export type RouteId =
   | "explorer"
   | "profiling"
   | "quality"
+  | "readiness"
   | "bivariate"
   | "cleaning"
   | "report";
@@ -25,6 +26,7 @@ export const ROUTES: RouteDef[] = [
   { id: "explorer", label: "Dataset" },
   { id: "profiling", label: "Profiling" },
   { id: "quality", label: "Quality" },
+  { id: "readiness", label: "Readiness" },
   { id: "bivariate", label: "Bivariat" },
   { id: "cleaning", label: "Cleaning" },
   { id: "report", label: "Report" },

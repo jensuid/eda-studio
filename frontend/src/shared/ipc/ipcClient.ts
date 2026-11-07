@@ -34,6 +34,7 @@ import type {
   FindingStatus,
   HypothesisStatus,
   QualityRecord,
+  ReadinessRecord,
   ReportRecord,
   ReportScope,
   ProtocolInfo,
@@ -249,6 +250,14 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<QualityRecord>;
     if (!res.ok || !res.data) throw ipcError(res, "runQuality failed");
+    return res.data;
+  },
+  async runReadiness(projectId: string, datasetId: string): Promise<ReadinessRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dataset.readiness.run",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<ReadinessRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "runReadiness failed");
     return res.data;
   },
   async runBivariate(projectId: string, datasetId: string, columnA: string, columnB: string): Promise<BivariateRecord> {

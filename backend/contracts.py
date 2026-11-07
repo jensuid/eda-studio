@@ -251,6 +251,40 @@ class QualityRecord(BaseModel):
     summary: str
 
 
+# ---- Anomaly + modeling-readiness (G3, Phase 4 slice 1) ----
+class RunReadinessPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class ReadinessItemRecord(BaseModel):
+    check_id: str  # iqr_outliers|skewness|duplicate_rows|row_count_sufficiency|numeric_target_candidate|missingness|constant_column|high_cardinality
+    category: str  # "anomaly" | "modeling"
+    column_name: str | None = None
+    status: str  # "ok" | "check" | "problem"
+    message: str
+    evidence_count: int
+    evidence_pct: float
+    evidence_detail: str
+    example_row_indexes: list[int] = []
+
+
+class ReadinessRecord(BaseModel):
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    row_count: int
+    column_count: int
+    numeric_count: int
+    categorical_count: int
+    items: list[ReadinessItemRecord]
+    ok_count: int
+    check_count: int
+    problem_count: int
+    score: int  # 0-100, deterministic projection of item statuses
+    summary: str
+
+
 # ---- Desriptive histogram (M2, SCREEN-HIST-001) ----
 class RunHistogramPayload(BaseModel):
     project_id: str
@@ -774,6 +808,7 @@ class PlanStepType(str, Enum):
     BIVARIATE = "bivariate"
     REPORT = "report"
     PDF = "pdf"
+    READINESS = "readiness"
 
 
 class PlanStatus(str, Enum):

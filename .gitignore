@@ -10,5 +10,4 @@ frontend/node_modules/
 data/
 .DS_Store
 eda_workbench.egg-info/
-uv.lock
 *.egg-info/

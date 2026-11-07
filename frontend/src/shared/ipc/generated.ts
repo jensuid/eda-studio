@@ -550,3 +550,14 @@ export interface HypothesisListRecord {
   dataset_id: string;
   hypotheses: HypothesisRecord[];
 }
+
+export interface DialogPickFilePayload {
+  mode?: "open" | "save";
+  file_types?: string[];
+  title?: string;
+}
+
+export interface DialogPickFileRecord {
+  path: string;
+  available: boolean;
+}

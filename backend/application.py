@@ -112,6 +112,35 @@ class ValidationError(ValueError):
     """Operation invalid for this snapshot (FLOW-CLEAN-001 F2/F4)."""
 
 
+def validate_path_input(path: str, allowed_exts: tuple[str, ...] = (),
+                        must_exist: bool = False) -> Path:
+    """Single gate for every user-supplied path (P2-3).
+
+    Rejects empty paths, NUL bytes, non-allowlisted extensions, and
+    (when must_exist) missing files with a clear error code at the IPC
+    boundary: VALIDATION_ERROR for malformed input, NOT_FOUND for a
+    path that simply does not exist.
+    """
+    if "\x00" in path:
+        raise ValidationError("path mengandung byte NUL yang tidak valid")
+    if not path.strip():
+        raise ValidationError("path kosong")
+    p = Path(path)
+    if allowed_exts:
+        allowed = {e.lower() if e.startswith(".") else f".{e.lower()}"
+                   for e in allowed_exts}
+        if p.suffix.lower() not in allowed:
+            raise ValidationError(
+                f"ekstensi tidak didukung: {p.suffix or '(tidak ada)'} "
+                f"— boleh: {', '.join(sorted(allowed))}")
+    if must_exist:
+        if not p.exists():
+            raise NotFoundError(f"file tidak ditemukan: {path}")
+        if not p.is_file():
+            raise ValidationError(f"path bukan file: {path}")
+    return p
+
+
 class WorkbenchService:
     def __init__(self, store: Store, jobs: JobManager) -> None:
         self.store = store
@@ -126,6 +155,9 @@ class WorkbenchService:
     def import_dataset(self, project_id: str, source_path: str, dataset_name: str) -> DatasetRecord:
         if self.store.get_project(project_id) is None:
             raise NotFoundError(f"project not found: {project_id}")
+        # Extension allowlist stays inside read_source so a wrong suffix
+        # keeps UNSUPPORTED_FORMAT (not VALIDATION_ERROR).
+        validate_path_input(source_path, must_exist=True)
         table, source_bytes = read_source(source_path)
         snapshot_id = new_id()
         parquet_bytes = to_parquet_bytes(table)
@@ -756,6 +788,9 @@ class WorkbenchService:
         """Full project backup as a ZIP package (Doc04 §12.1)."""
         if self.store.get_project(project_id) is None:
             raise NotFoundError(f"project not found: {project_id}")
+        dest = validate_path_input(dest_path, (".zip", ".edaworkspace"))
+        if dest.is_dir():
+            raise ValidationError(f"dest adalah direktori, bukan file: {dest_path}")
         holder: dict[str, BackupRecord] = {}
 
         def work() -> None:
@@ -779,6 +814,10 @@ class WorkbenchService:
     def restore_project(self, archive_path: str, dest_root: str,
                         correlation_id: str | None = None) -> RestoreRecord:
         """Restore a backup ZIP to a NEW root (Doc04 §12.3)."""
+        validate_path_input(archive_path, (".zip", ".edaworkspace"), must_exist=True)
+        root = validate_path_input(dest_root)
+        if root.is_file():
+            raise ValidationError(f"dest_root adalah file, bukan direktori: {dest_root}")
         holder: dict[str, RestoreRecord] = {}
 
         def work() -> None:
@@ -805,6 +844,9 @@ class WorkbenchService:
         """User-initiated Basic diagnostic bundle, redacted (OBS-007)."""
         if self.store.get_project(project_id) is None:
             raise NotFoundError(f"project not found: {project_id}")
+        dest = validate_path_input(dest_path, (".zip", ".edaworkspace"))
+        if dest.is_dir():
+            raise ValidationError(f"dest adalah direktori, bukan file: {dest_path}")
         holder: dict[str, DiagnosticRecord] = {}
 
         def work() -> None:
@@ -834,6 +876,10 @@ class WorkbenchService:
         dataset = self.store.get_dataset(dataset_id)
         if dataset is None or dataset.project_id != project_id:
             raise NotFoundError(f"dataset not found: {dataset_id}")
+        # Destination extension must match the requested format — e.g. a
+        # .xlsx dest for a csv export is rejected before any file is written.
+        validate_path_input(
+            dest_path, (f".{export_format.value}",))
         holder: dict[str, ExportRecord] = {}
 
         def work() -> None:

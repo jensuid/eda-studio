@@ -33,6 +33,8 @@ from backend.contracts import (
     CreateProjectPayload,
     DatasetActivatePayload,
     DiagnosticCreatePayload,
+    DialogPickFilePayload,
+    DialogPickFileRecord,
     ErrorCode,
     ErrorContract,
     ExportDatasetPayload,
@@ -79,6 +81,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "insight.finding.transition": TransitionFindingPayload,
     "insight.hypothesis.create": CreateHypothesisPayload,
     "insight.hypothesis.transition": TransitionHypothesisPayload,
+    "dialog.pick_file": DialogPickFilePayload,  # P2-3 native file dialog
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
@@ -94,6 +97,37 @@ _QUERIES: dict[str, type[BaseModel]] = {
 }
 
 
+def default_file_dialog(payload: DialogPickFilePayload) -> DialogPickFileRecord:
+    """Open the native PyWebView file dialog (P2-3).
+
+    Returns ``available=False`` when no webview window exists yet (headless
+    tests, non-desktop shells); callers keep the manual path entry as
+    fallback. A cancelled dialog returns ``path=None``.
+    """
+    try:
+        import webview
+    except Exception:  # noqa: BLE001 -- absent webview = headless, unavailable
+        return DialogPickFileRecord(path=None, available=False)
+    windows = getattr(webview, "windows", None) or []
+    if not windows:
+        return DialogPickFileRecord(path=None, available=False)
+    window = windows[0]
+    types = [t.lstrip(".") for t in (payload.file_types or []) if t]
+    file_types = (("Files", ";".join(f"*.{t}" for t in types)),) if types else None
+    try:
+        if payload.mode == "save":
+            result = window.create_file_dialog(
+                webview.SAVE_DIALOG, file_types=file_types, save_filename="")
+        else:
+            result = window.create_file_dialog(
+                webview.OPEN_DIALOG, allow_multiple=False, file_types=file_types)
+    except Exception:
+        log.warning("native file dialog failed", exc_info=True)
+        return DialogPickFileRecord(path=None, available=False)
+    path = result if isinstance(result, str) and result else None
+    return DialogPickFileRecord(path=path, available=True)
+
+
 def _error(code: ErrorCode, message: str, correlation_id: str | None) -> Response:
     return Response(ok=False, error=ErrorContract(code=code, message=message,
                                                   correlation_id=correlation_id),
@@ -101,9 +135,11 @@ def _error(code: ErrorCode, message: str, correlation_id: str | None) -> Respons
 
 
 class Bridge:
-    def __init__(self, service: WorkbenchService, jobs: JobManager) -> None:
+    def __init__(self, service: WorkbenchService, jobs: JobManager,
+                 file_dialog=None) -> None:
         self.service = service
         self.jobs = jobs
+        self.file_dialog = file_dialog or default_file_dialog
 
     # -- the 4 bridge methods --------------------------------------------
     def get_protocol_info(self) -> dict[str, Any]:
@@ -196,6 +232,9 @@ class Bridge:
                 result = self.service.create_diagnostic(
                     payload.project_id, payload.dest_path,
                     req.correlation_id or req.request_id)
+            elif req.command == "dialog.pick_file":
+                # Synchronous native dialog — no job, no mutation (P2-3).
+                result = self.file_dialog(payload)
             elif req.command == "project.restore":
                 result = self.service.restore_project(
                     payload.archive_path, payload.dest_root,

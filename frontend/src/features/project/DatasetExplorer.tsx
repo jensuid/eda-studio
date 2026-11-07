@@ -1,6 +1,6 @@
 /**
  * DatasetExplorer.tsx — P2-2 route Dataset: preview snapshot aktif,
- * export CSV/Parquet/Excel, dan histogram. Guard bila belum ada dataset.
+ * export CSV/Parquet, dan histogram. Guard bila belum ada dataset.
  */
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -11,6 +11,8 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
 import { HistogramChart } from "../histogram/HistogramChart";
+import { FilePathInput } from "./FilePathInput";
+import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
 
 export function DatasetExplorer() {
   const { projectId, dataset } = useProject();
@@ -23,8 +25,9 @@ export function DatasetExplorer() {
     enabled: !!projectId && !!dataset,
   });
 
-  // M3 P3 export CSV/Parquet/Excel (Doc04 §11): dest path text input; single-record download.
+  // M3 P3 export CSV/Parquet (Doc04 §11): native save dialog; confirm first.
   const [exportPath, setExportPath] = useState("");
+  const [confirmExport, setConfirmExport] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
   const [exportRecord, setExportRecord] = useState<ExportRecord | null>(null);
   const doExport = useMutation({
@@ -87,21 +90,23 @@ export function DatasetExplorer() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            doExport.mutate({ format: exportFormat, dest: exportPath });
+            setConfirmExport(true);
           }}
         >
           <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value as ExportFormat)}>
             <option value="csv">CSV</option>
             <option value="parquet">Parquet</option>
-            <option value="excel">Excel</option>
           </select>
-          <input
+          <FilePathInput
             value={exportPath}
-            onChange={(e) => setExportPath(e.target.value)}
-            placeholder="Path file tujuan (.csv/.parquet/.xlsx)"
-            required
+            onChange={setExportPath}
+            mode="save"
+            fileTypes={[exportFormat]}
+            title="Simpan hasil export"
+            placeholder={`Path file tujuan (.${exportFormat})`}
+            disabled={doExport.isPending || confirmExport}
           />
-          <button type="submit" disabled={doExport.isPending}>
+          <button type="submit" disabled={!exportPath || doExport.isPending}>
             Export
           </button>
         </form>
@@ -137,6 +142,19 @@ export function DatasetExplorer() {
             </tbody>
           </table>
         </section>
+      )}
+      {confirmExport && (
+        <DestructiveConfirmDialog
+          title="Export dataset?"
+          description={`Dataset akan di-export sebagai ${exportFormat.toUpperCase()} ke ${exportPath}. File tujuan yang sudah ada akan ditimpa.`}
+          confirmLabel="Export"
+          pending={doExport.isPending}
+          onCancel={() => setConfirmExport(false)}
+          onConfirm={() => {
+            setConfirmExport(false);
+            doExport.mutate({ format: exportFormat, dest: exportPath });
+          }}
+        />
       )}
     </>
   );

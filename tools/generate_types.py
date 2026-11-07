@@ -46,6 +46,7 @@ MODELS = [
     "ListInsightsPayload", "FindingListRecord",
     "CreateHypothesisPayload", "HypothesisRecord",
     "TransitionHypothesisPayload", "HypothesisListRecord",
+    "DialogPickFilePayload", "DialogPickFileRecord",
 ]
 
 _TYPE_MAP = {"string": "string", "integer": "number", "number": "number",

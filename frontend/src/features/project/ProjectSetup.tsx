@@ -14,6 +14,10 @@ import type {
 } from "../../shared/ipc/generated";
 import { useProject } from "../../app/ProjectContext";
 import { useToast } from "../../shared/ui/Toaster";
+import { FilePathInput } from "./FilePathInput";
+import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
+
+type ConfirmKind = "backup" | "restore" | "diagnostic" | null;
 
 interface ProjectForm {
   name: string;
@@ -24,7 +28,9 @@ interface ProjectForm {
 export function ProjectSetup() {
   const { projectId, dataset, setProjectId, setDataset } = useProject();
   const toast = useToast();
-  const { register, handleSubmit } = useForm<ProjectForm>();
+  const { register, handleSubmit, getValues } = useForm<ProjectForm>();
+  const [sourcePath, setSourcePath] = useState("");
+  const [confirm, setConfirm] = useState<ConfirmKind>(null);
 
   const create = useMutation({
     mutationFn: (name: string) => ipcClient.createProject(name),
@@ -96,8 +102,25 @@ export function ProjectSetup() {
       {projectId && (
         <section>
           <h2>Import Dataset (CSV)</h2>
-          <form onSubmit={handleSubmit((v) => doImport.mutate(v))}>
-            <input {...register("sourcePath", { required: true })} placeholder="Path file .csv" />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              doImport.mutate({
+                name: getValues("name") || "",
+                sourcePath,
+                datasetName: getValues("datasetName"),
+              });
+            }}
+          >
+            <FilePathInput
+              value={sourcePath}
+              onChange={setSourcePath}
+              mode="open"
+              fileTypes={["csv", "xlsx", "parquet"]}
+              title="Pilih file dataset"
+              placeholder="Path file .csv/.xlsx/.parquet"
+              disabled={doImport.isPending}
+            />
             <input {...register("datasetName", { required: true })} placeholder="Nama dataset" />
             <button type="submit" disabled={doImport.isPending}>
               Import
@@ -117,16 +140,19 @@ export function ProjectSetup() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              createBackup.mutate(backupPath);
+              setConfirm("backup");
             }}
           >
-            <input
+            <FilePathInput
               value={backupPath}
-              onChange={(e) => setBackupPath(e.target.value)}
-              placeholder="Path file backup (.edaworkspace)"
-              required
+              onChange={setBackupPath}
+              mode="save"
+              fileTypes={["zip"]}
+              title="Simpan backup proyek"
+              placeholder="Path file backup (.zip)"
+              disabled={createBackup.isPending || confirm !== null}
             />
-            <button type="submit" disabled={createBackup.isPending}>
+            <button type="submit" disabled={!backupPath || createBackup.isPending}>
               Buat Backup
             </button>
           </form>
@@ -140,22 +166,31 @@ export function ProjectSetup() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              restoreProject.mutate({ archive: restoreArchive, root: restoreRoot });
+              setConfirm("restore");
             }}
           >
-            <input
+            <FilePathInput
               value={restoreArchive}
-              onChange={(e) => setRestoreArchive(e.target.value)}
-              placeholder="Path file backup"
-              required
+              onChange={setRestoreArchive}
+              mode="open"
+              fileTypes={["zip"]}
+              title="Pilih file backup"
+              placeholder="Path file backup (.zip)"
+              disabled={restoreProject.isPending || confirm !== null}
             />
-            <input
+            <FilePathInput
               value={restoreRoot}
-              onChange={(e) => setRestoreRoot(e.target.value)}
+              onChange={setRestoreRoot}
+              mode="save"
+              fileTypes={[]}
+              title="Pilih folder tujuan restore"
               placeholder="Folder tujuan restore (baru/kosong)"
-              required
+              disabled={restoreProject.isPending || confirm !== null}
             />
-            <button type="submit" disabled={restoreProject.isPending}>
+            <button
+              type="submit"
+              disabled={!restoreArchive || !restoreRoot || restoreProject.isPending}
+            >
               Restore
             </button>
           </form>
@@ -174,16 +209,22 @@ export function ProjectSetup() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              createDiagnostic.mutate(diagnosticPath);
+              setConfirm("diagnostic");
             }}
           >
-            <input
+            <FilePathInput
               value={diagnosticPath}
-              onChange={(e) => setDiagnosticPath(e.target.value)}
+              onChange={setDiagnosticPath}
+              mode="save"
+              fileTypes={["zip"]}
+              title="Simpan diagnostic bundle"
               placeholder="Path file bundle (.zip)"
-              required
+              disabled={createDiagnostic.isPending || confirm !== null}
             />
-            <button type="submit" disabled={createDiagnostic.isPending}>
+            <button
+              type="submit"
+              disabled={!diagnosticPath || createDiagnostic.isPending}
+            >
               Buat Diagnostic
             </button>
           </form>
@@ -195,6 +236,47 @@ export function ProjectSetup() {
             </p>
           )}
         </section>
+      )}
+      {confirm && (
+        <DestructiveConfirmDialog
+          title={
+            confirm === "backup"
+              ? "Buat backup proyek?"
+              : confirm === "restore"
+                ? "Restore backup proyek?"
+                : "Buat diagnostic bundle?"
+          }
+          description={
+            confirm === "backup"
+              ? `Backup akan ditulis ke ${backupPath}. Tidak ada data yang dihapus.`
+              : confirm === "restore"
+                ? `Backup ${restoreArchive} akan di-restore ke folder baru ${restoreRoot}. Folder tujuan harus baru atau kosong.`
+                : `Bundle diagnostic ter-redaksi akan ditulis ke ${diagnosticPath}. Tanpa data mentah atau isi database.`
+          }
+          confirmLabel={
+            confirm === "backup"
+              ? "Buat Backup"
+              : confirm === "restore"
+                ? "Restore"
+                : "Buat Diagnostic"
+          }
+          pending={
+            confirm === "backup"
+              ? createBackup.isPending
+              : confirm === "restore"
+                ? restoreProject.isPending
+                : createDiagnostic.isPending
+          }
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => {
+            const kind = confirm;
+            setConfirm(null);
+            if (kind === "backup") createBackup.mutate(backupPath);
+            else if (kind === "restore") {
+              restoreProject.mutate({ archive: restoreArchive, root: restoreRoot });
+            } else createDiagnostic.mutate(diagnosticPath);
+          }}
+        />
       )}
     </>
   );

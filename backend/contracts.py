@@ -714,6 +714,17 @@ class DiagnosticRecord(BaseModel):
     sha256: str
 
 
+class DialogPickFilePayload(BaseModel):
+    mode: Literal["open", "save"] = "open"
+    file_types: list[str] = Field(default_factory=list)  # extensions (no dot), e.g. csv, xlsx, parquet, zip
+    title: str | None = None
+
+
+class DialogPickFileRecord(BaseModel):
+    path: str | None  # None = user cancelled or native dialog unavailable
+    available: bool
+
+
 class Kind(str, Enum):
     COMMAND = "command"
     QUERY = "query"

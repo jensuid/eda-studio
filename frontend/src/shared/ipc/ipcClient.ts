@@ -6,6 +6,7 @@
 import type {
   BackupRecord,
   DiagnosticRecord,
+  DialogPickFileRecord,
   RestoreRecord,
   BivariateRecord,
   CleaningOperation,
@@ -85,6 +86,16 @@ function bridge(): PywebviewBridge {
 export const ipcClient = {
   async getProtocolInfo(): Promise<ProtocolInfo> {
     return bridge().get_protocol_info();
+  },
+  /** Native file dialog via registered command (P2-3), NOT a 5th bridge
+   *  method: returns { path: null } when the user cancels. */
+  async pickFile(mode: "open" | "save", fileTypes: string[], title?: string): Promise<DialogPickFileRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "dialog.pick_file",
+      payload: { mode, file_types: fileTypes, title: title ?? null },
+    }) as BridgeResponse<DialogPickFileRecord>;
+    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "pickFile failed");
+    return res.data;
   },
   async createProject(name: string): Promise<ProjectRecord> {
     const res = await bridge().execute_command({

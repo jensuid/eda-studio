@@ -59,9 +59,11 @@ export function HistogramChart({ record }: Props) {
         },
       }],
     });
-    const onResize = () => chart.resize();
-    window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); chart.dispose(); };
+    // P2-4: render ulang saat container berubah (resize viewport,
+    // toggle rail/panel, dsb.) — bukan hanya event window resize.
+    const ro = new ResizeObserver(() => chart.resize());
+    ro.observe(ref.current);
+    return () => { ro.disconnect(); chart.dispose(); };
   }, [record]);
 
   const summary = record.kind === "empty"
@@ -85,18 +87,20 @@ export function HistogramChart({ record }: Props) {
       <p className="chart-caption">{summary} Metode binning: {record.bin_method}. Missing: {record.missing_pct}%. Fingerprint: {record.fingerprint.slice(0, 12)}…</p>
       <details>
         <summary>Data tabel</summary>
-        <table>
-          <thead><tr><th>{record.inferred_type === "numeric" ? "Rentang" : "Kategori"}</th><th>Count</th><th>%</th></tr></thead>
-          <tbody>
-            {record.bins.map((b) => (
-              <tr key={b.label}>
-                <td>{b.label}</td>
-                <td>{b.count}</td>
-                <td>{record.value_count ? ((b.count / record.value_count) * 100).toFixed(1) : 0}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table>
+            <thead><tr><th>{record.inferred_type === "numeric" ? "Rentang" : "Kategori"}</th><th>Count</th><th>%</th></tr></thead>
+            <tbody>
+              {record.bins.map((b) => (
+                <tr key={b.label}>
+                  <td>{b.label}</td>
+                  <td>{b.count}</td>
+                  <td>{record.value_count ? ((b.count / record.value_count) * 100).toFixed(1) : 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </details>
     </div>
   );

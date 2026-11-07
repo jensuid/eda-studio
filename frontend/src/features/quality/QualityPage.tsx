@@ -57,32 +57,34 @@ export function QualityPage() {
             {qualityRecord.summary} ({qualityRecord.ok_count}/{qualityRecord.check_count} lolos,{" "}
             {qualityRecord.problem_count} bermasalah)
           </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Aturan</th>
-                <th>Kolom</th>
-                <th>Severity</th>
-                <th>Temuan</th>
-                <th>Bukti</th>
-              </tr>
-            </thead>
-            <tbody>
-              {qualityRecord.findings.map((f, i) => (
-                <tr key={`${f.rule_id}-${i}`}>
-                  <td>{f.rule_id}</td>
-                  <td>{f.column_name ?? "—"}</td>
-                  <td className={f.severity === "error" ? "status-danger" : "status-warning"}>
-                    {f.severity}
-                  </td>
-                  <td>{f.message}</td>
-                  <td>
-                    {f.evidence_count} ({f.evidence_pct.toFixed(1)}%) — {f.evidence_detail}
-                  </td>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Aturan</th>
+                  <th>Kolom</th>
+                  <th>Severity</th>
+                  <th>Temuan</th>
+                  <th>Bukti</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {qualityRecord.findings.map((f, i) => (
+                  <tr key={`${f.rule_id}-${i}`}>
+                    <td>{f.rule_id}</td>
+                    <td>{f.column_name ?? "—"}</td>
+                    <td className={f.severity === "error" ? "status-danger" : "status-warning"}>
+                      {f.severity}
+                    </td>
+                    <td>{f.message}</td>
+                    <td>
+                      {f.evidence_count} ({f.evidence_pct.toFixed(1)}%) — {f.evidence_detail}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </section>

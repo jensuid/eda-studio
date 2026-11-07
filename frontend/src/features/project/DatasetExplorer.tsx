@@ -123,24 +123,26 @@ export function DatasetExplorer() {
           <h2>
             Preview ({preview.data.total_rows} rows{preview.data.truncated ? ", truncated" : ""})
           </h2>
-          <table>
-            <thead>
-              <tr>
-                {preview.data.columns.map((c) => (
-                  <th key={c}>{c}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {preview.data.rows.map((r, i) => (
-                <tr key={i}>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
                   {preview.data.columns.map((c) => (
-                    <td key={c}>{String(r[c] ?? "")}</td>
+                    <th key={c}>{c}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {preview.data.rows.map((r, i) => (
+                  <tr key={i}>
+                    {preview.data.columns.map((c) => (
+                      <td key={c}>{String(r[c] ?? "")}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       {confirmExport && (

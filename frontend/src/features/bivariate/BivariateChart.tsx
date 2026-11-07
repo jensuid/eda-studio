@@ -104,9 +104,11 @@ export function BivariateChart({ record }: Props) {
         series: [{ type: "heatmap", data, label: { show: true, fontSize: FONT_SIZE_SM } }],
       });
     }
-    const onResize = () => chart.resize();
-    window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); chart.dispose(); };
+    // P2-4: render ulang saat container berubah (resize viewport,
+    // toggle rail/panel, dsb.) — bukan hanya event window resize.
+    const ro = new ResizeObserver(() => chart.resize());
+    ro.observe(ref.current);
+    return () => { ro.disconnect(); chart.dispose(); };
   }, [record]);
 
   const summary = summarySentence(record);

@@ -195,26 +195,28 @@ export function ProfilingPage() {
       {savedProfile && (
         <section>
           <h2>Profil</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Kolom</th>
-                <th>Null %</th>
-                <th>Unique</th>
-                <th>Tipe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {savedProfile.columns.map((c) => (
-                <tr key={c.name}>
-                  <td>{c.name}</td>
-                  <td>{c.missing_pct.toFixed(2)}</td>
-                  <td>{c.distinct_count}</td>
-                  <td>{c.inferred_type}</td>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kolom</th>
+                  <th>Null %</th>
+                  <th>Unique</th>
+                  <th>Tipe</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {savedProfile.columns.map((c) => (
+                  <tr key={c.name}>
+                    <td>{c.name}</td>
+                    <td>{c.missing_pct.toFixed(2)}</td>
+                    <td>{c.distinct_count}</td>
+                    <td>{c.inferred_type}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 

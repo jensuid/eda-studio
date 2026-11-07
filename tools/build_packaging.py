@@ -56,8 +56,13 @@ def check_only() -> int:
 def build_frontend() -> None:
     pm = "pnpm" if shutil.which("pnpm") else "npm"
     install = [pm, "install", "--frozen-lockfile"] if pm == "pnpm" else [pm, "install"]
-    run(install)
-    run([pm, "run", "build"])
+
+    def run_frontend(cmd: list[str]) -> None:
+        print("+", " ".join(cmd))
+        subprocess.run(cmd, check=True, cwd=ROOT / "frontend")
+
+    run_frontend(install)
+    run_frontend([pm, "run", "build"])
 
 
 def build_pyinstaller() -> None:

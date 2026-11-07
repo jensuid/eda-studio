@@ -17,7 +17,7 @@ application-controlled Python runtime and no global Python/Node is required
 import sys
 from pathlib import Path
 
-ROOT = Path(SPECPATH).resolve().parent.parent  # noqa: F821 — PyInstaller global
+ROOT = Path(SPECPATH).resolve().parent  # noqa: F821 — PyInstaller global
 ENTRY = str(ROOT / "desktop" / "main.py")
 FRONTEND_DIST = str(ROOT / "frontend" / "dist")
 

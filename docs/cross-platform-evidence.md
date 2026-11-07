@@ -58,3 +58,29 @@ Dokumen beta (P3-1 langkah 2–3): [beta-validation-script.md](beta-validation-s
 [bug-report-template.md](bug-report-template.md). Checklist rilis mendapat
 blok sign-off pemilik di [release-checklist.md](release-checklist.md)
 (belum ditandatangani — menandatangani adalah langkah manual pemilik).
+
+## Build artefak Beta unsigned — macOS (2026-11-07, sesi lanjutan)
+
+Artefak dibangun di dev host macOS via `python tools/build_packaging.py`
+(unsigned): `dist/EDA Workbench.app` (9,1 MB), `codesign -dv` →
+`Identifier=com.jensuid.eda-workbench`, tanpa Developer ID (unsigned,
+sesuai keputusan pemilik 2026-11-07).
+
+Smoke test skenario 1: app diluncurkan dari artefak → data root
+`~/.eda-workbench/projects/` dibuat dengan `project.db` (+ `-shm`/`-wal`)
+dan `snapshots/` → bridge `make_bridge` terinisialisasi tanpa error.
+Validasi tester penuh (skenario 2–7) tetap tugas pemilik per
+[beta-validation-script.md](beta-validation-script.md).
+
+Tiga fix build-enabling sesi ini (sebelumnya flow belum pernah jalan):
+1. `tools/build_packaging.py`: `build_frontend()` menjalankan pnpm di
+   repo root (tanpa lockfile) — diperbaiki ke `cwd=frontend/`.
+2. `desktop/eda-workbench.spec`: `Path(SPECPATH).parent.parent` menghitung
+   root satu level di luar repo — diperbaiki ke `.parent`.
+3. `frontend/pnpm-workspace.yaml`: `allowBuilds: esbuild: true` —
+   pnpm 11 memblokir build scripts secara default (menimpa pemblokir
+   `pnpm approve-builds`).
+
+Windows/Linux: artefak belum dibangun (perlu host masing-masing OS;
+PyInstaller tidak cross-compile). CI hijau di 3 OS tetap bukti runtime
+(lihat baris matrix di atas).

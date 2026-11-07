@@ -17,11 +17,10 @@ import json
 import sqlite3
 import tempfile
 import zipfile
-from datetime import timezone
+from datetime import UTC
 from pathlib import Path
 
 MANIFEST_VERSION = "1"
-UTC = timezone.utc  # noqa: UP017 -- venv is Python 3.9 in some envs
 
 _REQUIRED_TABLES = ("projects", "datasets", "snapshots", "profiles")
 

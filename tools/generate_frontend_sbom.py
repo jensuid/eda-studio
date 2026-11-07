@@ -16,10 +16,8 @@ from __future__ import annotations
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
-UTC = timezone.utc  # noqa: UP017
 
 _PACKAGE_KEY = re.compile(r"^  '?(?P<entry>[^'\n]+@[^'\n]+)'?:\s*$")
 

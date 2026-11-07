@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "eda-workbench"
 version = "0.1.0"
 description = "EDA Workbench — local-first guided EDA (M1 Technical Foundation)"
-# Target runtime 3.12+ (ES-5.14); code stays 3.11-compatible for CI flexibility.
+# Target runtime 3.12+ (ES-5.14); floor is Python 3.11 (P4-3 / K8): requires-python,
+# ruff target-version py311, and CI matrix 3.11/3.12 are aligned. No 3.9 shims remain.
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.9",
@@ -14,8 +15,7 @@ dependencies = [
     "openpyxl>=3.1", # Excel import adapter (M1-next)
     "reportlab>=4.0", # PDF export renderer (backend/pdf_renderer.py)
 ]
-# NOTE: local dev interpreter is Python 3.9, so the venv pins numpy<2 for
-# pyarrow 14 compat; target runtime 3.12+ uses current pyarrow + numpy 2.
+# NOTE: dev floor is Python 3.11+ (P4-3); datetime.UTC (3.11+) is used directly.
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]

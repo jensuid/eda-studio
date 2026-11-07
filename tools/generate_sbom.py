@@ -13,10 +13,8 @@ import hashlib
 import json
 import sys
 import tomllib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
-UTC = timezone.utc  # noqa: UP017
 
 
 def _sha256_file(path: Path) -> str:

@@ -1,3 +1,4 @@
+# Python floor is 3.11 (P4-3 / K8; see pyproject.toml requires-python).
 # Cross-platform CI matrix — M3 P2 (Doc16 §4.3 exit criteria).
 #
 # Runs the full quality gate on Windows/macOS/Ubuntu so that

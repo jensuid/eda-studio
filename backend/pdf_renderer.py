@@ -8,10 +8,6 @@ renderer_version, labelled in metadata (A-L1, never silent).
 """
 from __future__ import annotations
 
-from datetime import timezone
-
-UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
-
 REPORTLAB_VERSION = "reportlab/1.0"
 STDLIB_VERSION = "stdlib-tables/1.0"
 

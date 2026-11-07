@@ -6,11 +6,9 @@ the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
-
-UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
 
 from backend.backup_restore import BackupError, create_backup, restore_backup
 from backend.bivariate import describe_bivariate

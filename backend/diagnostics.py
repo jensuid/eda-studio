@@ -18,11 +18,10 @@ import re
 import sqlite3
 import sys
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 MANIFEST_VERSION = "1"
-UTC = timezone.utc  # noqa: UP017 -- venv is Python 3.9 in some envs
 
 _COUNT_TABLES = ("projects", "datasets", "snapshots", "profiles",
                  "cleanings", "findings", "hypotheses", "jobs", "job_events")

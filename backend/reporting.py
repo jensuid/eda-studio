@@ -10,11 +10,9 @@ never silently dropped (A1: all sections optional-but-disclosed).
 from __future__ import annotations
 
 import html
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from backend.contracts import REPORT_RENDERER_VERSION
-
-UTC = timezone.utc  # noqa: UP017 -- runtime venv is Python 3.9 (datetime.UTC needs 3.11+)
 
 _RENDERER_VERSION = REPORT_RENDERER_VERSION  # single source (contracts.py)
 

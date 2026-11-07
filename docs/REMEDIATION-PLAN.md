@@ -217,6 +217,13 @@ Sumber: `docs/ROADMAP-STATUS-2026-11-07.md` (audit vs Doc16 §3/§4.1). Remedias
 - **Kriteria diterima:** chart tersimpan dapat dilihat kembali setelah reopen project; spec snapshot basi ditandai stale; `grep -n "chart.spec" backend/ipc.py` ≥ 2; generator diff kosong; payload hanya spec kecil (patuh ADR-003).
 - **Urutan lanjut:** G2 Analysis Plan/DAG → G3 Phase 4 anomaly/modeling-readiness → G4 Pyright staged. Arrow IPC (G5) ditunda sampai trigger ADR-003 terukur.
 
+### NXT-2 — Analysis Plan + DAG Execution (penutupan sisa M2 / Phase 3, gap G2)
+- **Mengapa:** scope Phase 3 "Execution" belum terpenuhi — `JobManager` saat ini per-perintah tanpa rencana; tanpa plan, pengguna tidak dapat menyusun alur analisis berurutan yang disetujui sebelum dijalankan. Bergantung pada G1 (NXT-1, done) sebagai artefak plan.
+- **Berkas:** `backend/contracts.py` (`PlanStepType` enum, `CreatePlanPayload {project_id, dataset_id, steps}`, `PlanRecord {plan_id, dataset_id, snapshot_id, steps, status: draft|approved|executed, created_at}`, list payload), `backend/persistence.py` (tabel `analysis_plans` + repository pola `chart_specs`), `backend/application.py` (`create_plan` (validasi tiap step terhadap command terdaftar + dataset), `approve_plan`, `execute_plan` (jalankan step sekuensial lewat jalur job yang ada, simpan status tiap step), `list_plans`), `backend/ipc.py` (command `plan.create/approve/execute` + query `plan.get/list`), `tools/generate_types.py` MODELS + regen TS, frontend minimal (daftar plan + tombol setujui/jalankan di halaman plan baru atau panel Dataset — tanpa ubah visual chart), `tests/test_analysis_plan.py` (baru).
+- **Langkah:** (1) Model kontrak + tabel plan; (2) service: plan `draft` → `approve` → `execute` sekuensial via `JobManager`/jalur command yang ada; status langkah tersimpan; (3) IPC + generator + regen TS (diff run kedua kosong); (4) frontend minimal; (5) test: create→approve→execute round-trip, step tak-terdaftar ditolak saat create, execute tanpa approve ditolak, status langkah tersimpan per step.
+- **Kriteria diterima:** user dapat membuat plan dari langkah analisis, menyetujuinya, dan menjalankannya sekuensial dengan status tiap langkah terlihat; execute tanpa approve ditolak; `grep -n "plan\." backend/ipc.py` ≥ 4 (3 command + query); generator diff kosong; payload hanya spec kecil (patuh ADR-003).
+- **Urutan lanjut:** G3 Phase 4 anomaly/modeling-readiness → G4 Pyright staged. Arrow IPC (G5) ditunda.
+
 ---
 
 ## 10. Gate wajib sebelum tugas dinyatakan selesai

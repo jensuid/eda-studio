@@ -25,7 +25,7 @@ Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 |---|---|---|---|---|
 | AUDIT-2026-11-07 | Audit report | done | — | docs/AUDIT-2026-11-07-REPORT.md |
 | REMED-2026-11-07 | Remediation plan | done | — | docs/REMEDIATION-PLAN.md |
-| P0-1 | Git remote + CI observed | todo | — | blocked: `git remote -v` kosong (2026-11-07); butuh URL remote dari pemilik |
+| P0-1 | Git remote + CI observed | in_progress | gate §10 lokal hijau: 74 passed, ruff/tsc/gen clean | remote `jensuid/eda-studio` (dikonfirmasi pemilik 2026-11-07); fix 2 cacat CI (pnpm version:9, SBOM frontend); menunggu push + CI observed |
 | P0-2a | K2 error leak | done | 74 passed, ruff clean | backend/ipc.py logging + pesan generik; tests/test_p0_fixes.py |
 | P0-2b | K1 idempotency | done | 74 passed | tabel idempotency + dedup pre-dispatch; tests/test_p0_fixes.py |
 | P0-2c | K6 generator fail-loud | done | regen diff kosong | tools/generate_types.py introspeksi model publik |

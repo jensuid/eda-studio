@@ -42,6 +42,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -56,6 +58,12 @@ jobs:
       - name: Build
         working-directory: frontend
         run: pnpm run build
+      - name: Frontend SBOM
+        run: python tools/generate_frontend_sbom.py dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-sbom-${{ matrix.os }}
+          path: dist/frontend-sbom.json
 
   benchmark:
     name: benchmark (${{ matrix.os }})

@@ -3,8 +3,8 @@
 Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 
 ## Handoff note (untuk session berikutnya — baca ini dulu)
-- Posisi terakhir: P0-1 **done** (2026-11-07). Remote `jensuid/eda-studio` ter-push, CI hijau 3 OS di run 42321701878 SHA `166dd18`, gate §10 hijau lokal + di CI, bukti tercatat di `docs/cross-platform-evidence.md`.
-- Kartu berikutnya: **P1-1** (ADR-003: Arrow/structure/Pyright). Jangan mulai P2 sebelum P1-1 selesai.
+- Posisi terakhir: P1-1 **done** (2026-11-07). ADR-003 Accepted (`docs/ADR-003.md`): IPC JSON + cap (preview ≤200, scatter ≤2000, bin ≤30), Arrow IPC dinyatakan belum diterapkan, deviasi flat-modules dicatat, Pyright diputuskan di P1-4. Gate §10 hijau lokal (74 passed, ruff/tsc/gen clean).
+- Kartu berikutnya: **P1-2** (Seq durable K4 + verify K5). Jangan mulai P2 sebelum P1-1 selesai — P1-1 selesai, lanjut P1-2.
 - Catatan auth sesi ini: `gh` di shell agent masih invalid; push dilakukan manual oleh pemilik. Untuk sesi berikutnya, pemilik jalankan push manual bila agent tidak dapat push.
 - Prompt resume session baru: "Baca `docs/status-register.md`, ambil kartu `todo` pertama dari `docs/REMEDIATION-PLAN.md`, kerjakan, jalankan gate §10, update status register. Jangan mulai kartu kedua sebelum kartu pertama `done`."
 - Aturan titik bersih: berhenti hanya pada kartu `done` dengan bukti gate; jangan tinggalkan `in_progress` tanpa commit.
@@ -30,7 +30,7 @@ Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 | P0-2b | K1 idempotency | done | 74 passed | tabel idempotency + dedup pre-dispatch; tests/test_p0_fixes.py |
 | P0-2c | K6 generator fail-loud | done | regen diff kosong | tools/generate_types.py introspeksi model publik |
 | P0-3 | Sinkron dokumen basi + untracked | done | — | final-roadmap.md, README-M1.md, status-register dibuat 2026-11-07 |
-| P1-1 | ADR-003 Arrow/structure/Pyright | todo | — | — |
+| P1-1 | ADR-003 Arrow/structure/Pyright | done | gate §10 lokal hijau 2026-11-07: 74 passed, ruff clean, tsc clean, gen diff kosong | `docs/ADR-003.md` Accepted (format ADR-001/002); AGENTS.md footnote ADR-003; klaim terverifikasi via grep (cap di contracts.py:118/288, bivariate.py:24, histograms.py:22; pyarrow hanya Parquet/CSV internal; pyright nol); Pyright diputuskan di P1-4 |
 | P1-2 | Seq durable K4 + verify K5 | todo | — | — |
 | P1-3 | Round-trip test + coverage | todo | — | — |
 | P1-4 | Pyright strict | todo | — | — |

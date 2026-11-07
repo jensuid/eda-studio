@@ -127,6 +127,17 @@ CREATE TABLE IF NOT EXISTS chart_specs (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS analysis_plans (
+    plan_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    dataset_id TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    status TEXT NOT NULL,
+    steps_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS idempotency (
     key TEXT NOT NULL,
     command TEXT NOT NULL,
@@ -495,6 +506,30 @@ class Store:
         with self._lock:
             rows = self.db.execute(
                 "SELECT * FROM chart_specs WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def save_plan(self, record: dict) -> None:
+        with self._lock:
+            self.db.execute(
+                "INSERT OR REPLACE INTO analysis_plans VALUES (?,?,?,?,?,?,?,?,?)",
+                (record["plan_id"], record["project_id"], record["dataset_id"],
+                 record["snapshot_id"], record["fingerprint"], record["status"],
+                 json.dumps(record["steps"]), record["created_at"], record["updated_at"]),
+            )
+            self.db.commit()
+
+    def get_plan(self, plan_id: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT * FROM analysis_plans WHERE plan_id = ?", (plan_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_plans(self, dataset_id: str) -> list[dict]:
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT * FROM analysis_plans WHERE dataset_id = ? ORDER BY rowid", (dataset_id,)
             ).fetchall()
         return [dict(r) for r in rows]
 

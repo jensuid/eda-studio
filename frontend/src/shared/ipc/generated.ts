@@ -21,6 +21,12 @@ export type HypothesisStatus = "proposed" | "accepted" | "investigating" | "supp
 
 export type ChartType = "bar" | "line" | "scatter" | "hist" | "box" | "heatmap";
 
+export type PlanStepType = "profile" | "histogram" | "quality" | "bivariate" | "report" | "pdf";
+
+export type PlanStatus = "draft" | "approved" | "executed";
+
+export type PlanStepStatus = "pending" | "completed" | "failed";
+
 export interface ErrorContract {
   code: ErrorCode;
   message: string;
@@ -597,6 +603,61 @@ export interface ListChartSpecsPayload {
 export interface ChartSpecListRecord {
   dataset_id: string;
   specs: ChartSpecRecord[];
+}
+
+export interface PlanStepInput {
+  kind: PlanStepType;
+  params?: Record<string, unknown>;
+}
+
+export interface PlanStep {
+  kind: PlanStepType;
+  params?: Record<string, unknown>;
+  status?: PlanStepStatus;
+  error?: string;
+}
+
+export interface CreatePlanPayload {
+  project_id: string;
+  dataset_id: string;
+  steps: PlanStepInput[];
+}
+
+export interface PlanRecord {
+  plan_id: string;
+  project_id: string;
+  dataset_id: string;
+  snapshot_id: string;
+  fingerprint: string;
+  steps: PlanStep[];
+  status: PlanStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApprovePlanPayload {
+  project_id: string;
+  plan_id: string;
+}
+
+export interface ExecutePlanPayload {
+  project_id: string;
+  plan_id: string;
+}
+
+export interface GetPlanPayload {
+  project_id: string;
+  plan_id: string;
+}
+
+export interface ListPlansPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
+export interface PlanListRecord {
+  dataset_id: string;
+  plans: PlanRecord[];
 }
 
 export interface DialogPickFilePayload {

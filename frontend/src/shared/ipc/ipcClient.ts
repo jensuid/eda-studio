@@ -21,6 +21,9 @@ import type {
   PreviewRecord,
   ProfileListRecord,
   PdfRecord,
+  PlanListRecord,
+  PlanRecord,
+  PlanStepInput,
   ProfileRecord,
   ProjectRecord,
   ProvenanceRecord,
@@ -270,6 +273,48 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId, scope },
     }) as BridgeResponse<PdfRecord>;
     if (!res.ok || !res.data) throw ipcError(res, "runPdf failed");
+    return res.data;
+  },
+  // NXT-2: Analysis Plan + DAG execution (gap G2) — backend-authoritative
+  // plan lifecycle: draft -> approve -> execute (sequential, per-step status).
+  async createPlan(projectId: string, datasetId: string, steps: PlanStepInput[]): Promise<PlanRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "plan.create",
+      payload: { project_id: projectId, dataset_id: datasetId, steps },
+    }) as BridgeResponse<PlanRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "createPlan failed");
+    return res.data;
+  },
+  async approvePlan(projectId: string, planId: string): Promise<PlanRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "plan.approve",
+      payload: { project_id: projectId, plan_id: planId },
+    }) as BridgeResponse<PlanRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "approvePlan failed");
+    return res.data;
+  },
+  async executePlan(projectId: string, planId: string): Promise<PlanRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "plan.execute",
+      payload: { project_id: projectId, plan_id: planId },
+    }) as BridgeResponse<PlanRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "executePlan failed");
+    return res.data;
+  },
+  async getPlan(projectId: string, planId: string): Promise<PlanRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "plan.get",
+      payload: { project_id: projectId, plan_id: planId },
+    }) as BridgeResponse<PlanRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "getPlan failed");
+    return res.data;
+  },
+  async listPlans(projectId: string, datasetId: string): Promise<PlanListRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "plan.list",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<PlanListRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "listPlans failed");
     return res.data;
   },
   async previewCleaning(

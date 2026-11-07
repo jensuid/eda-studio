@@ -755,6 +755,98 @@ class ChartSpecListRecord(BaseModel):
     specs: list[ChartSpecRecord]
 
 
+# ---- Analysis Plan + DAG Execution (NXT-2, gap G2) ----
+# A plan is a SMALL, ordered list of analysis step SPECS (kind + tiny params)
+# that the user composes, approves, then executes sequentially. Steps carry
+# NO data — only parameters — so plan payloads stay well under ADR-003 caps.
+# Execution reuses the existing command/job path (run_profile /
+# run_histogram / ... via JobManager, SYS-015); this slice adds no new
+# analysis logic. Only read-only analysis commands are step-eligible
+# (mutating commands such as cleaning/export are deliberately excluded).
+PLAN_MAX_STEPS = 20
+PLAN_MAX_SPEC_BYTES = 50 * 1024
+
+
+class PlanStepType(str, Enum):
+    PROFILE = "profile"
+    HISTOGRAM = "histogram"
+    QUALITY = "quality"
+    BIVARIATE = "bivariate"
+    REPORT = "report"
+    PDF = "pdf"
+
+
+class PlanStatus(str, Enum):
+    DRAFT = "draft"
+    APPROVED = "approved"
+    EXECUTED = "executed"
+
+
+class PlanStepStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class PlanStepInput(BaseModel):
+    """One step spec at create time: kind + small params only."""
+
+    kind: PlanStepType
+    params: dict[str, Any] = Field(default_factory=dict, max_length=20)
+
+
+class PlanStep(BaseModel):
+    kind: PlanStepType
+    params: dict[str, Any] = Field(default_factory=dict)
+    status: PlanStepStatus = PlanStepStatus.PENDING
+    error: str | None = None  # short code when status == FAILED
+
+
+class CreatePlanPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    steps: list[PlanStepInput] = Field(min_length=1, max_length=PLAN_MAX_STEPS)
+
+
+class PlanRecord(BaseModel):
+    """Persisted plan; snapshot + fingerprint ground it to one evidence set."""
+
+    plan_id: str
+    project_id: str
+    dataset_id: str
+    snapshot_id: str
+    fingerprint: str
+    steps: list[PlanStep]
+    status: PlanStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class ApprovePlanPayload(BaseModel):
+    project_id: str
+    plan_id: str
+
+
+class ExecutePlanPayload(BaseModel):
+    project_id: str
+    plan_id: str
+
+
+class GetPlanPayload(BaseModel):
+    project_id: str
+    plan_id: str
+
+
+class ListPlansPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+
+
+class PlanListRecord(BaseModel):
+    dataset_id: str
+    plans: list[PlanRecord]
+
+
 # ---- Diagnostics: user-initiated redacted bundle (M3 P2, Doc15 §10) ----
 
 class DiagnosticLevel(str, Enum):

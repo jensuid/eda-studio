@@ -24,12 +24,14 @@ from backend.application import (
     ValidationError as ServiceValidationError,
 )
 from backend.contracts import (
+    ApprovePlanPayload,
     BackupCreatePayload,
     BackupRestorePayload,
     CleaningPreviewPayload,
     CleaningRunPayload,
     CreateFindingPayload,
     CreateHypothesisPayload,
+    CreatePlanPayload,
     CreateProjectPayload,
     DatasetActivatePayload,
     DiagnosticCreatePayload,
@@ -37,15 +39,18 @@ from backend.contracts import (
     DialogPickFileRecord,
     ErrorCode,
     ErrorContract,
+    ExecutePlanPayload,
     ExportDatasetPayload,
     GetChartSpecPayload,
     GetDatasetPreviewPayload,
     GetDatasetProfilePayload,
     GetDatasetProvenancePayload,
+    GetPlanPayload,
     GetProfileByIdPayload,
     ImportDatasetPayload,
     ListChartSpecsPayload,
     ListInsightsPayload,
+    ListPlansPayload,
     ListProfilesPayload,
     ListSnapshotsPayload,
     OpenProjectPayload,
@@ -85,6 +90,9 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "insight.hypothesis.create": CreateHypothesisPayload,
     "insight.hypothesis.transition": TransitionHypothesisPayload,
     "chart.spec.save": SaveChartSpecPayload,  # NXT-1 chart-spec persistence
+    "plan.create": CreatePlanPayload,  # NXT-2 analysis plan
+    "plan.approve": ApprovePlanPayload,  # NXT-2
+    "plan.execute": ExecutePlanPayload,  # NXT-2
     "dialog.pick_file": DialogPickFilePayload,  # P2-3 native file dialog
 }
 _QUERIES: dict[str, type[BaseModel]] = {
@@ -99,6 +107,8 @@ _QUERIES: dict[str, type[BaseModel]] = {
     "insight.hypotheses.list": ListInsightsPayload,
     "chart.spec.get": GetChartSpecPayload,  # NXT-1
     "chart.spec.list": ListChartSpecsPayload,  # NXT-1
+    "plan.get": GetPlanPayload,  # NXT-2
+    "plan.list": ListPlansPayload,  # NXT-2
     "dataset.cleaning.preview": CleaningPreviewPayload,
 }
 
@@ -290,6 +300,15 @@ class Bridge:
                     payload.fingerprint, payload.chart_type, payload.x,
                     payload.y, payload.group, payload.encodings, payload.options,
                     payload.chart_id)
+            elif req.command == "plan.create":
+                result = self.service.create_plan(
+                    payload.project_id, payload.dataset_id, payload.steps)
+            elif req.command == "plan.approve":
+                result = self.service.approve_plan(
+                    payload.project_id, payload.plan_id)
+            elif req.command == "plan.execute":
+                result = self.service.execute_plan(
+                    payload.project_id, payload.plan_id, req.correlation_id)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
         except NotFoundError:
@@ -360,6 +379,12 @@ class Bridge:
                     payload.project_id, payload.chart_id)
             elif req.command == "chart.spec.list":
                 result = self.service.list_chart_specs(
+                    payload.project_id, payload.dataset_id)
+            elif req.command == "plan.get":
+                result = self.service.get_plan(
+                    payload.project_id, payload.plan_id)
+            elif req.command == "plan.list":
+                result = self.service.list_plans(
                     payload.project_id, payload.dataset_id)
             else:  # pragma: no cover
                 raise AssertionError(req.command)

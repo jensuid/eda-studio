@@ -21,6 +21,7 @@ from backend.cleaning import (
 )
 from backend.contracts import (
     CHART_SPEC_MAX_BYTES,
+    PLAN_MAX_SPEC_BYTES,
     BackupRecord,
     BivariateGroup,
     BivariateRecord,
@@ -49,6 +50,13 @@ from backend.contracts import (
     HypothesisRecord,
     HypothesisStatus,
     PdfRecord,
+    PlanListRecord,
+    PlanRecord,
+    PlanStatus,
+    PlanStep,
+    PlanStepInput,
+    PlanStepStatus,
+    PlanStepType,
     PreviewRecord,
     ProfileListRecord,
     ProfileRecord,
@@ -1200,6 +1208,171 @@ class WorkbenchService:
             dataset_id=dataset_id,
             specs=[self._chart_spec(r) for r in self.store.list_chart_specs(dataset_id)],
         )
+
+    # --- Analysis Plan + DAG execution (NXT-2, gap G2) ---
+    # Step allowlist (default-deny): only read-only analysis kinds are
+    # step-eligible; anything else is rejected at create time. Execution
+    # reuses the existing job-wrapped service methods (run_profile,
+    # run_histogram, ...) so the SYS-015 lifecycle stays backend-authoritative
+    # and no analysis logic is duplicated (ADR-003: steps carry specs only).
+    _PLAN_STEP_PARAMS: ClassVar[dict[str, frozenset[str]]] = {
+        PlanStepType.PROFILE.value: frozenset(),
+        PlanStepType.HISTOGRAM.value: frozenset({"column_name"}),
+        PlanStepType.QUALITY.value: frozenset(),
+        PlanStepType.BIVARIATE.value: frozenset({"column_a", "column_b"}),
+        PlanStepType.REPORT.value: frozenset({"scope"}),
+        PlanStepType.PDF.value: frozenset({"scope"}),
+    }
+
+    @classmethod
+    def _validate_plan_steps(cls, steps: list[PlanStepInput]) -> list[PlanStep]:
+        if not steps:
+            raise ValidationError("plan requires at least one step")
+        out: list[PlanStep] = []
+        total_bytes = 0
+        for step in steps:
+            kind = step.kind.value
+            allowed = cls._PLAN_STEP_PARAMS.get(kind)
+            if allowed is None:  # unreachable via enum, kept for default-deny clarity
+                raise ValidationError(f"plan step kind not allowed: {kind}")
+            params = dict(step.params or {})
+            unknown = set(params) - set(allowed)
+            if unknown:
+                raise ValidationError(f"plan step {kind} has unknown params")
+            for required in allowed:
+                if kind in (PlanStepType.REPORT.value, PlanStepType.PDF.value) and required == "scope":
+                    continue  # scope is optional (defaults to all)
+                value = params.get(required)
+                if not isinstance(value, str) or not value.strip():
+                    raise ValidationError(f"plan step {kind} requires param {required}")
+            if "scope" in params and params["scope"] not in {s.value for s in ReportScope}:
+                raise ValidationError("plan step scope is not a valid report scope")
+            total_bytes += len(json.dumps({"kind": kind, "params": params}))
+            out.append(PlanStep(kind=step.kind, params=params))
+        if total_bytes >= PLAN_MAX_SPEC_BYTES:
+            raise ValidationError("analysis plan exceeds size cap")
+        return out
+
+    @staticmethod
+    def _plan_record(r: dict) -> PlanRecord:
+        return PlanRecord(
+            plan_id=r["plan_id"], project_id=r["project_id"],
+            dataset_id=r["dataset_id"], snapshot_id=r["snapshot_id"],
+            fingerprint=r["fingerprint"],
+            steps=[PlanStep.model_validate(s) for s in json.loads(r["steps_json"])],
+            status=PlanStatus(r["status"]),
+            created_at=datetime.fromisoformat(r["created_at"]),
+            updated_at=datetime.fromisoformat(r["updated_at"]),
+        )
+
+    def create_plan(
+        self, project_id: str, dataset_id: str, steps: list[PlanStepInput],
+    ) -> PlanRecord:
+        dataset = self._require_dataset(project_id, dataset_id)
+        validated = self._validate_plan_steps(steps)
+        now = now_iso()
+        record = {
+            "plan_id": new_id(), "project_id": project_id,
+            "dataset_id": dataset_id,
+            "snapshot_id": dataset.snapshot.snapshot_id,
+            "fingerprint": dataset.snapshot.fingerprint,
+            "status": PlanStatus.DRAFT.value,
+            "steps": [s.model_dump(mode="json") for s in validated],
+            "created_at": now, "updated_at": now,
+        }
+        self.store.save_plan(record)
+        stored = self.store.get_plan(record["plan_id"])
+        return self._plan_record(stored if stored is not None else record)
+
+    def _require_plan(self, project_id: str, plan_id: str) -> tuple[PlanRecord, dict]:
+        row = self.store.get_plan(plan_id)
+        if row is None or row["project_id"] != project_id:
+            raise NotFoundError(f"analysis plan not found: {plan_id}")
+        return self._plan_record(row), row
+
+    def get_plan(self, project_id: str, plan_id: str) -> PlanRecord:
+        plan, _ = self._require_plan(project_id, plan_id)
+        return plan
+
+    def list_plans(self, project_id: str, dataset_id: str) -> PlanListRecord:
+        self._require_dataset(project_id, dataset_id)
+        return PlanListRecord(
+            dataset_id=dataset_id,
+            plans=[self._plan_record(r) for r in self.store.list_plans(dataset_id)],
+        )
+
+    def approve_plan(self, project_id: str, plan_id: str) -> PlanRecord:
+        plan, row = self._require_plan(project_id, plan_id)
+        if plan.status is not PlanStatus.DRAFT:
+            raise ConflictError(f"plan {plan_id} is {plan.status.value}, not draft")
+        row["steps"] = [s.model_dump(mode="json") for s in plan.steps]
+        row["status"] = PlanStatus.APPROVED.value
+        row["updated_at"] = now_iso()
+        self.store.save_plan(row)
+        stored = self.store.get_plan(plan_id)
+        return self._plan_record(stored if stored is not None else row)
+
+    def _run_plan_step(
+        self, project_id: str, dataset_id: str, step: PlanStep,
+        correlation_id: str | None,
+    ) -> None:
+        """Run ONE approved step through the existing command/job path."""
+        kind = step.kind.value
+        params = step.params or {}
+        if kind == PlanStepType.PROFILE.value:
+            self.run_profile(project_id, dataset_id, correlation_id)
+        elif kind == PlanStepType.QUALITY.value:
+            self.run_quality(project_id, dataset_id, correlation_id)
+        elif kind == PlanStepType.HISTOGRAM.value:
+            self.run_histogram(project_id, dataset_id, params["column_name"], correlation_id)
+        elif kind == PlanStepType.BIVARIATE.value:
+            self.run_bivariate(
+                project_id, dataset_id,
+                params["column_a"], params["column_b"], correlation_id,
+            )
+        elif kind in (PlanStepType.REPORT.value, PlanStepType.PDF.value):
+            scope = ReportScope(params.get("scope", ReportScope.ALL.value))
+            if kind == PlanStepType.REPORT.value:
+                self.run_report(project_id, dataset_id, scope, correlation_id)
+            else:
+                self.run_pdf(project_id, dataset_id, scope, correlation_id)
+        else:  # pragma: no cover - enum allowlist guards this at create time
+            raise ValidationError(f"plan step kind not allowed: {kind}")
+
+    def execute_plan(
+        self, project_id: str, plan_id: str, correlation_id: str | None = None,
+    ) -> PlanRecord:
+        plan, row = self._require_plan(project_id, plan_id)
+        if plan.status is PlanStatus.EXECUTED:
+            raise ConflictError(f"plan {plan_id} already executed")
+        if plan.status is not PlanStatus.APPROVED:
+            raise ConflictError(f"plan {plan_id} must be approved before execution")
+        dataset = self._require_dataset(project_id, plan.dataset_id)
+        if dataset.snapshot.fingerprint != plan.fingerprint:
+            raise ConflictError(f"stale fingerprint for snapshot {plan.snapshot_id}")
+        # Sequential DAG: each step runs through its existing job-wrapped
+        # service method; a failed step stops the plan (rest stay pending),
+        # the plan stays approved so it can be re-executed after a fix.
+        steps = [s for s in plan.steps]
+        for i, step in enumerate(steps):
+            if step.status is PlanStepStatus.COMPLETED:
+                continue  # resume semantics after a partial failure
+            try:
+                step_corr = f"{correlation_id}:{i}" if correlation_id else None
+                self._run_plan_step(project_id, plan.dataset_id, step, step_corr)
+            except Exception as exc:  # noqa: BLE001 - recorded, not raised
+                step.status = PlanStepStatus.FAILED
+                step.error = type(exc).__name__
+                break
+            step.status = PlanStepStatus.COMPLETED
+            step.error = None
+        all_done = all(s.status is PlanStepStatus.COMPLETED for s in steps)
+        row["status"] = (PlanStatus.EXECUTED if all_done else PlanStatus.APPROVED).value
+        row["steps"] = [s.model_dump(mode="json") for s in steps]
+        row["updated_at"] = now_iso()
+        self.store.save_plan(row)
+        stored = self.store.get_plan(plan_id)
+        return self._plan_record(stored if stored is not None else row)
 
     def create_hypothesis(
         self, project_id: str, dataset_id: str, statement: str,

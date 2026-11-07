@@ -48,9 +48,15 @@ def _fabricate(prop: dict[str, Any], defs: dict[str, Any]) -> Any:
         inner = [x for x in t if x != "null"]
         return _fabricate({**prop, "type": inner[0]}, defs) if inner else None
     if t == "array":
+        if prop.get("minItems", 0) > 0 and prop.get("items") is not None:
+            return [_fabricate(prop["items"], defs)]  # minItems>=1 (e.g. CreatePlanPayload.steps)
         return []
     if t == "object":
-        return {}
+        out: dict[str, Any] = {}
+        for key in prop.get("required") or []:
+            if key in (prop.get("properties") or {}):
+                out[key] = _fabricate(prop["properties"][key], defs)
+        return out
     if t == "integer":
         return 1
     if t == "number":

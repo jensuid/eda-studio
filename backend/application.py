@@ -113,19 +113,52 @@ class ValidationError(ValueError):
 
 
 def validate_path_input(path: str, allowed_exts: tuple[str, ...] = (),
-                        must_exist: bool = False) -> Path:
-    """Single gate for every user-supplied path (P2-3).
+                        must_exist: bool = False,
+                        allowed_roots: tuple[Path | str, ...] = (),
+                        trusted_paths: set[Path | str] | None = None) -> Path:
+    """Single gate for every user-supplied path (P2-3, hardened P4-2).
 
     Rejects empty paths, NUL bytes, non-allowlisted extensions, and
     (when must_exist) missing files with a clear error code at the IPC
     boundary: VALIDATION_ERROR for malformed input, NOT_FOUND for a
     path that simply does not exist.
+
+    P4-2 hardening: when ``allowed_roots`` is non-empty the path is
+    additionally checked against an allowlist (project root + dialog
+    picks). Any ``..`` component is rejected as traversal before
+    existence checks, and absolute paths that resolve outside every
+    allowed root (and are not themselves a trusted/dialog-picked file)
+    are rejected with VALIDATION_ERROR. Callers that pass no
+    ``allowed_roots`` keep the P2-3 behaviour (validation only).
     """
     if "\x00" in path:
         raise ValidationError("path mengandung byte NUL yang tidak valid")
     if not path.strip():
         raise ValidationError("path kosong")
     p = Path(path)
+    # Traversal: any '..' component is rejected outright, even if it
+    # would resolve back under an allowed root (fail-closed).
+    if ".." in p.parts:
+        raise ValidationError("path mengandung traversal '..' yang tidak diizinkan")
+    if allowed_roots:
+        resolved = p.resolve() if not p.is_absolute() else Path(p).resolve()
+        # Symlinks that escape are also rejected by checking the
+        # resolved target rather than the literal path.
+        roots = tuple(Path(r).resolve() for r in allowed_roots)
+        trusted = {Path(t).resolve() for t in (trusted_paths or set())}
+        if p.is_absolute():
+            if resolved not in trusted and not any(
+                resolved == r or r in resolved.parents for r in roots
+            ):
+                raise ValidationError(
+                    "path absolut di luar root yang diizinkan — pilih lewat dialog")
+        else:
+            # Relative paths resolve under the first allowed root and
+            # must stay there.
+            base = roots[0]
+            rel = (base / p).resolve()
+            if rel not in trusted and rel != base and base not in rel.parents:
+                raise ValidationError("path traversal keluar dari root proyek")
     if allowed_exts:
         allowed = {e.lower() if e.startswith(".") else f".{e.lower()}"
                    for e in allowed_exts}
@@ -145,6 +178,30 @@ class WorkbenchService:
     def __init__(self, store: Store, jobs: JobManager) -> None:
         self.store = store
         self.jobs = jobs
+        # P4-2 allowlist: paths explicitly returned by dialog.pick_file
+        # (and, in tests, paths registered via authorize_path).
+        # In-memory only; resets on process restart by design.
+        self._trusted_paths: set[Path] = set()
+        self._trusted_roots: set[Path] = set()
+
+    def authorize_path(self, path: str | Path) -> None:
+        """Mark a file dialog result as trusted (P4-2)."""
+        self._trusted_paths.add(Path(path).resolve())
+
+    def authorize_root(self, root: str | Path) -> None:
+        """Mark a whole directory as trusted (test/fixture helper)."""
+        self._trusted_roots.add(Path(root).resolve())
+
+    def _allowed_roots(self) -> tuple[Path, ...]:
+        return (self.store.root.resolve(), *sorted(self._trusted_roots))
+
+    def _check(self, path: str, allowed_exts: tuple[str, ...] = (),
+               must_exist: bool = False) -> Path:
+        return validate_path_input(
+            path, allowed_exts, must_exist=must_exist,
+            allowed_roots=self._allowed_roots(),
+            trusted_paths=set(self._trusted_paths),
+        )
 
     # -- commands ---------------------------------------------------------
     def create_project(self, name: str, project_id: str | None = None) -> ProjectRecord:
@@ -157,7 +214,7 @@ class WorkbenchService:
             raise NotFoundError(f"project not found: {project_id}")
         # Extension allowlist stays inside read_source so a wrong suffix
         # keeps UNSUPPORTED_FORMAT (not VALIDATION_ERROR).
-        validate_path_input(source_path, must_exist=True)
+        self._check(source_path, must_exist=True)
         table, source_bytes = read_source(source_path)
         snapshot_id = new_id()
         parquet_bytes = to_parquet_bytes(table)
@@ -788,7 +845,7 @@ class WorkbenchService:
         """Full project backup as a ZIP package (Doc04 §12.1)."""
         if self.store.get_project(project_id) is None:
             raise NotFoundError(f"project not found: {project_id}")
-        dest = validate_path_input(dest_path, (".zip", ".edaworkspace"))
+        dest = self._check(dest_path, (".zip", ".edaworkspace"))
         if dest.is_dir():
             raise ValidationError(f"dest adalah direktori, bukan file: {dest_path}")
         holder: dict[str, BackupRecord] = {}
@@ -814,8 +871,8 @@ class WorkbenchService:
     def restore_project(self, archive_path: str, dest_root: str,
                         correlation_id: str | None = None) -> RestoreRecord:
         """Restore a backup ZIP to a NEW root (Doc04 §12.3)."""
-        validate_path_input(archive_path, (".zip", ".edaworkspace"), must_exist=True)
-        root = validate_path_input(dest_root)
+        self._check(archive_path, (".zip", ".edaworkspace"), must_exist=True)
+        root = self._check(dest_root)
         if root.is_file():
             raise ValidationError(f"dest_root adalah file, bukan direktori: {dest_root}")
         holder: dict[str, RestoreRecord] = {}
@@ -844,7 +901,7 @@ class WorkbenchService:
         """User-initiated Basic diagnostic bundle, redacted (OBS-007)."""
         if self.store.get_project(project_id) is None:
             raise NotFoundError(f"project not found: {project_id}")
-        dest = validate_path_input(dest_path, (".zip", ".edaworkspace"))
+        dest = self._check(dest_path, (".zip", ".edaworkspace"))
         if dest.is_dir():
             raise ValidationError(f"dest adalah direktori, bukan file: {dest_path}")
         holder: dict[str, DiagnosticRecord] = {}
@@ -878,7 +935,7 @@ class WorkbenchService:
             raise NotFoundError(f"dataset not found: {dataset_id}")
         # Destination extension must match the requested format — e.g. a
         # .xlsx dest for a csv export is rejected before any file is written.
-        validate_path_input(
+        self._check(
             dest_path, (f".{export_format.value}",))
         holder: dict[str, ExportRecord] = {}
 

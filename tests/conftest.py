@@ -12,7 +12,13 @@ FIXTURE_CSV = Path(__file__).parent / "fixtures" / "sample.csv"
 
 @pytest.fixture()
 def bridge(tmp_path):
-    return make_bridge(str(tmp_path / "proj"))
+    b = make_bridge(str(tmp_path / "proj"))
+    # Test-harness convenience: fixtures + pytest tmp are treated as
+    # dialog-approved (existing tests supply absolute paths outside the
+    # project root). P4-2 tests build their own bridge without this.
+    b.service.authorize_root(str(FIXTURE_CSV.parent))
+    b.service.authorize_root(str(tmp_path))
+    return b
 
 
 @pytest.fixture()

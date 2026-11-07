@@ -235,6 +235,11 @@ class Bridge:
             elif req.command == "dialog.pick_file":
                 # Synchronous native dialog — no job, no mutation (P2-3).
                 result = self.file_dialog(payload)
+                # P4-2: a dialog-picked path becomes an authorized path
+                # (allowlist) so subsequent import/backup/etc. accept
+                # it even though it lies outside the project root.
+                if result is not None and getattr(result, "path", None) and getattr(result, "available", False):
+                    self.service.authorize_path(result.path)
             elif req.command == "project.restore":
                 result = self.service.restore_project(
                     payload.archive_path, payload.dest_root,

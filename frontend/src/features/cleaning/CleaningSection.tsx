@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ipcClient } from "../../shared/ipc/ipcClient";
+import { ipcClient, IpcError } from "../../shared/ipc/ipcClient";
 import type {
   CleaningOperation,
   CleaningPreviewSummary,
@@ -147,7 +147,7 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
           {runMutation.isError && (
             <CleaningError message="Cleaning gagal. Silakan coba lagi." />
           )}
-          {runMutation.isError && runMutation.error.message.includes("Snapshot telah berubah") && (
+          {runMutation.isError && runMutation.error instanceof IpcError && runMutation.error.code === "CONFLICT" && (
             <CleaningStaleBanner message="Snapshot telah berubah. Hitung ulang dampak." />
           )}
           {completed && (

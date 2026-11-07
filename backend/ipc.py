@@ -134,6 +134,20 @@ def _error(code: ErrorCode, message: str, correlation_id: str | None) -> Respons
                     correlation_id=correlation_id)
 
 
+# P4-5 (K2 sisa): domain-exception messages are NOT echoed to the client —
+# service messages can embed filesystem paths (e.g. "file tidak ditemukan:
+# /abs/path", "dest adalah direktori: ...") and Pydantic ValidationError
+# strings embed submitted input values. Every domain error is mapped to a
+# fixed generic message per code (setara jalur generik INTERNAL); the
+# original exception is logged server-side with correlation_id for debugging.
+_GENERIC_MESSAGES: dict[ErrorCode, str] = {
+    ErrorCode.VALIDATION: "invalid payload",
+    ErrorCode.NOT_FOUND: "not found",
+    ErrorCode.CONFLICT: "conflict",
+    ErrorCode.UNSUPPORTED_FORMAT: "unsupported format",
+}
+
+
 class Bridge:
     def __init__(self, service: WorkbenchService, jobs: JobManager,
                  file_dialog=None) -> None:
@@ -153,11 +167,12 @@ class Bridge:
             return _error(ErrorCode.VALIDATION, "invalid request envelope", None).model_dump(mode="json")
         if req.command not in _COMMANDS:
             return _error(ErrorCode.PERMISSION_DENIED,
-                          f"command not allowed: {req.command}", req.correlation_id).model_dump(mode="json")
+                          "command not allowed", req.correlation_id).model_dump(mode="json")
         try:
             payload = _COMMANDS[req.command](**req.payload)
-        except ValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
+        except ValidationError:
+            log.warning("invalid command payload for %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.VALIDATION, _GENERIC_MESSAGES[ErrorCode.VALIDATION], req.correlation_id).model_dump(mode="json")
         # K1: idempotent replay — return stored result without re-dispatch.
         if req.idempotency_key:
             cached = self.service.store.get_idempotent_result(req.idempotency_key, req.command)
@@ -265,14 +280,18 @@ class Bridge:
                     payload.project_id, payload.hypothesis_id, payload.to_status)
             else:  # pragma: no cover — guarded by registry check above
                 raise AssertionError(req.command)
-        except NotFoundError as exc:
-            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump(mode="json")
-        except ServiceValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
-        except ConflictError as exc:
-            return _error(ErrorCode.CONFLICT, str(exc), req.correlation_id).model_dump(mode="json")
-        except UnsupportedFormatError as exc:
-            return _error(ErrorCode.UNSUPPORTED_FORMAT, str(exc), req.correlation_id).model_dump(mode="json")
+        except NotFoundError:
+            log.warning("not found in command %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.NOT_FOUND, _GENERIC_MESSAGES[ErrorCode.NOT_FOUND], req.correlation_id).model_dump(mode="json")
+        except ServiceValidationError:
+            log.warning("validation error in command %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.VALIDATION, _GENERIC_MESSAGES[ErrorCode.VALIDATION], req.correlation_id).model_dump(mode="json")
+        except ConflictError:
+            log.warning("conflict in command %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.CONFLICT, _GENERIC_MESSAGES[ErrorCode.CONFLICT], req.correlation_id).model_dump(mode="json")
+        except UnsupportedFormatError:
+            log.warning("unsupported format in command %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.UNSUPPORTED_FORMAT, _GENERIC_MESSAGES[ErrorCode.UNSUPPORTED_FORMAT], req.correlation_id).model_dump(mode="json")
         except Exception:
             log.exception("internal error in command %s correlation_id=%s", req.command, req.correlation_id)
             return _error(ErrorCode.INTERNAL, "internal error", req.correlation_id).model_dump(mode="json")
@@ -290,11 +309,12 @@ class Bridge:
             return _error(ErrorCode.VALIDATION, "invalid request envelope", None).model_dump(mode="json")
         if req.command not in _QUERIES:
             return _error(ErrorCode.PERMISSION_DENIED,
-                          f"query not allowed: {req.command}", req.correlation_id).model_dump(mode="json")
+                          "query not allowed", req.correlation_id).model_dump(mode="json")
         try:
             payload = _QUERIES[req.command](**req.payload)
-        except ValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
+        except ValidationError:
+            log.warning("invalid query payload for %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.VALIDATION, _GENERIC_MESSAGES[ErrorCode.VALIDATION], req.correlation_id).model_dump(mode="json")
         try:
             if req.command == "project.open":
                 result = self.service.open_project(payload.project_id)
@@ -325,10 +345,12 @@ class Bridge:
                     payload.project_id, payload.dataset_id)
             else:  # pragma: no cover
                 raise AssertionError(req.command)
-        except NotFoundError as exc:
-            return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump(mode="json")
-        except ServiceValidationError as exc:
-            return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
+        except NotFoundError:
+            log.warning("not found in query %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.NOT_FOUND, _GENERIC_MESSAGES[ErrorCode.NOT_FOUND], req.correlation_id).model_dump(mode="json")
+        except ServiceValidationError:
+            log.warning("validation error in query %s correlation_id=%s", req.command, req.correlation_id, exc_info=True)
+            return _error(ErrorCode.VALIDATION, _GENERIC_MESSAGES[ErrorCode.VALIDATION], req.correlation_id).model_dump(mode="json")
         except Exception:
             log.exception("internal error in query %s correlation_id=%s", req.command, req.correlation_id)
             return _error(ErrorCode.INTERNAL, "internal error", req.correlation_id).model_dump(mode="json")

@@ -83,6 +83,22 @@ function bridge(): PywebviewBridge {
   return api;
 }
 
+/** Error thrown by every ipcClient method. P4-5: backend error messages
+ *  are generic by code (no internal details), so UI must branch on `code`,
+ *  never on message text. `code` is the ErrorContract code (e.g. CONFLICT). */
+export class IpcError extends Error {
+  code: string;
+  constructor(message: string, code: string) {
+    super(message);
+    this.name = "IpcError";
+    this.code = code;
+  }
+}
+
+function ipcError<T>(res: BridgeResponse<T>, fallback: string): IpcError {
+  return new IpcError(res.error?.message ?? fallback, res.error?.code ?? "INTERNAL");
+}
+
 export const ipcClient = {
   async getProtocolInfo(): Promise<ProtocolInfo> {
     return bridge().get_protocol_info();
@@ -94,14 +110,14 @@ export const ipcClient = {
       request_id: rid(), command: "dialog.pick_file",
       payload: { mode, file_types: fileTypes, title: title ?? null },
     }) as BridgeResponse<DialogPickFileRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "pickFile failed");
+    if (!res.ok || !res.data) throw ipcError(res, "pickFile failed");
     return res.data;
   },
   async createProject(name: string): Promise<ProjectRecord> {
     const res = await bridge().execute_command({
       request_id: rid(), command: "project.create", payload: { name },
     }) as BridgeResponse<ProjectRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createProject failed");
+    if (!res.ok || !res.data) throw ipcError(res, "createProject failed");
     return res.data;
   },
   async importDataset(projectId: string, sourcePath: string, datasetName: string): Promise<DatasetRecord> {
@@ -109,7 +125,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.import",
       payload: { project_id: projectId, source_path: sourcePath, dataset_name: datasetName },
     }) as BridgeResponse<DatasetRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "importDataset failed");
+    if (!res.ok || !res.data) throw ipcError(res, "importDataset failed");
     return res.data;
   },
   async getPreview(projectId: string, datasetId: string, limit = 20): Promise<PreviewRecord> {
@@ -117,7 +133,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.preview",
       payload: { project_id: projectId, dataset_id: datasetId, limit },
     }) as BridgeResponse<PreviewRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getPreview failed");
+    if (!res.ok || !res.data) throw ipcError(res, "getPreview failed");
     return res.data;
   },
   async getProfile(projectId: string, datasetId: string): Promise<ProfileRecord> {
@@ -125,7 +141,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.profile",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProfileRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProfile failed");
+    if (!res.ok || !res.data) throw ipcError(res, "getProfile failed");
     return res.data;
   },
   async runProfile(projectId: string, datasetId: string): Promise<ProfileRecord> {
@@ -133,7 +149,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.profile.run",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProfileRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runProfile failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runProfile failed");
     return res.data;
   },
   async listProfiles(projectId: string, datasetId: string): Promise<ProfileListRecord> {
@@ -141,7 +157,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.profiles.list",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProfileListRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listProfiles failed");
+    if (!res.ok || !res.data) throw ipcError(res, "listProfiles failed");
     return res.data;
   },
   async getProfileById(projectId: string, profileId: string): Promise<ProfileRecord> {
@@ -149,7 +165,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.profile.get",
       payload: { project_id: projectId, profile_id: profileId },
     }) as BridgeResponse<ProfileRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProfileById failed");
+    if (!res.ok || !res.data) throw ipcError(res, "getProfileById failed");
     return res.data;
   },
   async listSnapshots(projectId: string): Promise<SnapshotListRecord> {
@@ -157,7 +173,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.snapshots.list",
       payload: { project_id: projectId },
     }) as BridgeResponse<SnapshotListRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listSnapshots failed");
+    if (!res.ok || !res.data) throw ipcError(res, "listSnapshots failed");
     return res.data;
   },
   async getProvenance(projectId: string, datasetId: string): Promise<ProvenanceRecord> {
@@ -165,7 +181,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.provenance",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<ProvenanceRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "getProvenance failed");
+    if (!res.ok || !res.data) throw ipcError(res, "getProvenance failed");
     return res.data;
   },
   async createFinding(projectId: string, datasetId: string, title: string, body: string, evidenceSnapshotId: string, evidenceFingerprint: string): Promise<FindingRecord> {
@@ -173,7 +189,7 @@ export const ipcClient = {
       request_id: rid(), command: "insight.finding.create",
       payload: { project_id: projectId, dataset_id: datasetId, title, body, evidence_snapshot_id: evidenceSnapshotId, evidence_fingerprint: evidenceFingerprint },
     }) as BridgeResponse<FindingRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createFinding failed");
+    if (!res.ok || !res.data) throw ipcError(res, "createFinding failed");
     return res.data;
   },
   async transitionFinding(projectId: string, findingId: string, toStatus: FindingStatus): Promise<FindingRecord> {
@@ -181,7 +197,7 @@ export const ipcClient = {
       request_id: rid(), command: "insight.finding.transition",
       payload: { project_id: projectId, finding_id: findingId, to_status: toStatus },
     }) as BridgeResponse<FindingRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "transitionFinding failed");
+    if (!res.ok || !res.data) throw ipcError(res, "transitionFinding failed");
     return res.data;
   },
   async listFindings(projectId: string, datasetId: string): Promise<FindingListRecord> {
@@ -189,7 +205,7 @@ export const ipcClient = {
       request_id: rid(), command: "insight.findings.list",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<FindingListRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listFindings failed");
+    if (!res.ok || !res.data) throw ipcError(res, "listFindings failed");
     return res.data;
   },
   async createHypothesis(projectId: string, datasetId: string, statement: string): Promise<HypothesisRecord> {
@@ -197,7 +213,7 @@ export const ipcClient = {
       request_id: rid(), command: "insight.hypothesis.create",
       payload: { project_id: projectId, dataset_id: datasetId, statement },
     }) as BridgeResponse<HypothesisRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createHypothesis failed");
+    if (!res.ok || !res.data) throw ipcError(res, "createHypothesis failed");
     return res.data;
   },
   async transitionHypothesis(projectId: string, hypothesisId: string, toStatus: HypothesisStatus): Promise<HypothesisRecord> {
@@ -205,7 +221,7 @@ export const ipcClient = {
       request_id: rid(), command: "insight.hypothesis.transition",
       payload: { project_id: projectId, hypothesis_id: hypothesisId, to_status: toStatus },
     }) as BridgeResponse<HypothesisRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "transitionHypothesis failed");
+    if (!res.ok || !res.data) throw ipcError(res, "transitionHypothesis failed");
     return res.data;
   },
   async listHypotheses(projectId: string, datasetId: string): Promise<HypothesisListRecord> {
@@ -213,7 +229,7 @@ export const ipcClient = {
       request_id: rid(), command: "insight.hypotheses.list",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<HypothesisListRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "listHypotheses failed");
+    if (!res.ok || !res.data) throw ipcError(res, "listHypotheses failed");
     return res.data;
   },
   async runHistogram(projectId: string, datasetId: string, columnName: string): Promise<HistogramRecord> {
@@ -221,7 +237,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.histogram.run",
       payload: { project_id: projectId, dataset_id: datasetId, column_name: columnName },
     }) as BridgeResponse<HistogramRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runHistogram failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runHistogram failed");
     return res.data;
   },
   async runQuality(projectId: string, datasetId: string): Promise<QualityRecord> {
@@ -229,7 +245,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.quality.run",
       payload: { project_id: projectId, dataset_id: datasetId },
     }) as BridgeResponse<QualityRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runQuality failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runQuality failed");
     return res.data;
   },
   async runBivariate(projectId: string, datasetId: string, columnA: string, columnB: string): Promise<BivariateRecord> {
@@ -237,7 +253,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.bivariate.run",
       payload: { project_id: projectId, dataset_id: datasetId, column_a: columnA, column_b: columnB },
     }) as BridgeResponse<BivariateRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runBivariate failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runBivariate failed");
     return res.data;
   },
   async runReport(projectId: string, datasetId: string, scope: ReportScope): Promise<ReportRecord> {
@@ -245,7 +261,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.report.generate",
       payload: { project_id: projectId, dataset_id: datasetId, scope },
     }) as BridgeResponse<ReportRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runReport failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runReport failed");
     return res.data;
   },
   async runPdf(projectId: string, datasetId: string, scope: ReportScope): Promise<PdfRecord> {
@@ -253,7 +269,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.pdf.generate",
       payload: { project_id: projectId, dataset_id: datasetId, scope },
     }) as BridgeResponse<PdfRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runPdf failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runPdf failed");
     return res.data;
   },
   async previewCleaning(
@@ -271,7 +287,7 @@ export const ipcClient = {
         strategy: strategy ?? null, constant_value: constantValue ?? null,
       },
     }) as BridgeResponse<CleaningPreviewSummary>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "previewCleaning failed");
+    if (!res.ok || !res.data) throw ipcError(res, "previewCleaning failed");
     return res.data;
   },
   async runCleaning(
@@ -291,7 +307,7 @@ export const ipcClient = {
         expected_parent_fingerprint: expectedParentFingerprint,
       },
     }) as BridgeResponse<CleaningRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "runCleaning failed");
+    if (!res.ok || !res.data) throw ipcError(res, "runCleaning failed");
     return res.data;
   },
   async createBackup(projectId: string, destPath: string): Promise<BackupRecord> {
@@ -299,7 +315,7 @@ export const ipcClient = {
       request_id: rid(), command: "project.backup.create",
       payload: { project_id: projectId, dest_path: destPath },
     }) as BridgeResponse<BackupRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createBackup failed");
+    if (!res.ok || !res.data) throw ipcError(res, "createBackup failed");
     return res.data;
   },
   async createDiagnostic(projectId: string, destPath: string): Promise<DiagnosticRecord> {
@@ -307,7 +323,7 @@ export const ipcClient = {
       request_id: rid(), command: "project.diagnostic.create",
       payload: { project_id: projectId, dest_path: destPath },
     }) as BridgeResponse<DiagnosticRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "createDiagnostic failed");
+    if (!res.ok || !res.data) throw ipcError(res, "createDiagnostic failed");
     return res.data;
   },
   async restoreProject(archivePath: string, destRoot: string): Promise<RestoreRecord> {
@@ -315,7 +331,7 @@ export const ipcClient = {
       request_id: rid(), command: "project.restore",
       payload: { archive_path: archivePath, dest_root: destRoot },
     }) as BridgeResponse<RestoreRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "restoreProject failed");
+    if (!res.ok || !res.data) throw ipcError(res, "restoreProject failed");
     return res.data;
   },
   async exportDataset(projectId: string, datasetId: string, format: ExportFormat, destPath: string): Promise<ExportRecord> {
@@ -323,7 +339,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.export",
       payload: { project_id: projectId, dataset_id: datasetId, format, dest_path: destPath },
     }) as BridgeResponse<ExportRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "exportDataset failed");
+    if (!res.ok || !res.data) throw ipcError(res, "exportDataset failed");
     return res.data;
   },
   async activateSnapshot(projectId: string, datasetId: string, snapshotId: string): Promise<DatasetRecord> {
@@ -331,7 +347,7 @@ export const ipcClient = {
       request_id: rid(), command: "dataset.snapshot.activate",
       payload: { project_id: projectId, dataset_id: datasetId, snapshot_id: snapshotId },
     }) as BridgeResponse<DatasetRecord>;
-    if (!res.ok || !res.data) throw new Error(res.error?.message ?? "activateSnapshot failed");
+    if (!res.ok || !res.data) throw ipcError(res, "activateSnapshot failed");
     return res.data;
   },
   async getEvents(sinceSeq = 0): Promise<JobEvent[]> {

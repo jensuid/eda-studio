@@ -47,7 +47,7 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
           <fieldset>
             <legend>Cakupan</legend>
             {SCOPES.map((s) => (
-              <label key={s.value} style={{ display: "block" }}>
+              <label key={s.value} className="form-label-block">
                 <input
                   type="radio"
                   name="report-scope"

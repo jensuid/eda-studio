@@ -84,9 +84,9 @@ export function CleaningOperationPicker(props: Props) {
       {operation === "drop_missing" && (
         <fieldset>
           <legend>Kolom (gabungan — union)</legend>
-          <div style={{ maxHeight: 200, overflowY: "auto" }}>
+          <div className="form-scroll-list">
             {columnNames.map((c) => (
-              <label key={c} style={{ display: "block" }}>
+              <label key={c} className="form-label-block">
                 <input
                   type="checkbox"
                   checked={selectedColumns.includes(c)}

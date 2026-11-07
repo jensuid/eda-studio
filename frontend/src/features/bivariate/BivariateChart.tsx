@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import { init } from "echarts";
 import type { BivariateRecord } from "../../shared/ipc/generated";
+import { CHART_TITLE_SIZE, FONT_SIZE_SM, cssVar } from "../../shared/tokens";
 
 interface Props {
   record: BivariateRecord;
@@ -38,7 +39,10 @@ export function BivariateChart({ record }: Props) {
     if (!ref.current) return;
     const chart = init(ref.current);
     const title = `Hubungan ${record.column_a} × ${record.column_b}`;
-    const titleStyle = { fontSize: 14, fontWeight: 600 } as const;
+    const titleStyle = { fontSize: CHART_TITLE_SIZE, fontWeight: 600 } as const;
+    const scatterColor = cssVar("--color-chart-scatter-point");
+    const heatLow = cssVar("--color-surface");
+    const heatHigh = cssVar("--color-chart-heat-cell");
 
     if (record.mode === "num-num") {
       const data = (record.scatter_points ?? []).map((p) => [p.x, p.y]);
@@ -46,9 +50,12 @@ export function BivariateChart({ record }: Props) {
         title: { text: title, left: 0, top: 0, textStyle: titleStyle },
         grid: { left: 56, right: 16, top: 56, bottom: 64, containLabel: true },
         tooltip: { trigger: "item", formatter: (p: { value: number[] }) => `${p.value[0]}, ${p.value[1]}` },
-        xAxis: { type: "value", name: record.column_a, nameTextStyle: { fontSize: 11 } },
-        yAxis: { type: "value", name: record.column_b, nameTextStyle: { fontSize: 11 } },
-        series: [{ type: "scatter", data, symbolSize: 6 }],
+        xAxis: { type: "value", name: record.column_a, nameTextStyle: { fontSize: FONT_SIZE_SM } },
+        yAxis: { type: "value", name: record.column_b, nameTextStyle: { fontSize: FONT_SIZE_SM } },
+        series: [{
+          type: "scatter", data, symbolSize: 6,
+          ...(scatterColor ? { itemStyle: { color: scatterColor } } : {}),
+        }],
       });
     } else if (record.mode === "cat-num") {
       const gs = record.groups ?? [];
@@ -65,9 +72,9 @@ export function BivariateChart({ record }: Props) {
         xAxis: {
           type: "category",
           data: gs.map((g) => g.label),
-          axisLabel: { rotate: gs.length > 8 ? 30 : 0, fontSize: 11 },
+          axisLabel: { rotate: gs.length > 8 ? 30 : 0, fontSize: FONT_SIZE_SM },
         },
-        yAxis: { type: "value", name: `mean ${record.value_column ?? ""}`, nameLocation: "middle", nameGap: 36, nameTextStyle: { fontSize: 11 } },
+        yAxis: { type: "value", name: `mean ${record.value_column ?? ""}`, nameLocation: "middle", nameGap: 36, nameTextStyle: { fontSize: FONT_SIZE_SM } },
         series: [{ type: "bar", data: gs.map((g) => g.mean_value) }],
       });
     } else if (record.mode === "cat-cat") {
@@ -88,10 +95,13 @@ export function BivariateChart({ record }: Props) {
             return `${rows[i]} × ${cols[j]}: ${c} (${pct}% dari ${rows[i]})`;
           },
         },
-        xAxis: { type: "category", data: cols, axisLabel: { rotate: cols.length > 8 ? 30 : 0, fontSize: 11 } },
-        yAxis: { type: "category", data: rows, axisLabel: { fontSize: 11 } },
-        visualMap: { min: 0, max: Math.max(1, ...data.map((d) => d[2])), show: false },
-        series: [{ type: "heatmap", data, label: { show: true, fontSize: 11 } }],
+        xAxis: { type: "category", data: cols, axisLabel: { rotate: cols.length > 8 ? 30 : 0, fontSize: FONT_SIZE_SM } },
+        yAxis: { type: "category", data: rows, axisLabel: { fontSize: FONT_SIZE_SM } },
+        visualMap: {
+          min: 0, max: Math.max(1, ...data.map((d) => d[2])), show: false,
+          ...(heatLow && heatHigh ? { inRange: { color: [heatLow, heatHigh] } } : {}),
+        },
+        series: [{ type: "heatmap", data, label: { show: true, fontSize: FONT_SIZE_SM } }],
       });
     }
     const onResize = () => chart.resize();
@@ -112,9 +122,9 @@ export function BivariateChart({ record }: Props) {
         ref={ref}
         role="img"
         aria-label={summary}
-        style={{ width: "100%", height: 320, overflowX: "auto", minWidth: 320 }}
+        className="chart-canvas"
       />
-      <p style={{ fontSize: "0.85em", margin: "4px 0" }}>
+      <p className="chart-caption">
         {summary}{footnote ? ` ${footnote}` : ""} Fingerprint: {record.fingerprint.slice(0, 12)}…{" "}
         {record.sampled ? `Sampled (${record.sample_size})` : "Exact"} · {record.n_pairs} pasangan
         {record.missing_pairs > 0 ? ` · ${record.missing_pairs} berpasangan-baris hilang` : ""}
@@ -128,7 +138,7 @@ export function BivariateDataTable({ record }: Props) {
   return (
     <details>
       <summary>Data tabel</summary>
-      <div style={{ overflowX: "auto" }}>
+      <div className="table-scroll">
         {record.mode === "num-num" && (
           <table>
             <thead><tr><th>{record.column_a}</th><th>{record.column_b}</th></tr></thead>

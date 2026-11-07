@@ -6,6 +6,7 @@
 import { useEffect, useRef } from "react";
 import { init } from "echarts";
 import type { HistogramRecord } from "../../shared/ipc/generated";
+import { CHART_TITLE_SIZE, FONT_SIZE_SM } from "../../shared/tokens";
 
 interface Props {
   record: HistogramRecord;
@@ -24,7 +25,7 @@ export function HistogramChart({ record }: Props) {
         text: `Distribusi ${record.column_name}`,
         left: 0,
         top: 0,
-        textStyle: { fontSize: 14, fontWeight: 600 },
+        textStyle: { fontSize: CHART_TITLE_SIZE, fontWeight: 600 },
       },
       grid: { left: 56, right: 16, top: 56, bottom: 72, containLabel: true },
       tooltip: {
@@ -35,14 +36,14 @@ export function HistogramChart({ record }: Props) {
       xAxis: {
         type: "category",
         data: record.bins.map((b) => b.label),
-        axisLabel: { rotate: record.bins.length > 8 ? 30 : 0, fontSize: 11 },
+        axisLabel: { rotate: record.bins.length > 8 ? 30 : 0, fontSize: FONT_SIZE_SM },
       },
       yAxis: {
         type: "value",
         name: "count",
         nameLocation: "middle",
         nameGap: 36,
-        nameTextStyle: { fontSize: 11 },
+        nameTextStyle: { fontSize: FONT_SIZE_SM },
       },
       series: [{
         type: "bar",
@@ -53,7 +54,7 @@ export function HistogramChart({ record }: Props) {
         label: {
           show: true,
           position: "top",
-          fontSize: 11,
+          fontSize: FONT_SIZE_SM,
           formatter: (p: { dataIndex: number }) => (p.dataIndex === peakIdx ? String(record.bins[peakIdx]?.count ?? "") : ""),
         },
       }],
@@ -79,9 +80,9 @@ export function HistogramChart({ record }: Props) {
         ref={ref}
         role="img"
         aria-label={summary}
-        style={{ width: "100%", height: 320, overflowX: "auto", minWidth: 320 }}
+        className="chart-canvas"
       />
-      <p style={{ fontSize: "0.85em", margin: "4px 0" }}>{summary} Metode binning: {record.bin_method}. Missing: {record.missing_pct}%. Fingerprint: {record.fingerprint.slice(0, 12)}…</p>
+      <p className="chart-caption">{summary} Metode binning: {record.bin_method}. Missing: {record.missing_pct}%. Fingerprint: {record.fingerprint.slice(0, 12)}…</p>
       <details>
         <summary>Data tabel</summary>
         <table>

@@ -394,7 +394,7 @@ export function ProjectPage() {
               {qualityRecord.problem_count + qualityRecord.check_count === 0 && (
                 <p>Tidak ditemukan masalah kualitas pada snapshot ini.</p>
               )}
-              <div style={{ overflowX: "auto" }}>
+              <div className="table-scroll">
                 <table>
                   <thead>
                     <tr><th>Kolom</th><th>Aturan</th><th>Severity</th><th>Bukti</th><th>Keterangan</th></tr>

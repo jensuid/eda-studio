@@ -1,0 +1,179 @@
+/**
+ * tokens.css — P2-1 design tokens terpusat (single source of truth untuk
+ * nilai visual DOM). Kontrak: tidak ada hex liar di luar berkas ini;
+ * komponen memakai var(--*) atau kelas di bawah. Nilai canvas ECharts yang
+ * tidak bisa mengonsumsi var() dimirror di tokens.ts dengan komentar
+ * penanda nilai yang sama.
+ *
+ * Kontras (WCAG AA, teks ≥ 4.5:1):
+ *  - --color-text on surface/surface-raised ≥ 16:1
+ *  - --color-text-muted on surface/surface-raised ≥ 7:1
+ *  - --color-status-success on surface ≥ 4.5:1, warning/danger lebih tinggi
+ * Badge status selalu disertai teks (DS-CORE-001), bukan warna saja.
+ */
+:root {
+  /* Warna semantik surface */
+  --color-surface: #ffffff;
+  --color-surface-raised: #f8fafc;
+  --color-border-subtle: #d1d5db;
+  --color-text: #111827;
+  --color-text-muted: #475569;
+
+  /* Status (padakan dengan kelas .status-* di bawah) */
+  --color-status-success: #15803d;
+  --color-status-warning: #92400e;
+  --color-status-danger: #b91c1c;
+
+  /* Chart (dibaca runtime via cssVar() di tokens.ts) */
+  --color-chart-scatter-point: #2563eb;
+  --color-chart-heat-cell: #2563eb;
+
+  /* Spasi 4/8/12/16/24/32 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* Ukuran font 11/13/15 */
+  --font-size-sm: 11px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+
+  /* Durasi */
+  --duration-fast: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: var(--font-size-md);
+}
+
+button {
+  transition: opacity var(--duration-fast) ease;
+}
+
+/* ---------- Kelas status (teks selalu ada; warna hanya penegas) ----- */
+.status-success {
+  color: var(--color-status-success);
+  font-weight: 700;
+}
+
+.status-warning {
+  color: var(--color-status-warning);
+  font-weight: 700;
+}
+
+.status-danger {
+  color: var(--color-status-danger);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+}
+
+/* ---------- Utilitas umum ---------------------------------------- */
+.surface-raised {
+  background: var(--color-surface-raised);
+}
+
+.border-subtle {
+  border: 1px solid var(--color-border-subtle);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 320px;
+  overflow-x: auto;
+  min-width: 320px;
+}
+
+.chart-caption {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0;
+}
+
+.form-label-block {
+  display: block;
+  font-size: var(--font-size-md);
+}
+
+.form-scroll-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ---------- Dialog destruktif (cleaning) -------------------------- */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.cleaning-danger-dialog {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  max-width: 520px;
+  width: 90%;
+  max-height: calc(100vh - 64px);
+}
+
+.dialog-scroll {
+  overflow-y: auto;
+}
+
+.dialog-field {
+  display: block;
+  margin: var(--space-3) 0;
+  font-size: var(--font-size-md);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding-top: var(--space-3);
+}
+
+/* ---------- Cleaning ---------------------------------------------- */
+.cleaning-stale {
+  color: var(--color-status-warning);
+  font-size: var(--font-size-sm);
+}
+
+.cleaning-impact {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.cleaning-operation-id {
+  display: block;
+  margin-block: var(--space-1);
+  font-size: var(--font-size-md);
+}

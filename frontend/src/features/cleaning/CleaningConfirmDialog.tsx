@@ -52,29 +52,19 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
 
   return (
     <div
-      className="cleaning-danger-dialog"
+      className="dialog-overlay"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="cleaning-dialog-title"
       aria-describedby="cleaning-dialog-desc"
-      style={{
-        position: "fixed", inset: 0, display: "flex",
-        alignItems: "center", justifyContent: "center", zIndex: 50,
-      }}
     >
       <form
         ref={dialogRef}
         className="cleaning-danger-dialog surface-raised border-subtle"
-        style={{
-          display: "flex", flexDirection: "column",
-          padding: 24, borderRadius: 8,
-          maxWidth: 520, width: "90%",
-          maxHeight: "calc(100vh - 64px)",
-        }}
         onSubmit={(e) => e.preventDefault()}
         onKeyDown={onKeyDown}
       >
-        <div style={{ overflowY: "auto" }}>
+        <div className="dialog-scroll">
           <h3 id="cleaning-dialog-title" className="status-danger">Terapkan cleaning?</h3>
           <p id="cleaning-dialog-desc">
             Operasi ini bersifat destruktif. Periksa ringkasan dampak berikut sebelum melanjutkan.
@@ -90,7 +80,7 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
             Snapshot induk: {preview.parent_fingerprint.slice(0, 12)}&hellip;
           </p>
           <p>Snapshot sumber tidak diubah. Hasilnya disimpan sebagai snapshot baru dan perlu diaktifkan secara manual.</p>
-          <label style={{ display: "block", margin: "12px 0" }}>
+          <label className="dialog-field">
             <input
               type="checkbox"
               checked={agreed}
@@ -101,7 +91,7 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
               : `Saya memahami ${preview.affected_rows} baris akan dihapus dari snapshot ini.`}
           </label>
           {highImpact && (
-            <label style={{ display: "block", margin: "12px 0" }}>
+            <label className="dialog-field">
               <input
                 type="checkbox"
                 checked={highImpactAgreed}
@@ -111,7 +101,7 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
             </label>
           )}
         </div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 12 }}>
+        <div className="dialog-actions">
           <button type="button" ref={cancelRef} onClick={onCancel} disabled={pending}>
             Batal
           </button>

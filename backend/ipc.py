@@ -8,7 +8,7 @@ object PyWebView exposes as `window.pywebview` api in the desktop shell.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ValidationError
 
@@ -198,8 +198,10 @@ class Bridge:
                 return cached
         try:
             if req.command == "project.create":
+                payload = cast(CreateProjectPayload, payload)
                 result = self.service.create_project(payload.name, payload.project_id)
             elif req.command == "dataset.import":
+                payload = cast(ImportDatasetPayload, payload)
                 captured: list = []
 
                 def _import() -> None:
@@ -212,44 +214,52 @@ class Bridge:
                 )
                 result = captured[0]
             elif req.command == "dataset.profile.run":
+                payload = cast(RunProfilePayload, payload)
                 # service.run_profile owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_profile(
                     payload.project_id, payload.dataset_id,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.histogram.run":
+                payload = cast(RunHistogramPayload, payload)
                 result = self.service.run_histogram(
                     payload.project_id, payload.dataset_id,
                     payload.column_name,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.quality.run":
+                payload = cast(RunQualityPayload, payload)
                 # service.run_quality owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_quality(
                     payload.project_id, payload.dataset_id,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.readiness.run":
+                payload = cast(RunReadinessPayload, payload)
                 # service.run_readiness owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_readiness(
                     payload.project_id, payload.dataset_id,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.bivariate.run":
+                payload = cast(RunBivariatePayload, payload)
                 # service.run_bivariate owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_bivariate(
                     payload.project_id, payload.dataset_id,
                     payload.column_a, payload.column_b,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.report.generate":
+                payload = cast(RunReportPayload, payload)
                 # service.run_report owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_report(
                     payload.project_id, payload.dataset_id,
                     payload.scope,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.pdf.generate":
+                payload = cast(RunPdfPayload, payload)
                 # service.run_pdf owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_pdf(
                     payload.project_id, payload.dataset_id,
                     payload.scope,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.cleaning.run":
+                payload = cast(CleaningRunPayload, payload)
                 # service.run_cleaning owns the JobManager lifecycle (SYS-015)
                 result = self.service.run_cleaning(
                     payload.project_id, payload.dataset_id,
@@ -258,62 +268,77 @@ class Bridge:
                     payload.expected_parent_fingerprint,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.snapshot.activate":
+                payload = cast(DatasetActivatePayload, payload)
                 # service.activate_snapshot changes the active snapshot for a dataset
                 result = self.service.activate_snapshot(payload.project_id, payload.dataset_id, payload.snapshot_id)
             elif req.command == "project.backup.create":
+                payload = cast(BackupCreatePayload, payload)
                 # service.create_backup owns the JobManager lifecycle (SYS-015)
                 result = self.service.create_backup(
                     payload.project_id, payload.dest_path,
                     req.correlation_id or req.request_id)
             elif req.command == "project.diagnostic.create":
+                payload = cast(DiagnosticCreatePayload, payload)
                 # service.create_diagnostic owns the JobManager lifecycle (SYS-015)
                 result = self.service.create_diagnostic(
                     payload.project_id, payload.dest_path,
                     req.correlation_id or req.request_id)
             elif req.command == "dialog.pick_file":
+                payload = cast(DialogPickFilePayload, payload)
                 # Synchronous native dialog — no job, no mutation (P2-3).
-                result = self.file_dialog(payload)
+                dialog_result = self.file_dialog(payload)
                 # P4-2: a dialog-picked path becomes an authorized path
                 # (allowlist) so subsequent import/backup/etc. accept
                 # it even though it lies outside the project root.
-                if result is not None and getattr(result, "path", None) and getattr(result, "available", False):
-                    self.service.authorize_path(result.path)
+                if dialog_result is not None and dialog_result.path and dialog_result.available:
+                    self.service.authorize_path(dialog_result.path)
+                result = dialog_result
             elif req.command == "project.restore":
+                payload = cast(BackupRestorePayload, payload)
                 result = self.service.restore_project(
                     payload.archive_path, payload.dest_root,
                     req.correlation_id or req.request_id)
             elif req.command == "dataset.export":
+                payload = cast(ExportDatasetPayload, payload)
                 # service.export_dataset owns the JobManager lifecycle (SYS-015)
                 result = self.service.export_dataset(
                     payload.project_id, payload.dataset_id,
                     payload.format, payload.dest_path,
                     req.correlation_id or req.request_id)
             elif req.command == "insight.finding.create":
+                payload = cast(CreateFindingPayload, payload)
                 result = self.service.create_finding(
                     payload.project_id, payload.dataset_id, payload.title,
                     payload.body, payload.evidence_snapshot_id, payload.evidence_fingerprint)
             elif req.command == "insight.finding.transition":
+                payload = cast(TransitionFindingPayload, payload)
                 result = self.service.transition_finding(
                     payload.project_id, payload.finding_id, payload.to_status)
             elif req.command == "insight.hypothesis.create":
+                payload = cast(CreateHypothesisPayload, payload)
                 result = self.service.create_hypothesis(
                     payload.project_id, payload.dataset_id, payload.statement)
             elif req.command == "insight.hypothesis.transition":
+                payload = cast(TransitionHypothesisPayload, payload)
                 result = self.service.transition_hypothesis(
                     payload.project_id, payload.hypothesis_id, payload.to_status)
             elif req.command == "chart.spec.save":
+                payload = cast(SaveChartSpecPayload, payload)
                 result = self.service.save_chart_spec(
                     payload.project_id, payload.dataset_id, payload.snapshot_id,
                     payload.fingerprint, payload.chart_type, payload.x,
                     payload.y, payload.group, payload.encodings, payload.options,
                     payload.chart_id)
             elif req.command == "plan.create":
+                payload = cast(CreatePlanPayload, payload)
                 result = self.service.create_plan(
                     payload.project_id, payload.dataset_id, payload.steps)
             elif req.command == "plan.approve":
+                payload = cast(ApprovePlanPayload, payload)
                 result = self.service.approve_plan(
                     payload.project_id, payload.plan_id)
             elif req.command == "plan.execute":
+                payload = cast(ExecutePlanPayload, payload)
                 result = self.service.execute_plan(
                     payload.project_id, payload.plan_id, req.correlation_id)
             else:  # pragma: no cover — guarded by registry check above
@@ -333,7 +358,7 @@ class Bridge:
         except Exception:
             log.exception("internal error in command %s correlation_id=%s", req.command, req.correlation_id)
             return _error(ErrorCode.INTERNAL, "internal error", req.correlation_id).model_dump(mode="json")
-        response = Response(ok=True, data=result.model_dump(mode="json") if hasattr(result, "model_dump") else result,
+        response = Response(ok=True, data=result.model_dump(mode="json") if isinstance(result, BaseModel) else result,
                             correlation_id=req.correlation_id).model_dump(mode="json")
         if req.idempotency_key:
             self.service.store.save_idempotent_result(req.idempotency_key, req.command, response)
@@ -355,42 +380,56 @@ class Bridge:
             return _error(ErrorCode.VALIDATION, _GENERIC_MESSAGES[ErrorCode.VALIDATION], req.correlation_id).model_dump(mode="json")
         try:
             if req.command == "project.open":
+                payload = cast(OpenProjectPayload, payload)
                 result = self.service.open_project(payload.project_id)
             elif req.command == "dataset.preview":
+                payload = cast(GetDatasetPreviewPayload, payload)
                 result = self.service.get_preview(
                     payload.project_id, payload.dataset_id, payload.limit)
             elif req.command == "dataset.profile":
+                payload = cast(GetDatasetProfilePayload, payload)
                 result = self.service.get_profile(
                     payload.project_id, payload.dataset_id)
             elif req.command == "dataset.profile.get":
+                payload = cast(GetProfileByIdPayload, payload)
                 result = self.service.get_profile_by_id(
                     payload.project_id, payload.profile_id)
             elif req.command == "dataset.profiles.list":
+                payload = cast(ListProfilesPayload, payload)
                 result = self.service.list_profiles(
                     payload.project_id, payload.dataset_id)
             elif req.command == "dataset.snapshots.list":
+                payload = cast(ListSnapshotsPayload, payload)
                 result = self.service.list_snapshots(payload.project_id)
             elif req.command == "dataset.provenance":
+                payload = cast(GetDatasetProvenancePayload, payload)
                 result = self.service.get_provenance(
                     payload.project_id, payload.dataset_id)
             elif req.command == "dataset.cleaning.preview":
+                payload = cast(CleaningPreviewPayload, payload)
                 result = self.service.cleaning_preview(payload)
             elif req.command == "insight.findings.list":
+                payload = cast(ListInsightsPayload, payload)
                 result = self.service.list_findings(
                     payload.project_id, payload.dataset_id)
             elif req.command == "insight.hypotheses.list":
+                payload = cast(ListInsightsPayload, payload)
                 result = self.service.list_hypotheses(
                     payload.project_id, payload.dataset_id)
             elif req.command == "chart.spec.get":
+                payload = cast(GetChartSpecPayload, payload)
                 result = self.service.get_chart_spec(
                     payload.project_id, payload.chart_id)
             elif req.command == "chart.spec.list":
+                payload = cast(ListChartSpecsPayload, payload)
                 result = self.service.list_chart_specs(
                     payload.project_id, payload.dataset_id)
             elif req.command == "plan.get":
+                payload = cast(GetPlanPayload, payload)
                 result = self.service.get_plan(
                     payload.project_id, payload.plan_id)
             elif req.command == "plan.list":
+                payload = cast(ListPlansPayload, payload)
                 result = self.service.list_plans(
                     payload.project_id, payload.dataset_id)
             else:  # pragma: no cover

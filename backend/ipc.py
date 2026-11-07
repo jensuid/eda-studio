@@ -7,9 +7,12 @@ object PyWebView exposes as `window.pywebview` api in the desktop shell.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
+
+log = logging.getLogger(__name__)
 
 from backend.application import (
     ConflictError,
@@ -107,7 +110,11 @@ class Bridge:
         return ProtocolInfo(commands=sorted(_COMMANDS), queries=sorted(_QUERIES)).model_dump(mode="json")
 
     def execute_command(self, request: Request | dict) -> dict[str, Any]:
-        req = Request(**request) if isinstance(request, dict) else request
+        try:
+            req = Request(**request) if isinstance(request, dict) else request
+        except ValidationError:
+            log.warning("malformed command envelope rejected", exc_info=True)
+            return _error(ErrorCode.VALIDATION, "invalid request envelope", None).model_dump(mode="json")
         if req.command not in _COMMANDS:
             return _error(ErrorCode.PERMISSION_DENIED,
                           f"command not allowed: {req.command}", req.correlation_id).model_dump(mode="json")
@@ -115,6 +122,11 @@ class Bridge:
             payload = _COMMANDS[req.command](**req.payload)
         except ValidationError as exc:
             return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
+        # K1: idempotent replay — return stored result without re-dispatch.
+        if req.idempotency_key:
+            cached = self.service.store.get_idempotent_result(req.idempotency_key, req.command)
+            if cached is not None:
+                return cached
         try:
             if req.command == "project.create":
                 result = self.service.create_project(payload.name, payload.project_id)
@@ -217,13 +229,21 @@ class Bridge:
             return _error(ErrorCode.CONFLICT, str(exc), req.correlation_id).model_dump(mode="json")
         except UnsupportedFormatError as exc:
             return _error(ErrorCode.UNSUPPORTED_FORMAT, str(exc), req.correlation_id).model_dump(mode="json")
-        except Exception as exc:  # noqa: BLE001 — boundary translation
-            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump(mode="json")
-        return Response(ok=True, data=result.model_dump(mode="json") if hasattr(result, "model_dump") else result,
-                        correlation_id=req.correlation_id).model_dump(mode="json")
+        except Exception:
+            log.exception("internal error in command %s correlation_id=%s", req.command, req.correlation_id)
+            return _error(ErrorCode.INTERNAL, "internal error", req.correlation_id).model_dump(mode="json")
+        response = Response(ok=True, data=result.model_dump(mode="json") if hasattr(result, "model_dump") else result,
+                            correlation_id=req.correlation_id).model_dump(mode="json")
+        if req.idempotency_key:
+            self.service.store.save_idempotent_result(req.idempotency_key, req.command, response)
+        return response
 
     def execute_query(self, request: Request | dict) -> dict[str, Any]:
-        req = Request(**request) if isinstance(request, dict) else request
+        try:
+            req = Request(**request) if isinstance(request, dict) else request
+        except ValidationError:
+            log.warning("malformed query envelope rejected", exc_info=True)
+            return _error(ErrorCode.VALIDATION, "invalid request envelope", None).model_dump(mode="json")
         if req.command not in _QUERIES:
             return _error(ErrorCode.PERMISSION_DENIED,
                           f"query not allowed: {req.command}", req.correlation_id).model_dump(mode="json")
@@ -265,8 +285,9 @@ class Bridge:
             return _error(ErrorCode.NOT_FOUND, str(exc), req.correlation_id).model_dump(mode="json")
         except ServiceValidationError as exc:
             return _error(ErrorCode.VALIDATION, str(exc), req.correlation_id).model_dump(mode="json")
-        except Exception as exc:  # noqa: BLE001
-            return _error(ErrorCode.INTERNAL, f"internal error: {exc}", req.correlation_id).model_dump(mode="json")
+        except Exception:
+            log.exception("internal error in query %s correlation_id=%s", req.command, req.correlation_id)
+            return _error(ErrorCode.INTERNAL, "internal error", req.correlation_id).model_dump(mode="json")
         return Response(ok=True, data=result.model_dump(mode="json"),
                         correlation_id=req.correlation_id).model_dump(mode="json")
 

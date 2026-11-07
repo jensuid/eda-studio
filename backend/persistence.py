@@ -98,6 +98,13 @@ CREATE TABLE IF NOT EXISTS hypotheses (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS idempotency (
+    key TEXT NOT NULL,
+    command TEXT NOT NULL,
+    result_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (key, command)
+);
 """
 
 
@@ -205,6 +212,26 @@ class Store:
                 (dataset_id,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    # -- idempotency (K1: dedup command retries) ---------------------------
+    def get_idempotent_result(self, key: str, command: str) -> dict | None:
+        with self._lock:
+            row = self.db.execute(
+                "SELECT result_json FROM idempotency WHERE key = ? AND command = ?",
+                (key, command),
+            ).fetchone()
+        return json.loads(row["result_json"]) if row else None
+
+    def save_idempotent_result(self, key: str, command: str, result: dict) -> None:
+        from datetime import UTC, datetime
+
+        with self._lock:
+            self.db.execute(
+                "INSERT OR IGNORE INTO idempotency(key, command, result_json, created_at)"
+                " VALUES (?, ?, ?, ?)",
+                (key, command, json.dumps(result), datetime.now(UTC).isoformat()),
+            )
+            self.db.commit()
 
     # -- projects ---------------------------------------------------------
     def save_project(self, project: Project) -> None:

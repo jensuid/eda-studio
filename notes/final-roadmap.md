@@ -7,11 +7,11 @@ Berikut brief roadmap sampai aplikasi final, berlandaskan **Doc16 (Implementatio
 | Fase | Isi | Milestone | Status |
 |---|---|---|---|
 | **P1** Technical Foundation | Scaffold, IPC typed, SQLite/Parquet, JobManager, ingestion | **M1** | ✅ Selesai (termasuk M1-next Parquet/Excel) |
-| **P2** Core EDA | Profiling, quality, cleaning, univariate/bivariate, ECharts | **M2** | ⏳ Berikutnya |
-| **P3** Advanced EDA | Anomaly/pattern, hipotesis, readiness, insight lifecycle | M2/M3 | ⬜ |
-| **P4** Reporting & Export | HTML/PDF report, dataset export, project `.edaworkspace`, provenance | **M3** | ⬜ |
-| **P5** Platform | Plugin (subprocess isolated), AI governance layer | M3/post-MVP | ⬜ |
-| **P6** Release & Hardening | Backup/restore, cross-platform evidence, security hardening, SBOM | **M3 Release Candidate** | ⬜ |
+| **P2** Core EDA | Profiling, quality, cleaning, univariate/bivariate, ECharts | **M2** | ✅ Selesai (quad-B profiling/histogram/quality/bivariate) |
+| **P3** Advanced EDA | Anomaly/pattern, hipotesis, readiness, insight lifecycle | M2/M3 | ✅ Selesai (finding/hypothesis M3) |
+| **P4** Reporting & Export | HTML/PDF report, dataset export, project `.edaworkspace`, provenance | **M3** | ✅ Code-complete (M3-RC) |
+| **P5** Platform | Plugin (subprocess isolated), AI governance layer | M3/post-MVP | ⬜ Non-goal MVP |
+| **P6** Release & Hardening | Backup/restore, cross-platform evidence, security hardening, SBOM | **M3 Release Candidate** | ⚠️ Code-complete, belum Beta-ready (P0: remote+CI, packaging/signing, beta validation) |
 | **Post-MVP** | Marketplace plugin, kolaborasi tim, cloud, ML training, AI interpretation penuh | — | ⬜ Non-goal MVP (§10.3 Doc01) |
 
 **Prinsip delivery-nya** (Doc16 §11–13): trunk-based development, CI berlapis PR → Main → Nightly → Beta → Stable, dan **tanpa tanggal rilis spekulatif** — maju hanya kalau evidence gate lulus (test, security review, cross-platform proof).
@@ -49,7 +49,5 @@ F-01–F-05 (penutupan formal PLG/AI) — semuanya *setelah* aplikasi stabil di 
 
 ---
 
-## Posisi kita sekarang
-**M1 ✅ lengkap** (termasuk ADR + adapter + verifikasi desktop level bridge). Langkah terkecil berikutnya yang membuka M2: **univariate profiling** — satu fitur EDA pertama yang membaca snapshot Parquet.
-
-Setuju saya mulai M2 dari profiling?
+## Posisi kita sekarang (disinkronkan 2026-11-07)
+**M1 ✅, M2 ✅, M3-RC code-complete** — 74 test hijau, ruff + tsc bersih, generator tanpa drift. Status authoritative: `docs/status-register.md`; audit: `docs/AUDIT-2026-11-07-REPORT.md`; rencana: `docs/REMEDIATION-PLAN.md`. Tiga P0 tersisa menuju Beta: (1) git remote + push → CI observed, (2) packaging/signing, (3) beta validation — lihat `docs/REMEDIATION-PLAN.md` P0-1 & P3-1.

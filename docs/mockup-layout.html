@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>EDA Workbench — Mockup Layout Tahap 1</title>
+<style>
+  :root{--bg:#f5f6f8;--panel:#fff;--line:#e3e6ec;--ink:#1c2333;--mut:#67708a;--acc:#2563eb;--ok:#16a34a;--warn:#d97706;--rad:10px}
+  *{box-sizing:border-box} body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Inter,sans-serif;background:var(--bg);color:var(--ink)}
+  .titlebar{height:42px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#10162a;color:#fff;font-weight:600}
+  .titlebar .sp{flex:1}.titlebar .win span{margin-left:10px;opacity:.8}
+  .app{display:grid;grid-template-columns:210px 1fr 240px;gap:0;min-height:calc(100vh - 42px)}
+  aside{background:var(--panel);border-right:1px solid var(--line);padding:14px 10px}
+  nav a{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:8px;color:var(--ink);text-decoration:none;margin-bottom:2px}
+  nav a.on{background:#eef3ff;color:var(--acc);font-weight:600}
+  nav a:hover{background:#f0f2f7}
+  .sep{height:1px;background:var(--line);margin:12px 4px}
+  main{padding:20px 22px;overflow:auto}
+  .right{background:var(--panel);border-left:1px solid var(--line);padding:16px}
+  .stepper{display:flex;gap:6px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+  .step{display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:13px}
+  .step.done{border-color:#bbf7d0;background:#f0fdf4}.step.act{border-color:var(--acc);color:var(--acc);font-weight:600}
+  .step .n{width:20px;height:20px;border-radius:50%;background:#e5e9f2;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .step.done .n{background:var(--ok);color:#fff}.step.act .n{background:var(--acc);color:#fff}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);padding:14px 16px;margin-bottom:12px}
+  .row{display:flex;align-items:center;gap:10px}.row .sp{flex:1}
+  h1{font-size:18px;margin:0 0 14px} h2{font-size:15px;margin:0 0 8px} h3{font-size:13px;margin:0 0 6px}
+  .mut{color:var(--mut);font-size:13px}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+  .btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px}
+  .btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+  .btn:hover{filter:brightness(.97)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700}
+  .b-prop{background:#fef9c3;color:#854d0e}.b-acc{background:#dcfce7;color:#166534}.b-inv{background:#dbeafe;color:#1d4ed8}
+  .b-sup{background:#dcfce7;color:#166534}.b-arc{background:#e5e7eb;color:#374151}
+  .toast{position:fixed;right:16px;bottom:16px;background:#10162a;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 30px #0003}
+  .chart{height:110px;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;color:var(--mut);font-size:12px}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+  .kv{display:grid;grid-template-columns:80px 1fr;gap:4px 10px;font-size:13px}
+  @media(max-width:900px){.app{grid-template-columns:64px 1fr}.right{display:none}nav a span{display:none}}
+</style></head>
+<body>
+<header class="titlebar">EDA Workbench <span class="mut" style="color:#9aa3b8">· Mockup Tahap 1 (statis, tanpa backend) · Project: Demo</span><span class="sp"></span><span class="win"><span>─</span><span>□</span><span>×</span></span></header>
+<div class="app">
+  <aside><nav id="nav">
+    <a href="#" data-r="datasets" class="on">▦ <span>Datasets</span></a>
+    <a href="#" data-r="analysis">◈ <span>Analysis</span></a>
+    <a href="#" data-r="insights">✦ <span>Insights</span></a>
+    <a href="#" data-r="reports">▤ <span>Reports</span></a>
+    <a href="#" data-r="tools">⚒ <span>Tools</span></a>
+    <div class="sep"></div>
+    <a href="#" data-r="settings">⚙ <span>Settings</span></a>
+  </nav></aside>
+
+  <main id="main"></main>
+
+  <aside class="right" id="right"></aside>
+</div>
+<div class="toast" id="toast" hidden>Contoh aksi → file picker native (mockup)</div>
+
+<script>
+const routes = {
+ datasets: { title:"Datasets", body:`
+   <div class="note">Prinsip: import lewat <b>file picker native</b>, bukan ketik path. Dataset adalah objek pusat — Analysis/Insights/Reports selalu dalam konteks dataset aktif.</div>
+   <div class="row" style="margin-bottom:12px"><button class="btn pri" data-act>+ Import Dataset</button><span class="mut">CSV · XLSX · Parquet</span><span class="sp"></span><span class="mut">2 dataset</span></div>
+   ${[["sample.csv","128 rows · 6 cols","a3f9c…","Aktif",1],["messy.csv","42 rows · 4 cols","77bd1…","",0]].map(d=>`
+   <div class="card">
+     <div class="row"><b>${d[0]}</b>${d[3]?'<span class="badge b-acc">Aktif</span>':''}<span class="sp"></span><span class="mut">${d[1]} · fp <span class="mono">${d[2]}</span></span></div>
+     <div class="row" style="margin-top:8px"><button class="btn pri" data-act>Open</button><button class="btn" data-act>Profile</button><button class="btn" data-act>Export ▾</button><button class="btn" data-act>Provenance</button></div>
+   </div>`).join("")}`,
+   right:`<h3>Dataset Aktif</h3><div class="kv"><span>Nama</span><b>sample.csv</b><span>Rows</span><span>128</span><span>Cols</span><span>6</span><span>Fingerprint</span><span class="mono">a3f9c…e1</span><span>Snapshot</span><span class="mono">snap_01</span></div><div class="sep"></div><h3>Aksi Cepat</h3><div class="row" style="flex-wrap:wrap"><button class="btn" data-act>Run Profile</button><button class="btn" data-act>Export CSV</button><button class="btn" data-act>Report</button></div>` },
+
+ analysis: { title:"Analysis — sample.csv", body:`
+   <div class="stepper">
+     <span class="step done"><span class="n">✓</span>Import</span>→
+     <span class="step act"><span class="n">2</span>Profil</span>→
+     <span class="step"><span class="n">3</span>Analyse</span>→
+     <span class="step"><span class="n">4</span>Report</span>
+   </div>
+   <div class="grid2">
+     <div class="card"><h3>Profil</h3><p class="mut">rows 128 · nulls 3 · duplicates 0 · 6 kolom</p><div class="row"><button class="btn pri" data-act>Run Profile</button><button class="btn" data-act>Re-run</button></div></div>
+     <div class="card"><h3>Quality</h3><p class="mut">score <b>92/100</b> · 2 kolom perlu perhatian</p><div class="row"><button class="btn" data-act>Lihat detail</button></div></div>
+     <div class="card"><h3>Histogram: x</h3><div class="chart">[ ECharts histogram — 20 bins ]</div><div class="row" style="margin-top:8px"><button class="btn pri" data-act>Run</button></div></div>
+     <div class="card"><h3>Bivariate: x vs y</h3><div class="chart">[ ECharts scatter ]</div><div class="row" style="margin-top:8px"><button class="btn pri" data-act>Run</button></div></div>
+   </div>`,
+   right:`<h3>Dataset Aktif</h3><div class="kv"><span>Nama</span><b>sample.csv</b><span>Rows</span><span>128</span><span>Cols</span><span>6</span><span>Fingerprint</span><span class="mono">a3f9c…e1</span><span>Snapshot</span><span class="mono">snap_01</span></div><div class="sep"></div><h3>Hasil Terakhir</h3><p class="mut">Profile 2026-11-06 14:02 · Histogram 14:03</p>` },
+
+ insights: { title:"Insights — sample.csv", body:`
+   <div class="row" style="margin-bottom:12px"><button class="btn pri" data-act>+ Finding</button><button class="btn pri" data-act>+ Hypothesis</button><span class="sp"></span><span class="mut">Evidence: snapshot <span class="mono">snap_01</span> (a3f9c…)</span></div>
+   <div class="card"><div class="row"><b>Duplicate rows 3%</b><span class="badge b-prop">Proposed</span><span class="sp"></span><button class="btn" data-act>Accept</button><button class="btn" data-act>Archive</button></div><p class="mut">Berdasarkan profil snap_01 — evidence terverifikasi.</p></div>
+   <div class="card"><div class="row"><b>Missing X correlated with Y</b><span class="badge b-acc">Accepted</span><span class="sp"></span><button class="btn" data-act>Archive</button></div></div>
+   <div class="card"><div class="row"><b>X memengaruhi Y</b><span class="badge b-inv">Investigating</span><span class="sp"></span><button class="btn" data-act>Supported</button><button class="btn" data-act>Not Supported</button><button class="btn" data-act>Archive</button></div><p class="mut">Status mengikuti lifecycle Doc03 §4.8 — transisi invalid ditolak backend.</p></div>`,
+   right:`<h3>Konvensi</h3><p class="mut">Observation ≠ interpretation. AI-generated interpretation ditandai. Finding tidak boleh klaim kausalitas tanpa desain riset.</p>` },
+
+ reports: { title:"Reports", body:`
+   <div class="row" style="margin-bottom:12px"><button class="btn pri" data-act>Generate HTML Report</button><button class="btn pri" data-act>Generate PDF</button></div>
+   <div class="card"><div class="row"><b>report-2026-11-06.html</b><span class="sp"></span><span class="mut">2.1 MB</span><button class="btn" data-act>Open</button></div></div>
+   <div class="card"><div class="row"><b>report.pdf</b><span class="sp"></span><span class="mut">890 KB</span><button class="btn" data-act>Open</button></div></div>`,
+   right:`<h3>Konfirmasi</h3><p class="mut">Report dihasilkan dari snapshot aktif; provenance tercatat per dataset.</p>` },
+
+ tools: { title:"Tools — Project", body:`
+   <div class="card"><h3>Backup &amp; Restore</h3><p class="mut">ZIP + manifest SHA-256 · restore selalu ke lokasi baru</p><div class="row"><button class="btn pri" data-act>Save Backup…</button><button class="btn" data-act>Restore…</button></div></div>
+   <div class="card"><h3>Diagnostic Bundle</h3><p class="mut">Basic level · redacted · tanpa data mentah/DB</p><div class="row"><button class="btn pri" data-act>Create Diagnostic…</button></div></div>
+   <div class="card"><h3>Export Dataset</h3><p class="mut">Snapshot kanonis → CSV / Parquet</p><div class="row"><button class="btn" data-act>Export CSV…</button><button class="btn" data-act>Export Parquet…</button></div></div>
+   <div class="card"><h3>SBOM</h3><p class="mut">CycloneDX dari uv.lock → <span class="mono">dist/sbom.json</span> + checksums</p></div>`,
+   right:`<h3>Operasional</h3><p class="mut">Lihat <span class="mono">docs/operational-runbook.md</span> untuk prosedur lengkap (gagal umum → aksi).</p>` },
+
+ settings: { title:"Settings", body:`<div class="card"><h3>Preferensi</h3><p class="mut">Tema, shortcut, direktori default — placeholder untuk Tahap 3.</p></div>`,
+   right:`<h3>Info</h3><p class="mut">Mockup statis untuk validasi layout. Belum terhubung ke backend/IPC.</p>` }
+};
+
+const main = document.getElementById('main'), right = document.getElementById('right');
+function show(r){ const d = routes[r]; main.innerHTML = `<h1>${d.title}</h1>` + d.body; right.innerHTML = d.right;
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on', a.dataset.r===r)); }
+document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click', e=>{e.preventDefault(); show(a.dataset.r)}));
+document.body.addEventListener('click', e=>{ if(e.target.matches('[data-act]')){ const t=document.getElementById('toast'); t.hidden=false; setTimeout(()=>t.hidden=true,2200);} });
+show('datasets');
+</script>
+</body></html>

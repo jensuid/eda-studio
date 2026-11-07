@@ -11,7 +11,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from pydantic import BaseModel
+
 from backend import contracts
+
+# K6: fail-loud — any public BaseModel in contracts not listed in MODELS
+# (and not in OMIT_OK) aborts generation so new contracts cannot drift silently.
+OMIT_OK: set[str] = {"Response"}  # generic envelope; TS side defines it manually
 
 MODELS = [
     "ErrorContract", "Request", "ProtocolInfo", "JobEvent", "JobStatus",
@@ -79,6 +85,14 @@ def _ts_type(schema: dict) -> str:
 
 
 def main() -> None:
+    public_models = {
+        name for name, obj in vars(contracts).items()
+        if isinstance(obj, type) and issubclass(obj, BaseModel)
+        and obj.__module__ == contracts.__name__ and not name.startswith("_")
+    }
+    unregistered = sorted(public_models - set(MODELS) - OMIT_OK)
+    if unregistered:
+        raise SystemExit(f"Unregistered contract models (add to MODELS or OMIT_OK): {unregistered}")
     out = Path(__file__).resolve().parents[1] / "frontend" / "src" / "shared" / "ipc" / "generated.ts"
     out.parent.mkdir(parents=True, exist_ok=True)
     lines = [

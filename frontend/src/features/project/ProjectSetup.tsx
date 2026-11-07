@@ -10,6 +10,7 @@ import type {
   BackupRecord,
   DiagnosticRecord,
   DatasetRecord,
+  PortableExportRecord,
   RestoreRecord,
 } from "../../shared/ipc/generated";
 import { useProject } from "../../app/ProjectContext";
@@ -73,6 +74,19 @@ export function ProjectSetup() {
       toast.success("Restore selesai.");
     },
     onError: (e) => toast.error(`Restore gagal: ${e.message}`),
+  });
+
+  // G6-2 portable export: backup-shaped ZIP with kind="portable_export".
+  // It can be restored with the ordinary project.restore command.
+  const [portablePath, setPortablePath] = useState("");
+  const [portableRecord, setPortableRecord] = useState<PortableExportRecord | null>(null);
+  const exportPortable = useMutation({
+    mutationFn: (dest: string) => ipcClient.exportPortable(projectId!, dest),
+    onSuccess: (r) => {
+      setPortableRecord(r);
+      toast.success("Export portabel selesai.");
+    },
+    onError: (e) => toast.error(`Export portabel gagal: ${e.message}`),
   });
 
   // M3 P2 diagnostic bundle (Doc15 §10): Basic level, redacted.
@@ -206,6 +220,38 @@ export function ProjectSetup() {
             <p>
               Restore selesai: {restoreRecord.project_id} → {restoreRecord.dest_root} · db sha256{" "}
               {restoreRecord.project_db_sha256.slice(0, 12)}…
+            </p>
+          )}
+        </section>
+      )}
+      {projectId && (
+        <section>
+          <h2>Export Portabel (G6-2)</h2>
+          <p>Paket ZIP berisi project database, snapshots, dan manifest untuk serah terima ke mesin lain.</p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              exportPortable.mutate(portablePath);
+            }}
+          >
+            <FilePathInput
+              value={portablePath}
+              onChange={setPortablePath}
+              mode="save"
+              fileTypes={["zip"]}
+              title="Simpan export portabel"
+              placeholder="Path file export (.zip)"
+              disabled={exportPortable.isPending}
+            />
+            <button type="submit" disabled={!portablePath || exportPortable.isPending}>
+              Export Portabel
+            </button>
+          </form>
+          {portableRecord && (
+            <p>
+              Export: {portableRecord.file_path} ·{" "}
+              {(portableRecord.file_size_bytes / 1024).toFixed(1)} KB · kind {portableRecord.kind} · db sha256{" "}
+              {portableRecord.project_db_sha256.slice(0, 12)}…
             </p>
           )}
         </section>

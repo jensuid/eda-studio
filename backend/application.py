@@ -11,7 +11,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
 
-from backend.backup_restore import BackupError, create_backup, restore_backup
+from backend.app_update import app_info as _app_info
+from backend.app_update import check_for_update as _check_for_update
+from backend.backup_restore import (
+    BackupError,
+    create_autosave,
+    create_backup,
+    latest_autosave,
+    restore_backup,
+)
 from backend.bivariate import describe_bivariate
 from backend.cleaning import (
     CleaningNotFoundError,
@@ -22,6 +30,7 @@ from backend.cleaning import (
 from backend.contracts import (
     CHART_SPEC_MAX_BYTES,
     PLAN_MAX_SPEC_BYTES,
+    AppInfoRecord,
     BackupRecord,
     BivariateGroup,
     BivariateRecord,
@@ -57,6 +66,7 @@ from backend.contracts import (
     PlanStepInput,
     PlanStepStatus,
     PlanStepType,
+    PortableExportRecord,
     PreviewRecord,
     ProfileListRecord,
     ProfileRecord,
@@ -68,12 +78,14 @@ from backend.contracts import (
     QualityRecord,
     ReadinessItemRecord,
     ReadinessRecord,
+    RecoveryStatusRecord,
     ReportRecord,
     ReportScope,
     ReportSection,
     RestoreRecord,
     SnapshotInfo,
     SnapshotListRecord,
+    UpdateCheckRecord,
 )
 from backend.diagnostics import DiagnosticError, create_diagnostic_bundle
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes, new_id
@@ -942,6 +954,115 @@ class WorkbenchService:
 
         self.jobs.run("project.restore", work, correlation_id)
         return holder["rec"]
+
+    # -- crash recovery (G6-1) -------------------------------------------
+    # A running marker proves the previous process did not exit cleanly.
+    # Startup checkpoints into ``autosaves/``; the user explicitly restores
+    # from the latest autosave into a NEW root, never over the crashed one.
+
+    def maybe_autosave_on_startup(self) -> bool:
+        """Checkpoint a non-empty project at startup (fail-soft)."""
+        try:
+            if not self.store.list_projects():
+                return False
+            create_autosave(self.store.root)
+            return True
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "startup autosave failed; crash recovery may be unavailable",
+                exc_info=True,
+            )
+            return False
+
+    def recovery_status(self) -> RecoveryStatusRecord:
+        """Report whether the previous run crashed and what can be restored."""
+        previous = getattr(self.store, "previous_runtime_state", {}) or {}
+        autosave, manifest = latest_autosave(self.store.root)
+        return RecoveryStatusRecord(
+            unclean_previous=bool(getattr(self.store, "unclean_previous", False)),
+            last_started_at=previous.get("started_at"),
+            last_clean_exit_at=previous.get("last_clean_exit_at"),
+            has_autosave=autosave is not None,
+            autosave_path=str(autosave) if autosave else None,
+            autosave_created_at=(manifest or {}).get("created_at"),
+            autosave_project_db_sha256=(manifest or {}).get("project_db_sha256"),
+        )
+
+    def recovery_restore(self, correlation_id: str | None = None) -> RestoreRecord:
+        """Restore the latest autosave to a new recovered root."""
+        autosave, _manifest = latest_autosave(self.store.root)
+        if autosave is None:
+            raise ValidationError("tidak ada autosave yang tersedia untuk recovery")
+
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        dest_root = self.store.root / f"recovered-{stamp}"
+        for suffix in range(1, 100):
+            if not dest_root.exists():
+                break
+            dest_root = self.store.root / f"recovered-{stamp}-{suffix}"
+        if dest_root.exists():
+            raise ValidationError("root recovery sudah ada; tidak dapat ditimpa")
+
+        holder: dict[str, RestoreRecord] = {}
+
+        def work() -> None:
+            try:
+                manifest = restore_backup(autosave, dest_root)
+            except BackupError as exc:
+                raise ValidationError(str(exc)) from exc
+            projects = manifest.get("projects") or []
+            holder["rec"] = RestoreRecord(
+                project_id=str(projects[0].get("project_id", "")) if projects else "",
+                dest_root=str(dest_root.resolve()),
+                file_path=str(autosave.resolve()),
+                project_db_sha256=manifest["project_db_sha256"],
+                counts=dict(manifest.get("counts", {})),
+                version=str(manifest.get("version", "")),
+            )
+
+        self.jobs.run("project.recovery.restore", work, correlation_id)
+        return holder["rec"]
+
+    # -- portable export (G6-2) ------------------------------------------
+    def export_portable(self, project_id: str, dest_path: str,
+                        correlation_id: str | None = None) -> PortableExportRecord:
+        """Export project data + snapshots as a portable ZIP package."""
+        if self.store.get_project(project_id) is None:
+            raise NotFoundError(f"project not found: {project_id}")
+        dest = self._check(dest_path, (".zip", ".edaworkspace"))
+        if dest.is_dir():
+            raise ValidationError(f"dest adalah direktori, bukan file: {dest_path}")
+        holder: dict[str, PortableExportRecord] = {}
+
+        def work() -> None:
+            try:
+                manifest = create_backup(
+                    self.store.root, Path(dest_path), kind="portable_export"
+                )
+            except BackupError as exc:
+                raise ValidationError(str(exc)) from exc
+            holder["rec"] = PortableExportRecord(
+                project_id=project_id,
+                file_path=str(Path(dest_path).resolve()),
+                file_size_bytes=Path(dest_path).stat().st_size,
+                created_at=datetime.fromisoformat(manifest["created_at"]),
+                project_db_sha256=manifest["project_db_sha256"],
+                counts=dict(manifest.get("counts", {})),
+                version=str(manifest.get("version", "")),
+                kind=str(manifest.get("kind", "portable_export")),
+            )
+
+        self.jobs.run("project.export_portable", work, correlation_id)
+        return holder["rec"]
+
+    # -- app info / update channel (G6-3) -------------------------------
+    def app_info(self) -> AppInfoRecord:
+        return AppInfoRecord(**_app_info())
+
+    def check_update(self, feed_url: str | None = None) -> UpdateCheckRecord:
+        return UpdateCheckRecord(**_check_for_update(feed_url))
 
     # -- diagnostics (M3 P2, Doc15 §10) -----------------------------------
     def create_diagnostic(self, project_id: str, dest_path: str,

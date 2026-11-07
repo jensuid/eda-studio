@@ -11,11 +11,14 @@ import json
 import logging
 import sqlite3
 import threading
+from datetime import UTC, datetime
 from pathlib import Path
 
 from backend.domain import Dataset, Project, Snapshot, fingerprint_bytes
 
 log = logging.getLogger(__name__)
+
+RUNTIME_STATE_FILE = "runtime-state.json"
 
 
 class ConflictError(ValueError):
@@ -165,6 +168,44 @@ class Store:
         self._migrate_snapshots_file_fingerprint()
         self.db.commit()
         self._backfill_snapshots()
+        self._init_runtime_state()
+
+    def _runtime_state_path(self) -> Path:
+        return self.root / RUNTIME_STATE_FILE
+
+    def _read_runtime_state(self) -> dict:
+        try:
+            return json.loads(self._runtime_state_path().read_text())
+        except (OSError, ValueError):
+            return {}
+
+    def _write_runtime_state(self, state: dict) -> None:
+        try:
+            self._runtime_state_path().write_text(json.dumps(state, indent=2))
+        except OSError:
+            log.warning("failed to write runtime state", exc_info=True)
+
+    def _init_runtime_state(self) -> None:
+        """Crash-recovery marker (G6-1).
+
+        Reads the PREVIOUS run's marker before overwriting it:
+        ``state == "running"`` means the previous run never marked a
+        clean exit (kill/crash) → ``unclean_previous`` is True.
+        The new marker is written immediately; a clean exit overwrites
+        it with ``state == "clean"`` via :meth:`mark_clean_exit`.
+        """
+        previous = self._read_runtime_state()
+        self.previous_runtime_state = previous
+        self.unclean_previous = previous.get("state") == "running"
+        self._write_runtime_state(
+            {"state": "running",
+             "started_at": datetime.now(UTC).isoformat()})
+
+    def mark_clean_exit(self) -> None:
+        """Record a clean shutdown (called by the desktop shell on exit)."""
+        self._write_runtime_state(
+            {"state": "clean",
+             "last_clean_exit_at": datetime.now(UTC).isoformat()})
 
     def _migrate_snapshots_file_fingerprint(self) -> None:
         """Add snapshots.file_fingerprint to pre-existing databases (K5).
@@ -315,6 +356,11 @@ class Store:
                 "SELECT * FROM projects WHERE project_id = ?", (project_id,)
             ).fetchone()
         return Project(row["project_id"], row["name"]) if row else None
+
+    def list_projects(self) -> list[Project]:
+        with self._lock:
+            rows = self.db.execute("SELECT * FROM projects ORDER BY rowid").fetchall()
+        return [Project(row["project_id"], row["name"]) for row in rows]
 
     # -- snapshots + datasets --------------------------------------------
     def save_snapshot(self, snapshot_id: str, data: bytes) -> Path:

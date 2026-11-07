@@ -24,6 +24,7 @@ from backend.application import (
     ValidationError as ServiceValidationError,
 )
 from backend.contracts import (
+    AppInfoPayload,
     ApprovePlanPayload,
     BackupCreatePayload,
     BackupRestorePayload,
@@ -54,7 +55,10 @@ from backend.contracts import (
     ListProfilesPayload,
     ListSnapshotsPayload,
     OpenProjectPayload,
+    PortableExportPayload,
     ProtocolInfo,
+    RecoveryRestorePayload,
+    RecoveryStatusPayload,
     Request,
     Response,
     RunBivariatePayload,
@@ -67,6 +71,7 @@ from backend.contracts import (
     SaveChartSpecPayload,
     TransitionFindingPayload,
     TransitionHypothesisPayload,
+    UpdateCheckPayload,
 )
 from backend.execution import JobManager
 
@@ -86,6 +91,9 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "project.backup.create": BackupCreatePayload,  # M3 P0 backup (Doc04 §12)
     "project.diagnostic.create": DiagnosticCreatePayload,  # M3 P2 bundle (Doc15 §10)
     "project.restore": BackupRestorePayload,  # M3 P0 restore to new root
+    "project.recovery.restore": RecoveryRestorePayload,  # G6-1 crash recovery
+    "project.export_portable": PortableExportPayload,  # G6-2 portable export
+    "app.update.check": UpdateCheckPayload,  # G6-3 release feed check
     "dataset.export": ExportDatasetPayload,  # M3 P0 dataset export CSV/Parquet
     "insight.finding.create": CreateFindingPayload,  # M3 P1 insights
     "insight.finding.transition": TransitionFindingPayload,
@@ -112,6 +120,8 @@ _QUERIES: dict[str, type[BaseModel]] = {
     "plan.get": GetPlanPayload,  # NXT-2
     "plan.list": ListPlansPayload,  # NXT-2
     "dataset.cleaning.preview": CleaningPreviewPayload,
+    "project.recovery.status": RecoveryStatusPayload,  # G6-1
+    "app.info": AppInfoPayload,  # G6-3
 }
 
 
@@ -176,6 +186,21 @@ class Bridge:
     # -- the 4 bridge methods --------------------------------------------
     def get_protocol_info(self) -> dict[str, Any]:
         return ProtocolInfo(commands=sorted(_COMMANDS), queries=sorted(_QUERIES)).model_dump(mode="json")
+
+    def _dispatch_g6_command(self, req: Request, payload: BaseModel) -> BaseModel:
+        """Dispatch G6 commands (kept separate to bound main-dispatch complexity)."""
+        if req.command == "project.recovery.restore":
+            cast(RecoveryRestorePayload, payload)
+            return self.service.recovery_restore(req.correlation_id or req.request_id)
+        if req.command == "project.export_portable":
+            command_payload = cast(PortableExportPayload, payload)
+            return self.service.export_portable(
+                command_payload.project_id,
+                command_payload.dest_path,
+                req.correlation_id or req.request_id,
+            )
+        command_payload = cast(UpdateCheckPayload, payload)
+        return self.service.check_update(command_payload.feed_url)
 
     def execute_command(self, request: Request | dict) -> dict[str, Any]:
         try:
@@ -298,6 +323,12 @@ class Bridge:
                 result = self.service.restore_project(
                     payload.archive_path, payload.dest_root,
                     req.correlation_id or req.request_id)
+            elif req.command in {
+                "project.recovery.restore",
+                "project.export_portable",
+                "app.update.check",
+            }:
+                result = self._dispatch_g6_command(req, payload)
             elif req.command == "dataset.export":
                 payload = cast(ExportDatasetPayload, payload)
                 # service.export_dataset owns the JobManager lifecycle (SYS-015)
@@ -432,6 +463,12 @@ class Bridge:
                 payload = cast(ListPlansPayload, payload)
                 result = self.service.list_plans(
                     payload.project_id, payload.dataset_id)
+            elif req.command == "project.recovery.status":
+                payload = cast(RecoveryStatusPayload, payload)
+                result = self.service.recovery_status()
+            elif req.command == "app.info":
+                payload = cast(AppInfoPayload, payload)
+                result = self.service.app_info()
             else:  # pragma: no cover
                 raise AssertionError(req.command)
         except NotFoundError:
@@ -458,4 +495,5 @@ def make_bridge(root: str) -> Bridge:
     store = Store(Path(root))
     jobs = JobManager(store)
     service = WorkbenchService(store, jobs)
+    service.maybe_autosave_on_startup()
     return Bridge(service, jobs)

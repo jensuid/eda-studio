@@ -74,8 +74,14 @@ def _read_metadata(db_path: Path) -> dict:
         conn.close()
 
 
-def create_backup(root: str | Path, dest: str | Path) -> dict:
-    """Full backup of a project root to a ZIP file. Returns the manifest."""
+def create_backup(root: str | Path, dest: str | Path,
+                  kind: str = "backup") -> dict:
+    """Full backup of a project root to a ZIP file. Returns the manifest.
+
+    ``kind`` is recorded in the manifest: ``"backup"`` for routine
+    backups/autosaves, ``"portable_export"`` for G6-2 handoff exports
+    (same ZIP shape; accepted by :func:`restore_backup`).
+    """
     root, dest = Path(root), Path(dest)
     src_db = root / "project.db"
     if not src_db.exists():
@@ -99,6 +105,7 @@ def create_backup(root: str | Path, dest: str | Path) -> dict:
         metadata = _read_metadata(tmp_db)
         manifest: dict = {
             "version": MANIFEST_VERSION,
+            "kind": kind,
             "created_at": _now_iso(),
             "project_db_sha256": _sha256_file(tmp_db),
             "counts": {k[6:]: v for k, v in metadata.items()
@@ -196,3 +203,60 @@ def restore_backup(archive: str | Path, dest_root: str | Path) -> dict:
             shutil.copy2(tmp_root / "snapshots" / p,
                          dest_root / "snapshots" / p)
     return manifest
+
+
+# ---- Crash-recovery autosave (G6-1) ----------------------------------
+# On every startup the service checkpoints the current project into
+# `<root>/autosaves/` so a subsequent crash can offer a restore to the
+# state at session start. Only the newest `KEEP` autosaves are retained;
+# pruning is oldest-first (lexicographic on the timestamped name).
+
+AUTOSAVE_DIRNAME = "autosaves"
+AUTOSAVE_KEEP = 3
+
+
+def _autosave_dir(root: str | Path) -> Path:
+    return Path(root) / AUTOSAVE_DIRNAME
+
+
+def create_autosave(root: str | Path, keep: int = AUTOSAVE_KEEP) -> dict:
+    """Write a startup autosave ZIP and prune older ones. Returns manifest."""
+    root = Path(root)
+    import datetime as _dt
+
+    stamp = _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+    dest = _autosave_dir(root) / f"autosave-{stamp}.edaworkspace"
+    if dest.exists():  # two startups within the same second
+        for i in range(1, 100):
+            alt = _autosave_dir(root) / f"autosave-{stamp}-{i}.edaworkspace"
+            if not alt.exists():
+                dest = alt
+                break
+    manifest = create_backup(root, dest, kind="autosave")
+    autos = sorted(_autosave_dir(root).glob("autosave-*.edaworkspace"))
+    for old in autos[: max(0, len(autos) - keep)]:
+        try:
+            old.unlink()
+        except OSError:
+            pass
+    manifest["autosave_path"] = str(dest)
+    return manifest
+
+
+def latest_autosave(root: str | Path) -> tuple[Path, dict | None]:
+    """Newest autosave on disk, with its manifest (best-effort read).
+
+    Returns ``(path, manifest_or_None)``; ``(None, None)`` when no
+    autosave exists yet. A corrupt autosave yields its path with a
+    ``None`` manifest so callers can still surface it to the user.
+    """
+    autos = sorted(_autosave_dir(root).glob("autosave-*.edaworkspace"))
+    if not autos:
+        return None, None
+    path = autos[-1]
+    try:
+        with zipfile.ZipFile(path) as zf:
+            manifest = json.loads(zf.read("manifest.json"))
+    except Exception:  # noqa: BLE001 — corrupt autosave: surface path only
+        return path, None
+    return path, manifest

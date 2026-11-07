@@ -459,6 +459,62 @@ export interface RestoreRecord {
   version: string;
 }
 
+export interface RecoveryStatusPayload {
+  [key: string]: unknown;
+}
+
+export interface RecoveryRestorePayload {
+  [key: string]: unknown;
+}
+
+export interface RecoveryStatusRecord {
+  unclean_previous: boolean;
+  last_started_at?: string;
+  last_clean_exit_at?: string;
+  has_autosave?: boolean;
+  autosave_path?: string;
+  autosave_created_at?: string;
+  autosave_project_db_sha256?: string;
+}
+
+export interface PortableExportPayload {
+  project_id: string;
+  dest_path: string;
+}
+
+export interface PortableExportRecord {
+  project_id: string;
+  file_path: string;
+  file_size_bytes: number;
+  created_at: string;
+  project_db_sha256: string;
+  counts?: Record<string, unknown>;
+  version: string;
+  kind: string;
+}
+
+export interface AppInfoPayload {
+  [key: string]: unknown;
+}
+
+export interface AppInfoRecord {
+  version: string;
+  platform: string;
+  update_feed?: string;
+}
+
+export interface UpdateCheckPayload {
+  feed_url?: string;
+}
+
+export interface UpdateCheckRecord {
+  current_version: string;
+  latest_version?: string;
+  update_available?: boolean;
+  feed_url?: string;
+  checked_at: string;
+}
+
 export interface ExportDatasetPayload {
   project_id: string;
   dataset_id: string;

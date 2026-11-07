@@ -573,6 +573,83 @@ class RestoreRecord(BaseModel):
     version: str
 
 
+# ---- Crash Recovery (G6-1, Doc15 §10) ----
+# A `runtime-state.json` marker in the project root records the last
+# session as "running" or "clean". A session that ends without being
+# marked clean (process kill/crash) leaves "running" behind, so the
+# next startup knows it can offer a restore from the startup autosave
+# under `autosaves/`. Recovery restores into a NEW root (same policy as
+# M3 restore: the original project is never mutated).
+
+class RecoveryStatusPayload(BaseModel):
+    pass
+
+
+class RecoveryRestorePayload(BaseModel):
+    pass
+
+
+class RecoveryStatusRecord(BaseModel):
+    unclean_previous: bool  # True == previous run ended without clean exit
+    last_started_at: str | None = None
+    last_clean_exit_at: str | None = None
+    has_autosave: bool = False
+    autosave_path: str | None = None
+    autosave_created_at: str | None = None
+    autosave_project_db_sha256: str | None = None
+
+
+# ---- Portable Export (G6-2, Doc04 §12) ----
+# Portable export = backup ZIP format with manifest kind="portable_export"
+# (project.db + snapshots/ + manifest.json). It is accepted by the
+# existing `project.restore` command, so a handoff export round-trips
+# without any new restore path.
+
+class PortableExportPayload(BaseModel):
+    project_id: str
+    dest_path: str = Field(min_length=1)
+
+
+class PortableExportRecord(BaseModel):
+    project_id: str
+    file_path: str
+    file_size_bytes: int
+    created_at: datetime
+    project_db_sha256: str
+    counts: dict[str, int] = Field(default_factory=dict)
+    version: str
+    kind: str
+
+
+# ---- App Info / Update Channel (G6-3, Velopack roadmap) ----
+# The update channel is backed by GitHub Releases. `app.update.check`
+# compares the running version against a JSON release feed
+# (EDA_UPDATE_FEED; default: GitHub Releases "latest" API). Auto-apply
+# of updates is NOT included yet — Velopack packaging activates it at
+# Stable (see docs/update-channel.md).
+
+class AppInfoPayload(BaseModel):
+    pass
+
+
+class AppInfoRecord(BaseModel):
+    version: str
+    platform: str
+    update_feed: str | None = None
+
+
+class UpdateCheckPayload(BaseModel):
+    feed_url: str | None = None
+
+
+class UpdateCheckRecord(BaseModel):
+    current_version: str
+    latest_version: str | None = None
+    update_available: bool = False
+    feed_url: str | None = None
+    checked_at: str
+
+
 # ---- Dataset Export (M3 P0, Doc04/Doc16 §4.2) ----
 # Canonical-snapshot export to an explicit on-disk CSV/Parquet artifact.
 # The artifact lives on disk; IPC payload stays small (ExportRecord).

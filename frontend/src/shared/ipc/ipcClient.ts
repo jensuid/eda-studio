@@ -4,10 +4,14 @@
  * TanStack Query owns server cache, Zustand is for ephemeral UI state.
  */
 import type {
+  AppInfoRecord,
   BackupRecord,
   DiagnosticRecord,
   DialogPickFileRecord,
+  PortableExportRecord,
+  RecoveryStatusRecord,
   RestoreRecord,
+  UpdateCheckRecord,
   BivariateRecord,
   CleaningOperation,
   CleaningPreviewSummary,
@@ -386,6 +390,43 @@ export const ipcClient = {
       payload: { archive_path: archivePath, dest_root: destRoot },
     }) as BridgeResponse<RestoreRecord>;
     if (!res.ok || !res.data) throw ipcError(res, "restoreProject failed");
+    return res.data;
+  },
+  async recoveryStatus(): Promise<RecoveryStatusRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "project.recovery.status", payload: {},
+    }) as BridgeResponse<RecoveryStatusRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "recoveryStatus failed");
+    return res.data;
+  },
+  async recoveryRestore(): Promise<RestoreRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "project.recovery.restore", payload: {},
+    }) as BridgeResponse<RestoreRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "recoveryRestore failed");
+    return res.data;
+  },
+  async exportPortable(projectId: string, destPath: string): Promise<PortableExportRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "project.export_portable",
+      payload: { project_id: projectId, dest_path: destPath },
+    }) as BridgeResponse<PortableExportRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "exportPortable failed");
+    return res.data;
+  },
+  async appInfo(): Promise<AppInfoRecord> {
+    const res = await bridge().execute_query({
+      request_id: rid(), command: "app.info", payload: {},
+    }) as BridgeResponse<AppInfoRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "appInfo failed");
+    return res.data;
+  },
+  async checkUpdate(feedUrl?: string): Promise<UpdateCheckRecord> {
+    const res = await bridge().execute_command({
+      request_id: rid(), command: "app.update.check",
+      payload: { feed_url: feedUrl ?? null },
+    }) as BridgeResponse<UpdateCheckRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "checkUpdate failed");
     return res.data;
   },
   async exportDataset(projectId: string, datasetId: string, format: ExportFormat, destPath: string): Promise<ExportRecord> {

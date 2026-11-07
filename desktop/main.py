@@ -5,6 +5,7 @@ Exposes ONLY the 4 bridge methods to the webview (ES-8.6). Run:
 """
 from __future__ import annotations
 
+import atexit
 import sys
 from pathlib import Path
 
@@ -19,8 +20,13 @@ def main() -> None:
     import webview  # type: ignore
 
     bridge = make_bridge(str(DATA_ROOT))
-    webview.create_window("EDA Workbench", url="../frontend/dist/index.html", js_api=bridge)
-    webview.start()
+    # G6-1: any normal interpreter exit records that shutdown was clean.
+    atexit.register(bridge.service.store.mark_clean_exit)
+    try:
+        webview.create_window("EDA Workbench", url="../frontend/dist/index.html", js_api=bridge)
+        webview.start()
+    finally:
+        bridge.service.store.mark_clean_exit()
 
 
 if __name__ == "__main__":

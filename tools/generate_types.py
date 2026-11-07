@@ -39,6 +39,9 @@ MODELS = [
     "DatasetActivatePayload", "CleaningRecord",
     "BackupCreatePayload", "BackupRestorePayload",
     "BackupRecord", "RestoreRecord",
+    "RecoveryStatusPayload", "RecoveryRestorePayload", "RecoveryStatusRecord",
+    "PortableExportPayload", "PortableExportRecord",
+    "AppInfoPayload", "AppInfoRecord", "UpdateCheckPayload", "UpdateCheckRecord",
     "ExportDatasetPayload",
     "ExportRecord",
     "GetDatasetProvenancePayload", "ProvenanceEdge", "ProvenanceRecord",
@@ -128,7 +131,10 @@ def main() -> None:
     for name in MODELS:
         model = getattr(contracts, name)
         schema = model.model_json_schema()
-        lines.append(f"export interface {name} {_ts_type(schema)}")
+        ts_type = _ts_type(schema)
+        if ts_type == "Record<string, unknown>":
+            ts_type = "{\n  [key: string]: unknown;\n}"
+        lines.append(f"export interface {name} {ts_type}")
         lines.append("")
     out.write_text("\n".join(lines))
     print(f"wrote {out}")

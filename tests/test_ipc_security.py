@@ -36,6 +36,7 @@ def test_unsupported_format(bridge, project_id, tmp_path):
 def test_protocol_info_lists_only_registered(bridge):
     info = bridge.get_protocol_info()
     assert info["commands"] == [
+        "app.update.check",
         "chart.spec.save",
         "dataset.bivariate.run", "dataset.cleaning.run", "dataset.export", "dataset.histogram.run", "dataset.import",
         "dataset.pdf.generate", "dataset.profile.run", "dataset.quality.run", "dataset.readiness.run",
@@ -43,10 +44,12 @@ def test_protocol_info_lists_only_registered(bridge):
         "dataset.snapshot.activate", "dialog.pick_file", "insight.finding.create", "insight.finding.transition",
         "insight.hypothesis.create", "insight.hypothesis.transition",
         "plan.approve", "plan.create", "plan.execute", "project.backup.create",
-        "project.create", "project.diagnostic.create", "project.restore"]
+        "project.create", "project.diagnostic.create", "project.export_portable",
+        "project.recovery.restore", "project.restore"]
     assert info["queries"] == [
-        "chart.spec.get", "chart.spec.list",
+        "app.info", "chart.spec.get", "chart.spec.list",
         "dataset.cleaning.preview", "dataset.preview", "dataset.profile",
         "dataset.profile.get", "dataset.profiles.list",
         "dataset.provenance", "dataset.snapshots.list", "insight.findings.list",
-        "insight.hypotheses.list", "plan.get", "plan.list", "project.open"]
+        "insight.hypotheses.list", "plan.get", "plan.list", "project.open",
+        "project.recovery.status"]

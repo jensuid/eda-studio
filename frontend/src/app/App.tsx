@@ -11,6 +11,12 @@ import { ToastProvider } from "../shared/ui/Toaster";
 import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
 import { JobCenter } from "../shared/job/JobCenter";
 import { ipcClient } from "../shared/ipc/ipcClient";
+import type {
+  AppInfoRecord,
+  RecoveryStatusRecord,
+  RestoreRecord,
+  UpdateCheckRecord,
+} from "../shared/ipc/generated";
 import { ProjectSetup } from "../features/project/ProjectSetup";
 import { DatasetExplorer } from "../features/project/DatasetExplorer";
 import { ProfilingPage } from "../features/profiling/ProfilingPage";
@@ -52,6 +58,12 @@ function Shell() {
   const { route, navigate } = useRouter();
   const [protocolError, setProtocolError] = useState<string | null>(null);
   const [protocolChecked, setProtocolChecked] = useState(false);
+  const [recovery, setRecovery] = useState<RecoveryStatusRecord | null>(null);
+  const [restored, setRestored] = useState<RestoreRecord | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [appInfo, setAppInfo] = useState<AppInfoRecord | null>(null);
+  const [update, setUpdate] = useState<UpdateCheckRecord | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const prevRoute = useRef(route);
 
@@ -94,6 +106,46 @@ function Shell() {
     };
   }, []);
 
+  // G6-1/G6-3 startup state: clean up silently when the backend is absent.
+  useEffect(() => {
+    let cancelled = false;
+    ipcClient.appInfo().then((info) => {
+      if (!cancelled) setAppInfo(info);
+    }).catch(() => undefined);
+    ipcClient.recoveryStatus().then((status) => {
+      if (!cancelled && status.unclean_previous && status.has_autosave) {
+        setRecovery(status);
+      }
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const restoreRecovery = async () => {
+    setRestoring(true);
+    try {
+      const record = await ipcClient.recoveryRestore();
+      setRestored(record);
+      setRecovery(null);
+    } catch (e) {
+      setProtocolError(`Recovery gagal: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  const runUpdateCheck = async () => {
+    setCheckingUpdate(true);
+    try {
+      setUpdate(await ipcClient.checkUpdate());
+    } catch (e) {
+      setProtocolError(`Pemeriksaan update gagal: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -130,10 +182,51 @@ function Shell() {
         tabIndex={-1}
         aria-label="Konten utama"
       >
+        {recovery && (
+          <section className="recovery-banner" role="alertdialog" aria-label="Pemulihan crash">
+            <h2>Aplikasi berhenti tanpa clean exit</h2>
+            <p>Autosave terakhir tersedia dan dapat dipulihkan ke root baru tanpa mengubah project saat ini.</p>
+            <p>
+              Dibuat: {recovery.autosave_created_at ?? "—"} · Path: {recovery.autosave_path ?? "—"}
+            </p>
+            <div>
+              <button type="button" onClick={restoreRecovery} disabled={restoring}>
+                {restoring ? "Memulihkan…" : "Pulihkan autosave"}
+              </button>
+              <button type="button" onClick={() => setRecovery(null)} disabled={restoring}>
+                Tutup
+              </button>
+            </div>
+          </section>
+        )}
+        {restored && (
+          <section className="recovery-banner" role="status">
+            <h2>Recovery selesai</h2>
+            <p>
+              Project {restored.project_id} dipulihkan ke {restored.dest_root}.
+            </p>
+            <button type="button" onClick={() => setRestored(null)}>
+              OK
+            </button>
+          </section>
+        )}
         <RouteContent />
       </main>
       <aside className="app-aside" aria-label="Panel samping">
         <JobCenter />
+        <section className="version-panel" aria-label="Informasi versi dan update">
+          <p>Versi {appInfo?.version ?? "—"} · {appInfo?.platform ?? ""}</p>
+          <button type="button" onClick={runUpdateCheck} disabled={checkingUpdate}>
+            {checkingUpdate ? "Memeriksa…" : "Periksa update"}
+          </button>
+          {update && (
+            <p>
+              {update.latest_version
+                ? `Rilis terbaru: ${update.latest_version}. ${update.update_available ? "Update tersedia." : "Sudah versi terbaru."}`
+                : "Rilis feed tidak dapat dibaca."}
+            </p>
+          )}
+        </section>
       </aside>
     </div>
   );

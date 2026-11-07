@@ -3,8 +3,8 @@
 Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 
 ## Handoff note (untuk session berikutnya — baca ini dulu)
-- Posisi terakhir: P0-2 (K1/K2/K6) & P0-3 **done**, gate hijau (74 passed, ruff/tsc/gen clean), sudah di-commit.
-- Kartu berikutnya: **P0-1** (git remote + CI observed) — **blocked: belum ada git remote** (`git remote -v` kosong per 2026-11-07); butuh URL remote dari pemilik sebelum bisa dikerjakan.
+- Posisi terakhir: P0-1 **blocked:auth GitHub** (commit lokal `20b1bc8`, belum ter-push). Kerja lokal P0-1 selesai: remote `jensuid/eda-studio` terpasang, 2 cacat CI diperbaiki, gate §10 hijau (74 passed). `git push` gagal karena `gh` token invalid per 2026-11-07 — butuh pemilik jalankan `gh auth login`, lalu push & amati CI.
+- Kartu berikutnya: lanjutan **P0-1** — push + CI observed + tulis run URL ke `cross-platform-evidence.md`, baru `done`. Jangan mulai kartu kedua sebelum P0-1 `done`.
 - Setelah P0-1: **P1-1** (ADR-003). Jangan mulai P2 sebelum P1-1 selesai.
 - Prompt resume session baru: "Baca `docs/status-register.md`, ambil kartu `todo` pertama dari `docs/REMEDIATION-PLAN.md`, kerjakan, jalankan gate §10, update status register. Jangan mulai kartu kedua sebelum kartu pertama `done`."
 - Aturan titik bersih: berhenti hanya pada kartu `done` dengan bukti gate; jangan tinggalkan `in_progress` tanpa commit.
@@ -25,7 +25,7 @@ Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 |---|---|---|---|---|
 | AUDIT-2026-11-07 | Audit report | done | — | docs/AUDIT-2026-11-07-REPORT.md |
 | REMED-2026-11-07 | Remediation plan | done | — | docs/REMEDIATION-PLAN.md |
-| P0-1 | Git remote + CI observed | in_progress | gate §10 lokal hijau: 74 passed, ruff/tsc/gen clean | remote `jensuid/eda-studio` (dikonfirmasi pemilik 2026-11-07); fix 2 cacat CI (pnpm version:9, SBOM frontend); menunggu push + CI observed |
+| P0-1 | Git remote + CI observed | blocked:auth GitHub | gate §10 lokal hijau: 74 passed, ruff/tsc/gen clean (commit 20b1bc8) | remote `jensuid/eda-studio` terpasang; fix 2 cacat CI done (pnpm version:9, SBOM frontend `tools/generate_frontend_sbom.py` 122 komponen); `git push` gagal: gh token invalid (2026-11-07), butuh `gh auth login` / PAT; setelah push, tunggu CI + tulis run URL ke `cross-platform-evidence.md` |
 | P0-2a | K2 error leak | done | 74 passed, ruff clean | backend/ipc.py logging + pesan generik; tests/test_p0_fixes.py |
 | P0-2b | K1 idempotency | done | 74 passed | tabel idempotency + dedup pre-dispatch; tests/test_p0_fixes.py |
 | P0-2c | K6 generator fail-loud | done | regen diff kosong | tools/generate_types.py introspeksi model publik |

@@ -77,6 +77,7 @@ export function DatasetExplorer() {
             value={histColumn}
             onChange={(e) => setHistColumn(e.target.value)}
             placeholder="Nama kolom numerik"
+            aria-label="Nama kolom numerik"
             required
           />
           <button type="submit" disabled={runHistogram.isPending || !histColumn}>
@@ -93,7 +94,11 @@ export function DatasetExplorer() {
             setConfirmExport(true);
           }}
         >
-          <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value as ExportFormat)}>
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+            aria-label="Format export"
+          >
             <option value="csv">CSV</option>
             <option value="parquet">Parquet</option>
           </select>

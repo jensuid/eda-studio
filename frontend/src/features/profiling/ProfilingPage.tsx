@@ -276,12 +276,14 @@ export function ProfilingPage() {
             value={findingTitle}
             onChange={(e) => setFindingTitle(e.target.value)}
             placeholder="Judul temuan"
+            aria-label="Judul temuan"
             required
           />
           <input
             value={findingBody}
             onChange={(e) => setFindingBody(e.target.value)}
             placeholder="Detail temuan"
+            aria-label="Detail temuan"
             required
           />
           <button type="submit" disabled={createFinding.isPending}>
@@ -315,6 +317,7 @@ export function ProfilingPage() {
             value={hypothesisStatement}
             onChange={(e) => setHypothesisStatement(e.target.value)}
             placeholder="Pernyataan hipotesis"
+            aria-label="Pernyataan hipotesis"
             required
           />
           <button type="submit" disabled={createHypothesis.isPending}>

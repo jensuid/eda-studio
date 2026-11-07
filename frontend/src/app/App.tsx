@@ -3,7 +3,7 @@
  * (rail 210 | main | panel kanan 240; ≤900px rail 64, panel tersembunyi),
  * handshake protokol saat startup, ErrorBoundary per-route, Job Center.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProjectProvider } from "./ProjectContext";
 import { ROUTES, RouterProvider, useRouter } from "./router";
 import type { RouteId } from "./router";
@@ -50,6 +50,18 @@ function Shell() {
   const { route, navigate } = useRouter();
   const [protocolError, setProtocolError] = useState<string | null>(null);
   const [protocolChecked, setProtocolChecked] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const prevRoute = useRef(route);
+
+  // P2-5: fokus dipindah ke konten utama setelah navigasi route (dynamic
+  // update) agar pengguna keyboard/screen reader tidak tertinggal di rail.
+  // Mount pertama tidak dipindah; ref prevRoute kebal terhadap double-effect
+  // StrictMode (nilai route sama dibesarkan, tidak difokuskan).
+  useEffect(() => {
+    if (prevRoute.current === route) return;
+    prevRoute.current = route;
+    mainRef.current?.focus({ preventScroll: true });
+  }, [route]);
 
   // Handshake startup: cocokkan protocol_revision backend vs yang diharapkan.
   useEffect(() => {
@@ -82,6 +94,9 @@ function Shell() {
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        Lewati ke konten utama
+      </a>
       <header className="app-header">
         <h1>EDA Workbench</h1>
         {protocolChecked && protocolError && (
@@ -97,16 +112,25 @@ function Shell() {
             type="button"
             className={r.id === route ? "nav-item nav-item-active" : "nav-item"}
             aria-current={r.id === route ? "page" : undefined}
+            // P2-5: aria-label wajib — .nav-label disembunyikan di ≤900px
+            // (P2-4), tanpa ini tombol rail kehilangan accessible name.
+            aria-label={r.label}
             onClick={() => navigate(r.id)}
           >
             <span className="nav-label">{r.label}</span>
           </button>
         ))}
       </nav>
-      <main className="app-main">
+      <main
+        className="app-main"
+        id="main-content"
+        ref={mainRef}
+        tabIndex={-1}
+        aria-label="Konten utama"
+      >
         <RouteContent />
       </main>
-      <aside className="app-aside">
+      <aside className="app-aside" aria-label="Panel samping">
         <JobCenter />
       </aside>
     </div>

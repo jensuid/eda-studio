@@ -67,6 +67,33 @@ body {
   margin: 0;
 }
 
+/* ---------- A11y P2-5: skip link + focus-visible --------------------
+   Skip link tersembunyi sampai difokuskan (keyboard), lalu muncul di
+   pojok kiri atas menutupi header. Fokus keyboard selalu tampak:
+   outline 2px solid; jangan pernah outline:none tanpa pengganti. */
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -48px;
+  z-index: 100;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-chart-scatter-point);
+  border-radius: var(--radius-sm);
+  color: var(--color-chart-scatter-point);
+  font-weight: 700;
+  transition: top var(--duration-fast) ease;
+}
+
+.skip-link:focus-visible {
+  top: var(--space-2);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-chart-scatter-point);
+  outline-offset: 2px;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -164,6 +191,46 @@ button {
   gap: var(--space-2);
   justify-content: flex-end;
   padding-top: var(--space-3);
+}
+
+/* ---------- Dialog konfirmasi destruktif (P2-3/P2-5) -----------------
+   DestructiveConfirmDialog memakai .modal-backdrop/.modal/.check/.actions;
+   sebelumnya kelas ini belum didefinisikan (dialog tanpa gaya). Samakan
+   dengan .dialog-overlay/.cleaning-danger-dialog di atas. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  background: rgba(17, 24, 39, 0.35);
+  background: color-mix(in srgb, var(--color-text) 35%, transparent);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  max-width: 520px;
+  width: 90%;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+
+.check {
+  display: block;
+  font-size: var(--font-size-md);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
 }
 
 /* ---------- Cleaning ---------------------------------------------- */

@@ -23,6 +23,9 @@ export function DestructiveConfirmDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    // P2-5: fokus ke tombol Batal saat dialog terbuka; kembalikan fokus
+    // ke pemicu saat dialog ditutup (lihat CleaningConfirmDialog).
+    const prev = document.activeElement as HTMLElement | null;
     cancelRef.current?.focus();
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -52,7 +55,10 @@ export function DestructiveConfirmDialog({
       }
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      prev?.focus?.();
+    };
   }, [onCancel]);
 
   return (

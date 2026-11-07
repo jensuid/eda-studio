@@ -92,7 +92,11 @@ export function ProjectSetup() {
       <section>
         <h2>Buat Project</h2>
         <form onSubmit={handleSubmit((v) => create.mutate(v.name))}>
-          <input {...register("name", { required: true })} placeholder="Nama project" />
+          <input
+            {...register("name", { required: true })}
+            placeholder="Nama project"
+            aria-label="Nama project"
+          />
           <button type="submit" disabled={create.isPending}>
             Buat
           </button>
@@ -121,7 +125,11 @@ export function ProjectSetup() {
               placeholder="Path file .csv/.xlsx/.parquet"
               disabled={doImport.isPending}
             />
-            <input {...register("datasetName", { required: true })} placeholder="Nama dataset" />
+            <input
+              {...register("datasetName", { required: true })}
+              placeholder="Nama dataset"
+              aria-label="Nama dataset"
+            />
             <button type="submit" disabled={doImport.isPending}>
               Import
             </button>

@@ -11,3 +11,6 @@ data/
 .DS_Store
 eda_workbench.egg-info/
 *.egg-info/
+frontend/.playwright-browsers/
+frontend/test-results/
+.pnpm-store/

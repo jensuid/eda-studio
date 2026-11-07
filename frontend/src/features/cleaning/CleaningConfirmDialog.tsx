@@ -18,7 +18,13 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
   const canConfirm = agreed && (!highImpact || highImpactAgreed) && !pending;
 
   useEffect(() => {
+    // P2-5: fokus ke tombol Batal saat dialog terbuka; kembalikan fokus
+    // ke pemicu (elemen yang terfokus sebelumnya) saat dialog ditutup.
+    const prev = document.activeElement as HTMLElement | null;
     cancelRef.current?.focus();
+    return () => {
+      prev?.focus?.();
+    };
   }, []);
 
   const onKeyDown = (e: React.KeyboardEvent) => {

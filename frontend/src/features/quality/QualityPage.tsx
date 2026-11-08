@@ -8,6 +8,7 @@ import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
+import { COMMON_COPY, QUALITY_COPY } from "../../shared/copy/featureCopy";
 
 export function QualityPage() {
   const { projectId, dataset, savedProfile, qualityRecord, setQualityRecord } = useProject();
@@ -18,17 +19,17 @@ export function QualityPage() {
     mutationFn: () => ipcClient.runQuality(projectId!, dataset!.dataset_id),
     onSuccess: (r) => {
       setQualityRecord(r);
-      toast.success("Quality check selesai.");
+      toast.success(QUALITY_COPY.toastDone);
     },
-    onError: (e) => toast.error(`Quality check gagal: ${e.message}`),
+    onError: (e) => toast.error(QUALITY_COPY.toastFail(e.message)),
   });
 
   if (!projectId || !dataset) {
     return (
-      <EmptyState title="Quality">
-        <p>Belum ada dataset aktif.</p>
+      <EmptyState title={QUALITY_COPY.emptyTitle}>
+        <p>{COMMON_COPY.noActiveDataset}</p>
         <button type="button" onClick={() => navigate("setup")}>
-          Ke Setup
+          {COMMON_COPY.goToSetup}
         </button>
       </EmptyState>
     );
@@ -36,10 +37,10 @@ export function QualityPage() {
 
   if (!savedProfile) {
     return (
-      <EmptyState title="Quality">
-        <p>Jalankan profiling terlebih dahulu.</p>
+      <EmptyState title={QUALITY_COPY.emptyTitle}>
+        <p>{COMMON_COPY.runProfilingFirst}</p>
         <button type="button" onClick={() => navigate("profiling")}>
-          Ke Profiling
+          {COMMON_COPY.goToProfiling}
         </button>
       </EmptyState>
     );
@@ -47,25 +48,29 @@ export function QualityPage() {
 
   return (
     <section>
-      <h2>Quality Check</h2>
+      <h2>{QUALITY_COPY.heading}</h2>
       <button onClick={() => runQuality.mutate()} disabled={runQuality.isPending}>
-        {runQuality.isPending ? "Quality check berjalan…" : "Jalankan Quality Check"}
+        {runQuality.isPending ? QUALITY_COPY.running : QUALITY_COPY.runNow}
       </button>
       {qualityRecord && (
         <>
           <p>
-            {qualityRecord.summary} ({qualityRecord.ok_count}/{qualityRecord.check_count} lolos,{" "}
-            {qualityRecord.problem_count} bermasalah)
+            {QUALITY_COPY.summary(
+              qualityRecord.summary,
+              qualityRecord.ok_count,
+              qualityRecord.check_count,
+              qualityRecord.problem_count,
+            )}
           </p>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Aturan</th>
-                  <th>Kolom</th>
-                  <th>Severity</th>
-                  <th>Temuan</th>
-                  <th>Bukti</th>
+                  <th>{QUALITY_COPY.thRule}</th>
+                  <th>{QUALITY_COPY.thColumn}</th>
+                  <th>{QUALITY_COPY.thSeverity}</th>
+                  <th>{QUALITY_COPY.thFinding}</th>
+                  <th>{QUALITY_COPY.thEvidence}</th>
                 </tr>
               </thead>
               <tbody>

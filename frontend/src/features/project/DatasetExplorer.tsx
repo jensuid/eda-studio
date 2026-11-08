@@ -18,6 +18,7 @@ import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
+import { COMMON_COPY, DATASET_COPY } from "../../shared/copy/featureCopy";
 import { HistogramChart } from "../histogram/HistogramChart";
 import { FilePathInput } from "./FilePathInput";
 import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
@@ -76,9 +77,9 @@ export function DatasetExplorer() {
       ipcClient.exportDataset(projectId!, dataset!.dataset_id, v.format, v.dest),
     onSuccess: (r) => {
       setExportRecord(r);
-      toast.success("Export selesai.");
+      toast.success(DATASET_COPY.toastExportDone);
     },
-    onError: (e) => toast.error(`Export gagal: ${e.message}`),
+    onError: (e) => toast.error(DATASET_COPY.toastExportFail(e.message)),
   });
 
   const [histColumn, setHistColumn] = useState("");
@@ -88,9 +89,9 @@ export function DatasetExplorer() {
       ipcClient.runHistogram(projectId!, dataset!.dataset_id, column),
     onSuccess: (r) => {
       setHistRecord(r);
-      toast.success("Histogram selesai.");
+      toast.success(DATASET_COPY.toastHistogramDone);
     },
-    onError: (e) => toast.error(`Histogram gagal: ${e.message}`),
+    onError: (e) => toast.error(DATASET_COPY.toastHistogramFail(e.message)),
   });
 
   // NXT-2 (gap G2): Analysis Plan — susun langkah, setujui, eksekusi sekuensial.
@@ -129,35 +130,35 @@ export function DatasetExplorer() {
   const approvePlan = useMutation({
     mutationFn: (planId: string) => ipcClient.approvePlan(projectId!, planId),
     onSuccess: () => {
-      toast.success("Plan disetujui.");
+      toast.success(DATASET_COPY.toastPlanApproved);
       void queryClient.invalidateQueries({ queryKey: ["plans", projectId, dataset?.dataset_id] });
     },
-    onError: (e) => toast.error(`Menyetujui plan gagal: ${e.message}`),
+    onError: (e) => toast.error(DATASET_COPY.toastPlanApproveFail(e.message)),
   });
   const executePlan = useMutation({
     mutationFn: (planId: string) => ipcClient.executePlan(projectId!, planId),
     onSuccess: () => {
-      toast.success("Analysis plan dieksekusi.");
+      toast.success(DATASET_COPY.toastPlanExecuted);
       void queryClient.invalidateQueries({ queryKey: ["plans", projectId, dataset?.dataset_id] });
     },
-    onError: (e) => toast.error(`Eksekusi analysis plan gagal: ${e.message}`),
+    onError: (e) => toast.error(DATASET_COPY.toastPlanExecuteFail(e.message)),
   });
   const createPlan = useMutation({
     mutationFn: () => ipcClient.createPlan(projectId!, dataset!.dataset_id, planDraft),
     onSuccess: () => {
-      toast.success("Analysis plan dibuat.");
+      toast.success(DATASET_COPY.toastPlanCreated);
       setPlanDraft([{ kind: "profile", params: {} }]);
       void queryClient.invalidateQueries({ queryKey: ["plans", projectId, dataset?.dataset_id] });
     },
-    onError: (e) => toast.error(`Membuat analysis plan gagal: ${e.message}`),
+    onError: (e) => toast.error(DATASET_COPY.toastPlanCreateFail(e.message)),
   });
 
   if (!projectId || !dataset) {
     return (
-      <EmptyState title="Dataset">
-        <p>Belum ada dataset aktif.</p>
+      <EmptyState title={DATASET_COPY.emptyTitle}>
+        <p>{COMMON_COPY.noActiveDataset}</p>
         <button type="button" onClick={() => navigate("setup")}>
-          Ke Setup
+          {COMMON_COPY.goToSetup}
         </button>
       </EmptyState>
     );
@@ -166,7 +167,7 @@ export function DatasetExplorer() {
   return (
     <>
       <section>
-        <h2>Histogram</h2>
+        <h2>{DATASET_COPY.histogramTitle}</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -176,12 +177,12 @@ export function DatasetExplorer() {
           <input
             value={histColumn}
             onChange={(e) => setHistColumn(e.target.value)}
-            placeholder="Nama kolom numerik"
-            aria-label="Nama kolom numerik"
+            placeholder={DATASET_COPY.numericColumnPlaceholder}
+            aria-label={DATASET_COPY.numericColumnLabel}
             required
           />
           <button type="submit" disabled={runHistogram.isPending || !histColumn}>
-            {runHistogram.isPending ? "Menjalankan…" : "Jalankan Histogram"}
+            {runHistogram.isPending ? DATASET_COPY.running : DATASET_COPY.runHistogram}
           </button>
         </form>
         {histRecord && <HistogramChart record={histRecord} />}
@@ -192,9 +193,9 @@ export function DatasetExplorer() {
           PlanRecord; lifecycle backend-authoritative (SYS-015). */}
       {projectId && dataset && (
         <section aria-labelledby="plan-heading">
-          <h2 id="plan-heading">Analysis Plan</h2>
-          <p>Susun rencana langkah analisis, setujui, lalu jalankan sekuensial.</p>
-          {plansQuery.isPending && <LoadingSkeleton label="Memuat plan…" />}
+          <h2 id="plan-heading">{DATASET_COPY.planTitle}</h2>
+          <p>{DATASET_COPY.planIntro}</p>
+          {plansQuery.isPending && <LoadingSkeleton label={DATASET_COPY.loadingPlans} />}
           {plansQuery.data && (
             <ul>
               {plansQuery.data.plans.map((p) => (
@@ -212,12 +213,12 @@ export function DatasetExplorer() {
                   </ul>
                   {p.status === "draft" && (
                     <button type="button" onClick={() => approvePlan.mutate(p.plan_id)}>
-                      Setujui
+                      {DATASET_COPY.approveAction}
                     </button>
                   )}
                   {p.status === "approved" && (
                     <button type="button" onClick={() => executePlan.mutate(p.plan_id)}>
-                      Jalankan
+                      {DATASET_COPY.executeAction}
                     </button>
                   )}
                 </li>
@@ -225,16 +226,16 @@ export function DatasetExplorer() {
             </ul>
           )}
           {!plansQuery.data?.plans?.length && !plansQuery.isPending && (
-            <p>Belum ada plan untuk dataset ini.</p>
+            <p>{DATASET_COPY.noPlansYet}</p>
           )}
-          <h3>Membuat Plan</h3>
+          <h3>{DATASET_COPY.makePlanTitle}</h3>
           <ol>
             {planDraft.map((s, i) => (
               <li key={i}>
                 <select
                   value={s.kind}
                   onChange={(e) => changePlanStepKind(i, e.target.value as PlanStepType)}
-                  aria-label={`Jenis langkah ${i + 1}`}
+                  aria-label={DATASET_COPY.stepKindLabel(i + 1)}
                 >
                   {PLAN_STEP_TYPES.map((k) => (
                     <option key={k} value={k}>{k}</option>
@@ -244,8 +245,8 @@ export function DatasetExplorer() {
                   <input
                     value={String(s.params?.column_name ?? "")}
                     onChange={(e) => setPlanStepParam(i, "column_name", e.target.value)}
-                    placeholder="Nama kolom numerik"
-                    aria-label={`Nama kolom untuk langkah ${i + 1}`}
+                    placeholder={DATASET_COPY.numericColumnPlaceholder}
+                    aria-label={DATASET_COPY.stepColumnLabel(i + 1)}
                   />
                 )}
                 {s.kind === "bivariate" && (
@@ -253,14 +254,14 @@ export function DatasetExplorer() {
                     <input
                       value={String(s.params?.column_a ?? "")}
                       onChange={(e) => setPlanStepParam(i, "column_a", e.target.value)}
-                      placeholder="Kolom pertama"
-                      aria-label={`Kolom pertama untuk langkah ${i + 1}`}
+                      placeholder={DATASET_COPY.firstColumnPlaceholder}
+                      aria-label={DATASET_COPY.firstColumnLabel(i + 1)}
                     />
                     <input
                       value={String(s.params?.column_b ?? "")}
                       onChange={(e) => setPlanStepParam(i, "column_b", e.target.value)}
-                      placeholder="Kolom kedua"
-                      aria-label={`Kolom kedua untuk langkah ${i + 1}`}
+                      placeholder={DATASET_COPY.secondColumnPlaceholder}
+                      aria-label={DATASET_COPY.secondColumnLabel(i + 1)}
                     />
                   </>
                 )}
@@ -268,7 +269,7 @@ export function DatasetExplorer() {
                   <select
                     value={String(s.params?.scope ?? "all")}
                     onChange={(e) => setPlanStepParam(i, "scope", e.target.value)}
-                    aria-label={`Ruang laporan untuk langkah ${i + 1}`}
+                    aria-label={DATASET_COPY.stepScopeLabel(i + 1)}
                   >
                     <option value="all">all</option>
                     <option value="profile-quality">profile-quality</option>
@@ -280,7 +281,7 @@ export function DatasetExplorer() {
                   <select
                     value={String(s.params?.scope ?? "all")}
                     onChange={(e) => setPlanStepParam(i, "scope", e.target.value)}
-                    aria-label={`Ruang laporan untuk langkah ${i + 1}`}
+                    aria-label={DATASET_COPY.stepScopeLabel(i + 1)}
                   >
                     <option value="all">all</option>
                     <option value="profile-quality">profile-quality</option>
@@ -289,26 +290,26 @@ export function DatasetExplorer() {
                   </select>
                 )}
                 <button type="button" onClick={() => removePlanStep(i)}>
-                  Hapus
+                  {DATASET_COPY.removeStep}
                 </button>
               </li>
             ))}
           </ol>
           <button type="button" onClick={addPlanStep}>
-            Tambah Langkah
+            {DATASET_COPY.addStep}
           </button>
           <button
             type="button"
             onClick={() => createPlan.mutate()}
             disabled={planDraft.length === 0 || createPlan.isPending}
           >
-            Buat Plan
+            {DATASET_COPY.createPlan}
           </button>
         </section>
       )}
 
       <section>
-        <h2>Export</h2>
+        <h2>{DATASET_COPY.exportTitle}</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -318,36 +319,35 @@ export function DatasetExplorer() {
           <select
             value={exportFormat}
             onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-            aria-label="Format export"
+            aria-label={DATASET_COPY.exportFormatLabel}
           >
-            <option value="csv">CSV</option>
-            <option value="parquet">Parquet</option>
+            <option value="csv">{DATASET_COPY.formatCsv}</option>
+            <option value="parquet">{DATASET_COPY.formatParquet}</option>
           </select>
           <FilePathInput
             value={exportPath}
             onChange={setExportPath}
             mode="save"
             fileTypes={[exportFormat]}
-            title="Simpan hasil export"
-            placeholder={`Path file tujuan (.${exportFormat})`}
+            title={DATASET_COPY.saveExportFile}
+            placeholder={DATASET_COPY.exportDestPlaceholder(exportFormat)}
             disabled={doExport.isPending || confirmExport}
           />
           <button type="submit" disabled={!exportPath || doExport.isPending}>
-            Export
+            {DATASET_COPY.exportAction}
           </button>
         </form>
         {exportRecord && (
           <p>
-            Export: {exportRecord.file_path} · {(exportRecord.file_size_bytes / 1024).toFixed(1)} KB ·
-            {exportRecord.row_count} rows
+            {DATASET_COPY.exportResult(exportRecord.file_path, (exportRecord.file_size_bytes / 1024).toFixed(1), exportRecord.row_count)}
           </p>
         )}
       </section>
-      {preview.isPending && <LoadingSkeleton label="Memuat preview…" />}
+      {preview.isPending && <LoadingSkeleton label={DATASET_COPY.loadingPreview} />}
       {preview.data && (
         <section>
           <h2>
-            Preview ({preview.data.total_rows} rows{preview.data.truncated ? ", truncated" : ""})
+            {DATASET_COPY.previewTitle(preview.data.total_rows, preview.data.truncated)}
           </h2>
           <div className="table-scroll">
             <table>
@@ -373,9 +373,9 @@ export function DatasetExplorer() {
       )}
       {confirmExport && (
         <DestructiveConfirmDialog
-          title="Export dataset?"
-          description={`Dataset akan di-export sebagai ${exportFormat.toUpperCase()} ke ${exportPath}. File tujuan yang sudah ada akan ditimpa.`}
-          confirmLabel="Export"
+          title={DATASET_COPY.confirmExportTitle}
+          description={DATASET_COPY.confirmExportDesc(exportFormat.toUpperCase(), exportPath)}
+          confirmLabel={DATASET_COPY.exportAction}
           pending={doExport.isPending}
           onCancel={() => setConfirmExport(false)}
           onConfirm={() => {

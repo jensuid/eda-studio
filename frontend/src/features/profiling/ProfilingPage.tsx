@@ -15,6 +15,7 @@ import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
+import { COMMON_COPY, PROFILING_COPY } from "../../shared/copy/featureCopy";
 
 const FINDING_NEXT: Record<FindingStatus, FindingStatus> = {
   proposed: "accepted",
@@ -55,17 +56,17 @@ export function ProfilingPage() {
     mutationFn: () => ipcClient.runProfile(projectId!, dataset!.dataset_id),
     onSuccess: (r) => {
       setSavedProfile(r);
-      toast.success("Profiling selesai.");
+      toast.success(PROFILING_COPY.toastProfileDone);
       void queryClient.invalidateQueries({
         queryKey: ["profiles", projectId, dataset?.dataset_id],
       });
     },
-    onError: (e) => toast.error(`Profiling gagal: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastProfileFail(e.message)),
   });
   const openSaved = useMutation({
     mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
     onSuccess: (r) => setSavedProfile(r),
-    onError: (e) => toast.error(`Gagal membuka profil: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastOpenFail(e.message)),
   });
   const profiles = useQuery({
     queryKey: ["profiles", projectId, dataset?.dataset_id],
@@ -108,56 +109,56 @@ export function ProfilingPage() {
     onSuccess: () => {
       setFindingTitle("");
       setFindingBody("");
-      toast.success("Finding ditambahkan.");
+      toast.success(PROFILING_COPY.toastFindingAdded);
       invalidateInsights();
     },
-    onError: (e) => toast.error(`Finding gagal: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastFindingFail(e.message)),
   });
   const transitionFindingMut = useMutation({
     mutationFn: (v: { id: string; status: FindingStatus }) =>
       ipcClient.transitionFinding(projectId!, v.id, v.status),
     onSuccess: () => {
-      toast.success("Status finding diperbarui.");
+      toast.success(PROFILING_COPY.toastFindingStatus);
       invalidateInsights();
     },
-    onError: (e) => toast.error(`Ubah status finding gagal: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastFindingStatusFail(e.message)),
   });
   const createHypothesis = useMutation({
     mutationFn: () =>
       ipcClient.createHypothesis(projectId!, dataset!.dataset_id, hypothesisStatement),
     onSuccess: () => {
       setHypothesisStatement("");
-      toast.success("Hipotesis ditambahkan.");
+      toast.success(PROFILING_COPY.toastHypothesisAdded);
       invalidateInsights();
     },
-    onError: (e) => toast.error(`Hipotesis gagal: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastHypothesisFail(e.message)),
   });
   const transitionHypothesisMut = useMutation({
     mutationFn: (v: { id: string; status: HypothesisStatus }) =>
       ipcClient.transitionHypothesis(projectId!, v.id, v.status),
     onSuccess: () => {
-      toast.success("Status hipotesis diperbarui.");
+      toast.success(PROFILING_COPY.toastHypothesisStatus);
       invalidateInsights();
     },
-    onError: (e) => toast.error(`Ubah status hipotesis gagal: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastHypothesisStatusFail(e.message)),
   });
 
   const activateSnapshot = useMutation({
     mutationFn: (snapshotId: string) =>
       ipcClient.activateSnapshot(projectId!, dataset!.dataset_id, snapshotId),
     onSuccess: () => {
-      toast.success("Snapshot diaktifkan.");
+      toast.success(PROFILING_COPY.toastSnapshotActivated);
       void queryClient.invalidateQueries();
     },
-    onError: (e) => toast.error(`Aktivasi snapshot gagal: ${e.message}`),
+    onError: (e) => toast.error(PROFILING_COPY.toastSnapshotFail(e.message)),
   });
 
   if (!projectId || !dataset) {
     return (
-      <EmptyState title="Profiling">
-        <p>Belum ada dataset aktif.</p>
+      <EmptyState title={PROFILING_COPY.emptyTitle}>
+        <p>{COMMON_COPY.noActiveDataset}</p>
         <button type="button" onClick={() => navigate("setup")}>
-          Ke Setup
+          {COMMON_COPY.goToSetup}
         </button>
       </EmptyState>
     );
@@ -166,16 +167,16 @@ export function ProfilingPage() {
   return (
     <>
       <section>
-        <h2>Profiling (run terpadu)</h2>
+        <h2>{PROFILING_COPY.headingRun}</h2>
         <button onClick={() => runProfile.mutate()} disabled={runProfile.isPending}>
-          {runProfile.isPending ? "Profiling sedang berjalan…" : "Jalankan Profiling"}
+          {runProfile.isPending ? PROFILING_COPY.running : PROFILING_COPY.runNow}
         </button>
       </section>
 
-      {profiles.isPending && <LoadingSkeleton label="Memuat riwayat profil…" />}
+      {profiles.isPending && <LoadingSkeleton label={PROFILING_COPY.loadingHistory} />}
       {profiles.data && (
         <section>
-          <h2>Riwayat Profil</h2>
+          <h2>{PROFILING_COPY.historyTitle}</h2>
           <ul>
             {profiles.data.profiles.map((p) => (
               <li key={p.profile_id}>
@@ -194,15 +195,15 @@ export function ProfilingPage() {
 
       {savedProfile && (
         <section>
-          <h2>Profil</h2>
+          <h2>{PROFILING_COPY.profileTitle}</h2>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Kolom</th>
-                  <th>Null %</th>
-                  <th>Unique</th>
-                  <th>Tipe</th>
+                  <th>{PROFILING_COPY.thColumn}</th>
+                  <th>{PROFILING_COPY.thNullPct}</th>
+                  <th>{PROFILING_COPY.thUnique}</th>
+                  <th>{PROFILING_COPY.thType}</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,7 +222,7 @@ export function ProfilingPage() {
       )}
 
       <section>
-        <h2>Snapshots &amp; Provenance</h2>
+        <h2>{PROFILING_COPY.snapshotsTitle}</h2>
         {(snapshots.data?.snapshots ?? []).map((s) => (
           <p key={s.snapshot_id}>
             {s.snapshot_id.slice(0, 8)} · {s.row_count} rows · {s.fingerprint.slice(0, 12)}…
@@ -229,12 +230,12 @@ export function ProfilingPage() {
               onClick={() => activateSnapshot.mutate(s.snapshot_id)}
               disabled={activateSnapshot.isPending}
             >
-              Aktifkan
+              {PROFILING_COPY.activate}
             </button>
           </p>
         ))}
         <button onClick={() => setShowProvenance((v) => !v)}>
-          {showProvenance ? "Sembunyikan Provenance" : "Lihat Provenance"}
+          {showProvenance ? PROFILING_COPY.hideProvenance : PROFILING_COPY.showProvenance}
         </button>
         {provenance.data && (
           <ul>
@@ -251,8 +252,8 @@ export function ProfilingPage() {
       </section>
 
       <section>
-        <h2>Insights (Finding &amp; Hypothesis)</h2>
-        <h3>Finding</h3>
+        <h2>{PROFILING_COPY.insightsTitle}</h2>
+        <h3>{PROFILING_COPY.findingTitle}</h3>
         {(findings.data?.findings ?? []).map((f) => (
           <p key={f.finding_id}>
             <strong>{f.title}</strong> [{f.status}] {f.body}
@@ -262,7 +263,7 @@ export function ProfilingPage() {
               }
               disabled={transitionFindingMut.isPending}
             >
-              {FINDING_NEXT[f.status] === "accepted" ? "Terima" : "Arsipkan"}
+              {FINDING_NEXT[f.status] === "accepted" ? PROFILING_COPY.acceptFinding : PROFILING_COPY.archiveFinding}
             </button>
           </p>
         ))}
@@ -275,22 +276,22 @@ export function ProfilingPage() {
           <input
             value={findingTitle}
             onChange={(e) => setFindingTitle(e.target.value)}
-            placeholder="Judul temuan"
-            aria-label="Judul temuan"
+            placeholder={PROFILING_COPY.findingTitlePlaceholder}
+            aria-label={PROFILING_COPY.findingTitleLabel}
             required
           />
           <input
             value={findingBody}
             onChange={(e) => setFindingBody(e.target.value)}
-            placeholder="Detail temuan"
-            aria-label="Detail temuan"
+            placeholder={PROFILING_COPY.findingDetailPlaceholder}
+            aria-label={PROFILING_COPY.findingDetailLabel}
             required
           />
           <button type="submit" disabled={createFinding.isPending}>
-            Tambah Finding
+            {PROFILING_COPY.addFinding}
           </button>
         </form>
-        <h3>Hipotesis</h3>
+        <h3>{PROFILING_COPY.hypothesisTitle}</h3>
         {(hypotheses.data?.hypotheses ?? []).map((h) => (
           <p key={h.hypothesis_id}>
             <strong>{h.statement}</strong> [{h.status}]
@@ -303,7 +304,7 @@ export function ProfilingPage() {
               }
               disabled={transitionHypothesisMut.isPending}
             >
-              {h.status === "proposed" || h.status === "accepted" ? "Investigasi" : h.status}
+              {h.status === "proposed" || h.status === "accepted" ? PROFILING_COPY.investigate : h.status}
             </button>
           </p>
         ))}
@@ -316,12 +317,12 @@ export function ProfilingPage() {
           <input
             value={hypothesisStatement}
             onChange={(e) => setHypothesisStatement(e.target.value)}
-            placeholder="Pernyataan hipotesis"
-            aria-label="Pernyataan hipotesis"
+            placeholder={PROFILING_COPY.hypothesisPlaceholder}
+            aria-label={PROFILING_COPY.hypothesisLabel}
             required
           />
           <button type="submit" disabled={createHypothesis.isPending}>
-            Tambah Hipotesis
+            {PROFILING_COPY.addHypothesis}
           </button>
         </form>
       </section>

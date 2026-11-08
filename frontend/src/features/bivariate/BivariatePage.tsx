@@ -5,6 +5,7 @@
 import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
+import { COMMON_COPY, BIVARIAT_COPY } from "../../shared/copy/featureCopy";
 import { BivariateSection } from "./BivariateSection";
 
 export function BivariatePage() {
@@ -13,10 +14,10 @@ export function BivariatePage() {
 
   if (!projectId || !dataset) {
     return (
-      <EmptyState title="Bivariat">
-        <p>Belum ada dataset aktif.</p>
+      <EmptyState title={BIVARIAT_COPY.emptyTitle}>
+        <p>{COMMON_COPY.noActiveDataset}</p>
         <button type="button" onClick={() => navigate("setup")}>
-          Ke Setup
+          {COMMON_COPY.goToSetup}
         </button>
       </EmptyState>
     );

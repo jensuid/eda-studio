@@ -22,6 +22,7 @@ import type {
   ReadinessRecord,
 } from "../shared/ipc/generated";
 import { ipcClient } from "../shared/ipc/ipcClient";
+import { SHELL_COPY } from "../shared/copy/shellCopy";
 
 const PROJECT_KEY = "eda-resume:project-v1";
 
@@ -119,7 +120,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         clearStoredResume();
         setResumeError(
-          `Tidak dapat memulihkan konteks tersimpan — ${e instanceof Error ? e.message : String(e)}`,
+          `${SHELL_COPY.resumeFailedPrefix} — ${e instanceof Error ? e.message : String(e)}`,
         );
         setBooted(true);
       }

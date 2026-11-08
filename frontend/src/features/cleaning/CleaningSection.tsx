@@ -10,6 +10,7 @@ import type {
   ProfileRecord,
   QualityRecord,
 } from "../../shared/ipc/generated";
+import { CLEANING_COPY } from "../../shared/copy/featureCopy";
 import { CleaningConfirmDialog } from "./CleaningConfirmDialog";
 import { CleaningEmpty, CleaningError, CleaningImpactSummary, CleaningSkeleton } from "./CleaningImpactSummary";
 import { CleaningOperationPicker, constantError } from "./CleaningOperationPicker";
@@ -97,11 +98,11 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
 
   return (
     <section>
-      <h2>Cleaning</h2>
+      <h2>{CLEANING_COPY.heading}</h2>
       {!gated && (
         <>
-          <CleaningEmpty message="Jalankan Quality Check terlebih dahulu." />
-          {qualityStale && <CleaningStaleBanner message="Hasil mungkin usang — jalankan ulang." />}
+          <CleaningEmpty message={CLEANING_COPY.emptyNeedQuality} />
+          {qualityStale && <CleaningStaleBanner message={CLEANING_COPY.staleQuality} />}
         </>
       )}
       {gated && (
@@ -130,45 +131,45 @@ export function CleaningSection({ projectId, dataset, savedProfile, qualityRecor
               }
               onClick={() => previewMutation.mutate()}
             >
-              Hitung dampak
+              {CLEANING_COPY.previewImpactAction}
             </button>
             {preview && !previewStale && (
               <button disabled={runMutation.isPending} onClick={() => setDialogOpen(true)}>
-                Terapkan cleaning
+                {CLEANING_COPY.applyAction}
               </button>
             )}
           </p>
           {previewMutation.isPending && <CleaningSkeleton />}
           {previewMutation.isError && (
-            <CleaningError message="Tidak dapat menghitung dampak. Silakan coba lagi." />
+            <CleaningError message={CLEANING_COPY.previewError} />
           )}
           {preview && !previewStale && !previewMutation.isPending && <CleaningImpactSummary preview={preview} />}
-          {previewStale && <CleaningStaleBanner message="Snapshot telah berubah. Hitung ulang dampak." />}
+          {previewStale && <CleaningStaleBanner message={CLEANING_COPY.staleChanged} />}
           {runMutation.isError && (
-            <CleaningError message="Cleaning gagal. Silakan coba lagi." />
+            <CleaningError message={CLEANING_COPY.runError} />
           )}
           {runMutation.isError && runMutation.error instanceof IpcError && runMutation.error.code === "CONFLICT" && (
-            <CleaningStaleBanner message="Snapshot telah berubah. Hitung ulang dampak." />
+            <CleaningStaleBanner message={CLEANING_COPY.staleChanged} />
           )}
           {completed && (
             <div role="status">
-              <p>Cleaning selesai. Snapshot baru telah dibuat.</p>
-              <p>Snapshot baru: {completed.child_snapshot_id.slice(0, 8)} &middot; {completed.child_fingerprint.slice(0, 12)}&hellip; &middot; {completed.row_count_before} &rarr; {completed.row_count_after} baris</p>
+              <p>{CLEANING_COPY.completedMessage}</p>
+              <p>{CLEANING_COPY.newSnapshotInfo(completed.child_snapshot_id.slice(0, 8), completed.child_fingerprint.slice(0, 12), completed.row_count_before, completed.row_count_after)}</p>
               {/* SCREEN-CLEAN-001: "Gunakan snapshot baru" is the activate
                   CTA; revert ("Jadikan aktif") lives in the snapshot list. */}
               <button disabled={activateMutation.isPending} onClick={() => activateMutation.mutate(completed.child_snapshot_id)}>
-                Gunakan snapshot baru
+                {CLEANING_COPY.activateNew}
               </button>
               {completed.filled_rows != null && (
-                <p>Baris diisi: {completed.filled_rows} pada kolom {completed.columns.join(", ")}.</p>
+                <p>{CLEANING_COPY.filledRows(completed.filled_rows, completed.columns.join(", "))}</p>
               )}
               {activateMutation.isError && (
-                <CleaningError message="Cleaning gagal. Silakan coba lagi." />
+                <CleaningError message={CLEANING_COPY.runError} />
               )}
             </div>
           )}
           {cancelled && !dialogOpen && (
-            <p role="status">Cleaning dibatalkan. Tidak ada snapshot baru.</p>
+            <p role="status">{CLEANING_COPY.cancelled}</p>
           )}
           {dialogOpen && preview && (
             <CleaningConfirmDialog

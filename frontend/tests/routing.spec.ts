@@ -4,6 +4,7 @@
  * datasetId} + revalidasi wajib; gagal → degraded beralasan).
  */
 import { expect, test } from "@playwright/test";
+import { SHELL_COPY } from "../src/shared/copy/shellCopy";
 import { mockBridge, setupWalkthrough } from "./helpers";
 
 test.describe("B4 — hash routing (D-F2)", () => {
@@ -103,8 +104,13 @@ test.describe("B4 — revalidasi resume gagal → degraded (D-F3)", () => {
     });
     await page.goto("/");
     await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
+    // Banner resume-error memakai prefix dari modul copy shell (wiring
+    // SHELL_COPY.resumeFailedPrefix di ProjectContext).
     await expect(page.getByText("Tidak dapat memulihkan konteks")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mulai baru" })).toBeVisible();
+    await expect(
+      page.getByText(`${SHELL_COPY.resumeFailedPrefix} — project hilang di backend`),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: SHELL_COPY.startFresh })).toBeVisible();
     // Simpanan dibersihkan agar tidak mengulang kegagalan.
     const stored = await page.evaluate(() =>
       window.localStorage.getItem("eda-resume:project-v1"),

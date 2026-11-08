@@ -17,6 +17,7 @@ import { useProject } from "../../app/ProjectContext";
 import { useToast } from "../../shared/ui/Toaster";
 import { FilePathInput } from "./FilePathInput";
 import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
+import { SETUP_COPY } from "../../shared/copy/featureCopy";
 
 type ConfirmKind = "backup" | "restore" | "diagnostic" | null;
 
@@ -37,18 +38,18 @@ export function ProjectSetup() {
     mutationFn: (name: string) => ipcClient.createProject(name),
     onSuccess: (p) => {
       setProjectId(p.project_id);
-      toast.success(`Project dibuat: ${p.name}`);
+      toast.success(SETUP_COPY.toastProjectCreated(p.name));
     },
-    onError: (e) => toast.error(`Gagal membuat project: ${e.message}`),
+    onError: (e) => toast.error(SETUP_COPY.toastProjectFail(e.message)),
   });
   const doImport = useMutation({
     mutationFn: (v: ProjectForm) =>
       ipcClient.importDataset(projectId!, v.sourcePath, v.datasetName),
     onSuccess: (d: DatasetRecord) => {
       setDataset(d);
-      toast.success(`Dataset diimport: ${d.name}`);
+      toast.success(SETUP_COPY.toastDatasetImported(d.name));
     },
-    onError: (e) => toast.error(`Gagal import: ${e.message}`),
+    onError: (e) => toast.error(SETUP_COPY.toastImportFail(e.message)),
   });
 
   // M3 P0 backup/restore (Doc04 §12): path text inputs; restored project
@@ -62,18 +63,18 @@ export function ProjectSetup() {
     mutationFn: (dest: string) => ipcClient.createBackup(projectId!, dest),
     onSuccess: (r) => {
       setBackupRecord(r);
-      toast.success("Backup dibuat.");
+      toast.success(SETUP_COPY.toastBackupCreated);
     },
-    onError: (e) => toast.error(`Backup gagal: ${e.message}`),
+    onError: (e) => toast.error(SETUP_COPY.toastBackupFail(e.message)),
   });
   const restoreProject = useMutation({
     mutationFn: (v: { archive: string; root: string }) =>
       ipcClient.restoreProject(v.archive, v.root),
     onSuccess: (r) => {
       setRestoreRecord(r);
-      toast.success("Restore selesai.");
+      toast.success(SETUP_COPY.toastRestoreDone);
     },
-    onError: (e) => toast.error(`Restore gagal: ${e.message}`),
+    onError: (e) => toast.error(SETUP_COPY.toastRestoreFail(e.message)),
   });
 
   // G6-2 portable export: backup-shaped ZIP with kind="portable_export".
@@ -84,9 +85,9 @@ export function ProjectSetup() {
     mutationFn: (dest: string) => ipcClient.exportPortable(projectId!, dest),
     onSuccess: (r) => {
       setPortableRecord(r);
-      toast.success("Export portabel selesai.");
+      toast.success(SETUP_COPY.toastPortableDone);
     },
-    onError: (e) => toast.error(`Export portabel gagal: ${e.message}`),
+    onError: (e) => toast.error(SETUP_COPY.toastPortableFail(e.message)),
   });
 
   // M3 P2 diagnostic bundle (Doc15 §10): Basic level, redacted.
@@ -96,20 +97,20 @@ export function ProjectSetup() {
     mutationFn: (dest: string) => ipcClient.createDiagnostic(projectId!, dest),
     onSuccess: (r: DiagnosticRecord) => {
       setDiagnosticRecord(r);
-      toast.success("Diagnostic bundle dibuat.");
+      toast.success(SETUP_COPY.toastDiagnosticCreated);
     },
-    onError: (e) => toast.error(`Diagnostic gagal: ${e.message}`),
+    onError: (e) => toast.error(SETUP_COPY.toastDiagnosticFail(e.message)),
   });
 
   return (
     <>
       <section>
-        <h2>Buat Project</h2>
+        <h2>{SETUP_COPY.createProjectTitle}</h2>
         <form onSubmit={handleSubmit((v) => create.mutate(v.name))}>
           <input
-            {...register("name", { required: "Nama project wajib diisi." })}
-            placeholder="Nama project"
-            aria-label="Nama project"
+            {...register("name", { required: SETUP_COPY.projectNameRequired })}
+            placeholder={SETUP_COPY.projectNamePlaceholder}
+            aria-label={SETUP_COPY.projectNameLabel}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "name-error" : undefined}
           />
@@ -119,14 +120,14 @@ export function ProjectSetup() {
             </p>
           )}
           <button type="submit" disabled={create.isPending}>
-            Buat
+            {SETUP_COPY.createAction}
           </button>
         </form>
-        {projectId && <p>Project: {projectId}</p>}
+        {projectId && <p>{SETUP_COPY.projectLabel(projectId)}</p>}
       </section>
       {projectId && (
         <section>
-          <h2>Import Dataset (CSV)</h2>
+          <h2>{SETUP_COPY.importTitle}</h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -142,14 +143,14 @@ export function ProjectSetup() {
               onChange={setSourcePath}
               mode="open"
               fileTypes={["csv", "xlsx", "parquet"]}
-              title="Pilih file dataset"
-              placeholder="Path file .csv/.xlsx/.parquet"
+              title={SETUP_COPY.selectDatasetFile}
+              placeholder={SETUP_COPY.datasetPathPlaceholder}
               disabled={doImport.isPending}
             />
             <input
-              {...register("datasetName", { required: "Nama dataset wajib diisi." })}
-              placeholder="Nama dataset"
-              aria-label="Nama dataset"
+              {...register("datasetName", { required: SETUP_COPY.datasetNameRequired })}
+              placeholder={SETUP_COPY.datasetNamePlaceholder}
+              aria-label={SETUP_COPY.datasetNameLabel}
               aria-invalid={!!errors.datasetName}
               aria-describedby={errors.datasetName ? "dataset-name-error" : undefined}
             />
@@ -159,20 +160,19 @@ export function ProjectSetup() {
               </p>
             )}
             <button type="submit" disabled={doImport.isPending}>
-              Import
+              {SETUP_COPY.importAction}
             </button>
           </form>
           {dataset && (
             <p>
-              Snapshot {dataset.snapshot_id} · {dataset.row_count} rows · sha256{" "}
-              {dataset.fingerprint.slice(0, 12)}…
+              {SETUP_COPY.snapshotInfo(dataset.snapshot_id, dataset.row_count, dataset.fingerprint.slice(0, 12))}
             </p>
           )}
         </section>
       )}
       {projectId && (
         <section>
-          <h2>Backup &amp; Restore</h2>
+          <h2>{SETUP_COPY.backupRestoreTitle}</h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -184,19 +184,17 @@ export function ProjectSetup() {
               onChange={setBackupPath}
               mode="save"
               fileTypes={["zip"]}
-              title="Simpan backup proyek"
-              placeholder="Path file backup (.zip)"
+              title={SETUP_COPY.saveBackupFile}
+              placeholder={SETUP_COPY.backupPathPlaceholder}
               disabled={createBackup.isPending || confirm !== null}
             />
             <button type="submit" disabled={!backupPath || createBackup.isPending}>
-              Buat Backup
+              {SETUP_COPY.backupAction}
             </button>
           </form>
           {backupRecord && (
             <p>
-              Backup: {backupRecord.file_path} ·{" "}
-              {(backupRecord.file_size_bytes / 1024).toFixed(1)} KB · db sha256{" "}
-              {backupRecord.project_db_sha256.slice(0, 12)}… · v{backupRecord.version}
+              {SETUP_COPY.backupResult(backupRecord.file_path, (backupRecord.file_size_bytes / 1024).toFixed(1), backupRecord.project_db_sha256.slice(0, 12), backupRecord.version)}
             </p>
           )}
           <form
@@ -210,8 +208,8 @@ export function ProjectSetup() {
               onChange={setRestoreArchive}
               mode="open"
               fileTypes={["zip"]}
-              title="Pilih file backup"
-              placeholder="Path file backup (.zip)"
+              title={SETUP_COPY.selectBackupFile}
+              placeholder={SETUP_COPY.backupPathPlaceholder}
               disabled={restoreProject.isPending || confirm !== null}
             />
             <FilePathInput
@@ -219,29 +217,28 @@ export function ProjectSetup() {
               onChange={setRestoreRoot}
               mode="save"
               fileTypes={[]}
-              title="Pilih folder tujuan restore"
-              placeholder="Folder tujuan restore (baru/kosong)"
+              title={SETUP_COPY.selectRestoreFolder}
+              placeholder={SETUP_COPY.restoreFolderPlaceholder}
               disabled={restoreProject.isPending || confirm !== null}
             />
             <button
               type="submit"
               disabled={!restoreArchive || !restoreRoot || restoreProject.isPending}
             >
-              Restore
+              {SETUP_COPY.restoreAction}
             </button>
           </form>
           {restoreRecord && (
             <p>
-              Restore selesai: {restoreRecord.project_id} → {restoreRecord.dest_root} · db sha256{" "}
-              {restoreRecord.project_db_sha256.slice(0, 12)}…
+              {SETUP_COPY.restoreResult(restoreRecord.project_id, restoreRecord.dest_root, restoreRecord.project_db_sha256.slice(0, 12))}
             </p>
           )}
         </section>
       )}
       {projectId && (
         <section>
-          <h2>Export Portabel (G6-2)</h2>
-          <p>Paket ZIP berisi project database, snapshots, dan manifest untuk serah terima ke mesin lain.</p>
+          <h2>{SETUP_COPY.portableTitle}</h2>
+          <p>{SETUP_COPY.portableIntro}</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -253,27 +250,25 @@ export function ProjectSetup() {
               onChange={setPortablePath}
               mode="save"
               fileTypes={["zip"]}
-              title="Simpan export portabel"
-              placeholder="Path file export (.zip)"
+              title={SETUP_COPY.savePortableFile}
+              placeholder={SETUP_COPY.portablePathPlaceholder}
               disabled={exportPortable.isPending}
             />
             <button type="submit" disabled={!portablePath || exportPortable.isPending}>
-              Export Portabel
+              {SETUP_COPY.portableAction}
             </button>
           </form>
           {portableRecord && (
             <p>
-              Export: {portableRecord.file_path} ·{" "}
-              {(portableRecord.file_size_bytes / 1024).toFixed(1)} KB · kind {portableRecord.kind} · db sha256{" "}
-              {portableRecord.project_db_sha256.slice(0, 12)}…
+              {SETUP_COPY.portableResult(portableRecord.file_path, (portableRecord.file_size_bytes / 1024).toFixed(1), portableRecord.kind, portableRecord.project_db_sha256.slice(0, 12))}
             </p>
           )}
         </section>
       )}
       {projectId && (
         <section>
-          <h2>Diagnostic Bundle</h2>
-          <p>Bundle Basic yang ter-redaksi: metadata, health check, recent errors. Tanpa data mentah/DB.</p>
+          <h2>{SETUP_COPY.diagnosticTitle}</h2>
+          <p>{SETUP_COPY.diagnosticIntro}</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -285,22 +280,20 @@ export function ProjectSetup() {
               onChange={setDiagnosticPath}
               mode="save"
               fileTypes={["zip"]}
-              title="Simpan diagnostic bundle"
-              placeholder="Path file bundle (.zip)"
+              title={SETUP_COPY.saveDiagnosticFile}
+              placeholder={SETUP_COPY.diagnosticPathPlaceholder}
               disabled={createDiagnostic.isPending || confirm !== null}
             />
             <button
               type="submit"
               disabled={!diagnosticPath || createDiagnostic.isPending}
             >
-              Buat Diagnostic
+              {SETUP_COPY.diagnosticAction}
             </button>
           </form>
           {diagnosticRecord && (
             <p>
-              Diagnostic: {diagnosticRecord.path} · {diagnosticRecord.file_count} file · paths
-              redacted {diagnosticRecord.paths_redacted} · sha256{" "}
-              {diagnosticRecord.sha256.slice(0, 12)}…
+              {SETUP_COPY.diagnosticResult(diagnosticRecord.path, diagnosticRecord.file_count, diagnosticRecord.paths_redacted, diagnosticRecord.sha256.slice(0, 12))}
             </p>
           )}
         </section>
@@ -309,24 +302,24 @@ export function ProjectSetup() {
         <DestructiveConfirmDialog
           title={
             confirm === "backup"
-              ? "Buat backup proyek?"
+              ? SETUP_COPY.confirmBackupTitle
               : confirm === "restore"
-                ? "Restore backup proyek?"
-                : "Buat diagnostic bundle?"
+                ? SETUP_COPY.confirmRestoreTitle
+                : SETUP_COPY.confirmDiagnosticTitle
           }
           description={
             confirm === "backup"
-              ? `Backup akan ditulis ke ${backupPath}. Tidak ada data yang dihapus.`
+              ? SETUP_COPY.confirmBackupDesc(backupPath)
               : confirm === "restore"
-                ? `Backup ${restoreArchive} akan di-restore ke folder baru ${restoreRoot}. Folder tujuan harus baru atau kosong.`
-                : `Bundle diagnostic ter-redaksi akan ditulis ke ${diagnosticPath}. Tanpa data mentah atau isi database.`
+                ? SETUP_COPY.confirmRestoreDesc(restoreArchive, restoreRoot)
+                : SETUP_COPY.confirmDiagnosticDesc(diagnosticPath)
           }
           confirmLabel={
             confirm === "backup"
-              ? "Buat Backup"
+              ? SETUP_COPY.backupAction
               : confirm === "restore"
-                ? "Restore"
-                : "Buat Diagnostic"
+                ? SETUP_COPY.restoreAction
+                : SETUP_COPY.diagnosticAction
           }
           pending={
             confirm === "backup"

@@ -9,6 +9,7 @@ import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
+import { COMMON_COPY, READINESS_COPY } from "../../shared/copy/featureCopy";
 
 export function ReadinessPage() {
   const { projectId, dataset, readinessRecord, setReadinessRecord } = useProject();
@@ -19,17 +20,17 @@ export function ReadinessPage() {
     mutationFn: () => ipcClient.runReadiness(projectId!, dataset!.dataset_id),
     onSuccess: (r) => {
       setReadinessRecord(r);
-      toast.success("Readiness assessment selesai.");
+      toast.success(READINESS_COPY.toastDone);
     },
-    onError: (e) => toast.error(`Readiness assessment gagal: ${e.message}`),
+    onError: (e) => toast.error(READINESS_COPY.toastFail(e.message)),
   });
 
   if (!projectId || !dataset) {
     return (
-      <EmptyState title="Readiness">
-        <p>Belum ada dataset aktif.</p>
+      <EmptyState title={READINESS_COPY.emptyTitle}>
+        <p>{COMMON_COPY.noActiveDataset}</p>
         <button type="button" onClick={() => navigate("setup")}>
-          Ke Setup
+          {COMMON_COPY.goToSetup}
         </button>
       </EmptyState>
     );
@@ -37,28 +38,34 @@ export function ReadinessPage() {
 
   return (
     <section>
-      <h2>Modeling Readiness</h2>
+      <h2>{READINESS_COPY.heading}</h2>
       <button onClick={() => runReadiness.mutate()} disabled={runReadiness.isPending}>
-        {runReadiness.isPending ? "Assessing…" : "Jalankan Readiness Assessment"}
+        {runReadiness.isPending ? READINESS_COPY.assessing : READINESS_COPY.runNow}
       </button>
       {readinessRecord && (
         <>
           <p>
-            {readinessRecord.summary} ({readinessRecord.ok_count}/{readinessRecord.check_count} lolos,{" "}
-            {readinessRecord.problem_count} bermasalah) — {readinessRecord.row_count} baris,{" "}
-            {readinessRecord.column_count} kolom ({readinessRecord.numeric_count} numerik,{" "}
-            {readinessRecord.categorical_count} kategorikal)
+            {READINESS_COPY.summary(
+              readinessRecord.summary,
+              readinessRecord.ok_count,
+              readinessRecord.check_count,
+              readinessRecord.problem_count,
+              readinessRecord.row_count,
+              readinessRecord.column_count,
+              readinessRecord.numeric_count,
+              readinessRecord.categorical_count,
+            )}
           </p>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Check</th>
-                  <th>Kategori</th>
-                  <th>Kolom</th>
-                  <th>Status</th>
-                  <th>Hasil</th>
-                  <th>Bukti</th>
+                  <th>{READINESS_COPY.thCheck}</th>
+                  <th>{READINESS_COPY.thCategory}</th>
+                  <th>{READINESS_COPY.thColumn}</th>
+                  <th>{READINESS_COPY.thStatus}</th>
+                  <th>{READINESS_COPY.thResult}</th>
+                  <th>{READINESS_COPY.thEvidence}</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,7 +81,7 @@ export function ReadinessPage() {
                     <td>
                       {it.evidence_count} ({it.evidence_pct.toFixed(1)}%) — {it.evidence_detail}
                       {(it.example_row_indexes?.length ?? 0) > 0 && (
-                        <> — baris: {it.example_row_indexes!.join(", ")}</>
+                        <> {READINESS_COPY.exampleRows(it.example_row_indexes!.join(", "))}</>
                       )}
                     </td>
                   </tr>

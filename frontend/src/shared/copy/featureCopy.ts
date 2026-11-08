@@ -68,6 +68,17 @@ export const PROFILING_COPY = {
   toastHypothesisStatusFail: (message: string) => `Ubah status hipotesis gagal: ${message}`,
   toastSnapshotActivated: "Snapshot diaktifkan.",
   toastSnapshotFail: (message: string) => `Aktivasi snapshot gagal: ${message}`,
+  staleTitle: "Hasil profiling mungkin usang",
+  staleReason: "Dataset aktif telah berubah sejak profiling ini dijalankan.",
+  staleDependency: (datasetName: string) =>
+    `Dependency yang berubah: dataset ${datasetName} aktif — snapshot saat hasil dibuat bukan snapshot aktif.`,
+  staleImpact:
+    "Dampak: tabel profil di bawah ini mungkin tidak mewakili data saat ini; quality check dan analisis yang memakai hasil ini juga dapat terpengaruh.",
+  staleOldArtifact:
+    "Hasil lama tetap ditampilkan di bawah dan dapat dilihat, tetapi bukan hasil yang berlaku untuk snapshot aktif.",
+  staleRecommend:
+    "Rekomendasi: jalankan ulang profiling untuk snapshot aktif. Refresh hanya berjalan setelah Anda menekan tombol persetujuan di bawah ini.",
+  staleCta: "Saya setuju — perbarui profiling",
 };
 
 export const QUALITY_COPY = {
@@ -338,6 +349,17 @@ export const CHART_COPY = {
   bivariatYMean: (column: string) => `mean ${column}`,
   histogramTooltip: (name: string, value: number, pct: string) =>
     `${name}: ${value} nilai (${pct}%)`,
+  staleTitle: "Histogram mungkin usang",
+  staleReason: "Dataset aktif telah berubah sejak histogram ini dijalankan.",
+  staleDependency: (datasetName: string) =>
+    `Dependency yang berubah: dataset ${datasetName} aktif — snapshot saat hasil dibuat bukan snapshot aktif.`,
+  staleImpact:
+    "Dampak: distribusi di bawah ini mungkin tidak mewakili data saat ini; kesimpulan tentang kolom ini juga dapat terpengaruh.",
+  staleOldArtifact:
+    "Hasil lama tetap ditampilkan di bawah dan dapat dilihat, tetapi bukan hasil yang berlaku untuk snapshot aktif.",
+  staleRecommend:
+    "Rekomendasi: jalankan ulang histogram untuk snapshot aktif. Refresh hanya berjalan setelah Anda menekan tombol persetujuan di bawah ini.",
+  staleCta: "Saya setuju — perbarui histogram",
 };
 
 export const DATASET_COPY = {

@@ -317,6 +317,15 @@ const STAT_PATCHED = {
     problem_count: 1,
     summary: "1 peringatan: missing pada region.",
   },
+  staleProfile: {
+    profile_id: "prof_seed",
+    dataset_id: DATASET.dataset_id,
+    snapshot_id: DATASET.snapshot_id,
+    fingerprint: FP_OLD,
+    row_count: DATASET.row_count,
+    column_count: DATASET.columns.length,
+    columns: COLUMN_PROFILES,
+  },
   staleQuality: {
     dataset_id: DATASET.dataset_id,
     snapshot_id: DATASET.snapshot_id,
@@ -472,6 +481,7 @@ const STAT_PATCHED = {
 
 function staleMap(): Record<string, unknown> {
   return {
+    "dataset.profile.run": STAT_PATCHED.staleProfile,
     "dataset.quality.run": STAT_PATCHED.staleQuality,
     "dataset.readiness.run": STAT_PATCHED.staleReadiness,
     "dataset.bivariate.run": STAT_PATCHED.staleBivariate,

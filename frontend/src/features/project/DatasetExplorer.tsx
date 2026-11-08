@@ -18,7 +18,8 @@ import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
-import { COMMON_COPY, DATASET_COPY } from "../../shared/copy/featureCopy";
+import { CHART_COPY, COMMON_COPY, DATASET_COPY } from "../../shared/copy/featureCopy";
+import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 import { HistogramChart } from "../histogram/HistogramChart";
 import { FilePathInput } from "./FilePathInput";
 import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
@@ -185,6 +186,14 @@ export function DatasetExplorer() {
             {runHistogram.isPending ? DATASET_COPY.running : DATASET_COPY.runHistogram}
           </button>
         </form>
+        {histRecord && !!dataset && histRecord.fingerprint !== dataset.fingerprint && (
+          <StaleRefreshBanner
+            copy={{ ...CHART_COPY, staleDependency: CHART_COPY.staleDependency(dataset.name) }}
+            onRefresh={() => runHistogram.mutate(histRecord.column_name)}
+            isPending={runHistogram.isPending}
+            pendingLabel={DATASET_COPY.running}
+          />
+        )}
         {histRecord && <HistogramChart record={histRecord} />}
       </section>
 

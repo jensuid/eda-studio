@@ -16,6 +16,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
 import { COMMON_COPY, PROFILING_COPY } from "../../shared/copy/featureCopy";
+import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 
 const FINDING_NEXT: Record<FindingStatus, FindingStatus> = {
   proposed: "accepted",
@@ -164,6 +165,9 @@ export function ProfilingPage() {
     );
   }
 
+  // D-F7 follow-up / FLOW §2.4 `stale`: fingerprint artefak vs snapshot aktif.
+  const profileStale = !!savedProfile && savedProfile.fingerprint !== dataset.fingerprint;
+
   return (
     <>
       <section>
@@ -196,6 +200,14 @@ export function ProfilingPage() {
       {savedProfile && (
         <section>
           <h2>{PROFILING_COPY.profileTitle}</h2>
+          {profileStale && (
+            <StaleRefreshBanner
+              copy={{ ...PROFILING_COPY, staleDependency: PROFILING_COPY.staleDependency(dataset.name) }}
+              onRefresh={() => runProfile.mutate()}
+              isPending={runProfile.isPending}
+              pendingLabel={PROFILING_COPY.running}
+            />
+          )}
           <div className="table-scroll">
             <table>
               <thead>

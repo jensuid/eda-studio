@@ -9,6 +9,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
 import { COMMON_COPY, QUALITY_COPY } from "../../shared/copy/featureCopy";
+import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 
 export function QualityPage() {
   const { projectId, dataset, savedProfile, qualityRecord, setQualityRecord } = useProject();
@@ -46,12 +47,23 @@ export function QualityPage() {
     );
   }
 
+  // D-F7 / FLOW §2.4 `stale`: fingerprint artefak vs snapshot aktif.
+  const stale = !!qualityRecord && qualityRecord.fingerprint !== dataset.fingerprint;
+
   return (
     <section>
       <h2>{QUALITY_COPY.heading}</h2>
       <button onClick={() => runQuality.mutate()} disabled={runQuality.isPending}>
         {runQuality.isPending ? QUALITY_COPY.running : QUALITY_COPY.runNow}
       </button>
+      {stale && (
+        <StaleRefreshBanner
+          copy={{ ...QUALITY_COPY, staleDependency: QUALITY_COPY.staleDependency(dataset.name) }}
+          onRefresh={() => runQuality.mutate()}
+          isPending={runQuality.isPending}
+          pendingLabel={QUALITY_COPY.running}
+        />
+      )}
       {qualityRecord && (
         <>
           <p>

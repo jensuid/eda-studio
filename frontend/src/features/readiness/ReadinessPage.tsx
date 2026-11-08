@@ -10,6 +10,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
 import { COMMON_COPY, READINESS_COPY } from "../../shared/copy/featureCopy";
+import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 
 export function ReadinessPage() {
   const { projectId, dataset, readinessRecord, setReadinessRecord } = useProject();
@@ -36,12 +37,23 @@ export function ReadinessPage() {
     );
   }
 
+  // D-F7 / FLOW §2.4 `stale`: fingerprint artefak vs snapshot aktif.
+  const stale = !!readinessRecord && readinessRecord.fingerprint !== dataset.fingerprint;
+
   return (
     <section>
       <h2>{READINESS_COPY.heading}</h2>
       <button onClick={() => runReadiness.mutate()} disabled={runReadiness.isPending}>
         {runReadiness.isPending ? READINESS_COPY.assessing : READINESS_COPY.runNow}
       </button>
+      {stale && (
+        <StaleRefreshBanner
+          copy={{ ...READINESS_COPY, staleDependency: READINESS_COPY.staleDependency(dataset.name) }}
+          onRefresh={() => runReadiness.mutate()}
+          isPending={runReadiness.isPending}
+          pendingLabel={READINESS_COPY.assessing}
+        />
+      )}
       {readinessRecord && (
         <>
           <p>

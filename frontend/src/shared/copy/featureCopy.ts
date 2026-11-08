@@ -84,6 +84,17 @@ export const QUALITY_COPY = {
   toastFail: (message: string) => `Quality check gagal: ${message}`,
   summary: (summary: string, ok: number, checks: number, problems: number) =>
     `${summary} (${ok}/${checks} lolos, ${problems} bermasalah)`,
+  staleTitle: "Hasil quality check mungkin usang",
+  staleReason: "Dataset aktif telah berubah sejak quality check ini dijalankan.",
+  staleDependency: (datasetName: string) =>
+    `Dependency yang berubah: dataset ${datasetName} aktif — snapshot saat hasil dibuat bukan snapshot aktif.`,
+  staleImpact:
+    "Dampak: temuan di bawah ini mungkin tidak mewakili data saat ini; cleaning dan laporan yang memakai hasil ini juga dapat terpengaruh.",
+  staleOldArtifact:
+    "Hasil lama tetap ditampilkan di bawah dan dapat dilihat, tetapi bukan hasil yang berlaku untuk snapshot aktif.",
+  staleRecommend:
+    "Rekomendasi: jalankan ulang quality check untuk snapshot aktif. Refresh hanya berjalan setelah Anda menekan tombol persetujuan di bawah ini.",
+  staleCta: "Saya setuju — perbarui quality check",
 };
 
 export const BIVARIAT_COPY = {
@@ -204,6 +215,17 @@ export const READINESS_COPY = {
     `${summary} (${ok}/${checks} lolos, ${problems} bermasalah) — ${rows} baris, ${columns} kolom (${numeric} numerik, ${categorical} kategorikal)`,
   toastDone: "Readiness assessment selesai.",
   toastFail: (message: string) => `Readiness assessment gagal: ${message}`,
+  staleTitle: "Hasil readiness assessment mungkin usang",
+  staleReason: "Dataset aktif telah berubah sejak readiness assessment ini dijalankan.",
+  staleDependency: (datasetName: string) =>
+    `Dependency yang berubah: dataset ${datasetName} aktif — snapshot saat hasil dibuat bukan snapshot aktif.`,
+  staleImpact:
+    "Dampak: ringkasan kesiapan di bawah ini mungkin tidak mewakili data saat ini; keputusan pemodelan yang memakai hasil ini juga dapat terpengaruh.",
+  staleOldArtifact:
+    "Hasil lama tetap ditampilkan di bawah dan dapat dilihat, tetapi bukan hasil yang berlaku untuk snapshot aktif.",
+  staleRecommend:
+    "Rekomendasi: jalankan ulang readiness assessment untuk snapshot aktif. Refresh hanya berjalan setelah Anda menekan tombol persetujuan di bawah ini.",
+  staleCta: "Saya setuju — perbarui readiness assessment",
 };
 
 export const REPORT_COPY = {

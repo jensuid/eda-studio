@@ -181,6 +181,21 @@ test.describe("B6 — job berlanjut saat navigasi, progress indeterminate", () =
     await expect(page.getByText("history.run")).toBeVisible();
   });
 
+  // D-S8 pelengkap: saat job dengan command mencapai state terminal,
+  // label "In Progress" hilang (perintah tetap ditampilkan tanpa label).
+  test("D-S8: job selesai → label In Progress hilang, perintah tetap tampil", async ({ page }) => {
+    const finishedWithCommand = [
+      { seq: 1, job_id: "job_seed_running", state: "Running", message: "Memproses", command: "history.run", progress: 0.42, started_at: "2026-11-08T04:10:00Z", finished_at: null },
+      { seq: 2, job_id: "job_seed_running", state: "Completed", message: "Selesai", command: "history.run", progress: 1, started_at: "2026-11-08T04:10:00Z", finished_at: "2026-11-08T04:10:05Z" },
+    ];
+    await mockBridge(page, { seeded: true, events: finishedWithCommand });
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
+    await expect(page.getByText("Completed")).toBeVisible();
+    await expect(page.getByText("In Progress")).toHaveCount(0);
+    await expect(page.getByText("history.run")).toBeVisible();
+  });
+
   test("event Completed: progressbar terminal aria-valuenow=100", async ({ page }) => {
     await mockBridge(page, { seeded: true, events: completedEvents });
     await page.goto("/");

@@ -21,12 +21,13 @@ OMIT_OK: set[str] = {"Response"}  # generic envelope; TS side defines it manuall
 
 MODELS = [
     "ErrorContract", "Request", "ProtocolInfo", "JobEvent", "JobStatus",
-    "ProjectRecord", "DatasetRecord", "PreviewRecord",
+    "ProjectRecord", "RecentProjectRecord", "ProjectRecentListRecord",
+    "OpenProjectRecord", "DatasetRecord", "PreviewRecord",
     "ColumnProfile", "ProfileRecord", "ProfileSummary", "ProfileListRecord",
     "SnapshotInfo", "SnapshotListRecord",
     "CreateProjectPayload", "ImportDatasetPayload",
     "GetDatasetPreviewPayload", "OpenProjectPayload", "GetDatasetProfilePayload",
-    "GetDatasetPayload",
+    "GetDatasetPayload", "ListRecentPayload",
     "RunProfilePayload", "ListProfilesPayload", "GetProfileByIdPayload",
     "ListSnapshotsPayload",
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",

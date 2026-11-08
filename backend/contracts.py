@@ -148,6 +148,16 @@ class GetDatasetPayload(BaseModel):
     dataset_id: str
 
 
+class ListRecentPayload(BaseModel):
+    """D-F4: read-only recent-projects query (Beta/Phase 1).
+
+    `limit` is capped so the response stays small; ordering is
+    most-recently-created first (backend project activity log).
+    """
+
+    limit: int = Field(default=10, ge=1, le=50)
+
+
 # ---- G6: job-wrapped profiling + history ----
 class RunProfilePayload(BaseModel):
     project_id: str
@@ -175,6 +185,18 @@ class ProjectRecord(BaseModel):
     name: str
 
 
+class RecentProjectRecord(BaseModel):
+    """D-F4: one entry of the read-only recent-projects list."""
+
+    project_id: str
+    name: str
+    dataset_count: int
+
+
+class ProjectRecentListRecord(BaseModel):
+    projects: list[RecentProjectRecord]
+
+
 class DatasetRecord(BaseModel):
     dataset_id: str
     project_id: str
@@ -183,6 +205,20 @@ class DatasetRecord(BaseModel):
     fingerprint: str  # SHA-256 of immutable source bytes
     row_count: int
     columns: list[str]
+
+
+class OpenProjectRecord(BaseModel):
+    """D-F4: result of the `project.open` command.
+
+    `dataset` is the active dataset when one is stored in the backend,
+    otherwise null. Beta semantics: no separate active-dataset pointer
+    exists yet, so the most recently imported dataset is returned.
+    Columns come from snapshot metadata (pattern `dataset.get`).
+    """
+
+    project_id: str
+    name: str
+    dataset: DatasetRecord | None = None
 
 
 class PreviewRecord(BaseModel):

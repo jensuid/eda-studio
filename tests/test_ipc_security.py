@@ -45,11 +45,11 @@ def test_protocol_info_lists_only_registered(bridge):
         "insight.hypothesis.create", "insight.hypothesis.transition",
         "plan.approve", "plan.create", "plan.execute", "project.backup.create",
         "project.create", "project.diagnostic.create", "project.export_portable",
-        "project.recovery.restore", "project.restore"]
+        "project.open", "project.recovery.restore", "project.restore"]
     assert info["queries"] == [
         "app.info", "chart.spec.get", "chart.spec.list",
         "dataset.cleaning.preview", "dataset.get", "dataset.preview", "dataset.profile",
         "dataset.profile.get", "dataset.profiles.list",
         "dataset.provenance", "dataset.snapshots.list", "insight.findings.list",
-        "insight.hypotheses.list", "plan.get", "plan.list", "project.open",
-        "project.recovery.status"]
+        "insight.hypotheses.list", "plan.get", "plan.list", "project.list_recent",
+        "project.open", "project.recovery.status"]

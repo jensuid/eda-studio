@@ -30,6 +30,8 @@ import type {
   PlanStepInput,
   ProfileRecord,
   ProjectRecord,
+  OpenProjectRecord,
+  ProjectRecentListRecord,
   ProvenanceRecord,
   FindingRecord,
   FindingListRecord,
@@ -169,6 +171,22 @@ export const ipcClient = {
       request_id: rid(), command: "project.create", payload: { name },
     }) as BridgeResponse<ProjectRecord>;
     if (!res.ok || !res.data) throw ipcError(res, "createProject failed");
+    return res.data;
+  },
+  /** D-F4: command `project.open` — validate + active dataset if stored. */
+  async openProject(projectId: string): Promise<OpenProjectRecord> {
+    const res = await (await bridge()).execute_command({
+      request_id: rid(), command: "project.open", payload: { project_id: projectId },
+    }) as BridgeResponse<OpenProjectRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "openProject failed");
+    return res.data;
+  },
+  /** D-F4: query `project.list_recent` — read-only, newest first. */
+  async listRecent(limit = 10): Promise<ProjectRecentListRecord> {
+    const res = await (await bridge()).execute_query({
+      request_id: rid(), command: "project.list_recent", payload: { limit },
+    }) as BridgeResponse<ProjectRecentListRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "listRecent failed");
     return res.data;
   },
   async importDataset(projectId: string, sourcePath: string, datasetName: string): Promise<DatasetRecord> {

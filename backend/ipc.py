@@ -54,6 +54,7 @@ from backend.contracts import (
     ListInsightsPayload,
     ListPlansPayload,
     ListProfilesPayload,
+    ListRecentPayload,
     ListSnapshotsPayload,
     OpenProjectPayload,
     PortableExportPayload,
@@ -79,6 +80,7 @@ from backend.execution import JobManager
 # Registry: command/query name -> (payload model, handler kind)
 _COMMANDS: dict[str, type[BaseModel]] = {
     "project.create": CreateProjectPayload,
+    "project.open": OpenProjectPayload,  # D-F4: command (query kept for compat)
     "dataset.import": ImportDatasetPayload,
     "dataset.profile.run": RunProfilePayload,  # G6: job-wrapped profiling
     "dataset.histogram.run": RunHistogramPayload,  # M2 histogram
@@ -107,7 +109,8 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "dialog.pick_file": DialogPickFilePayload,  # P2-3 native file dialog
 }
 _QUERIES: dict[str, type[BaseModel]] = {
-    "project.open": OpenProjectPayload,
+    "project.open": OpenProjectPayload,  # compat: returns ProjectRecord
+    "project.list_recent": ListRecentPayload,  # D-F4 read-only recent list
     "dataset.get": GetDatasetPayload,  # D-F3 resume rehydration
     "dataset.preview": GetDatasetPreviewPayload,
     "dataset.profile": GetDatasetProfilePayload,  # M2 slice (compat)
@@ -237,6 +240,9 @@ class Bridge:
             if req.command == "project.create":
                 payload = cast(CreateProjectPayload, payload)
                 result = self.service.create_project(payload.name, payload.project_id)
+            elif req.command == "project.open":
+                payload = cast(OpenProjectPayload, payload)
+                result = self.service.open_project_command(payload.project_id)
             elif req.command == "dataset.import":
                 payload = cast(ImportDatasetPayload, payload)
                 captured: list = []
@@ -425,6 +431,9 @@ class Bridge:
             if req.command == "project.open":
                 payload = cast(OpenProjectPayload, payload)
                 result = self.service.open_project(payload.project_id)
+            elif req.command == "project.list_recent":
+                payload = cast(ListRecentPayload, payload)
+                result = self.service.list_recent(payload.limit)
             elif req.command == "dataset.get":
                 payload = cast(GetDatasetPayload, payload)
                 result = self.service.get_dataset(

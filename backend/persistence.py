@@ -387,6 +387,31 @@ class Store:
             rows = self.db.execute("SELECT * FROM projects ORDER BY rowid").fetchall()
         return [Project(row["project_id"], row["name"]) for row in rows]
 
+    def list_recent_projects(self, limit: int = 10) -> list[dict]:
+        """D-F4: recent projects, most-recently-created first.
+
+        Read-only: projects table rowid order is the backend activity
+        log (creation order); no mutation, no timestamps invented.
+        """
+        with self._lock:
+            rows = self.db.execute(
+                "SELECT p.project_id, p.name, "
+                "(SELECT COUNT(*) FROM datasets d WHERE d.project_id = p.project_id) "
+                "AS dataset_count FROM projects p ORDER BY p.rowid DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def latest_dataset_id(self, project_id: str) -> str | None:
+        """D-F4 Beta: most recently imported dataset for a project."""
+        with self._lock:
+            row = self.db.execute(
+                "SELECT dataset_id FROM datasets WHERE project_id = ? "
+                "ORDER BY rowid DESC LIMIT 1",
+                (project_id,),
+            ).fetchone()
+        return row["dataset_id"] if row else None
+
     # -- snapshots + datasets --------------------------------------------
     def save_snapshot(self, snapshot_id: str, data: bytes) -> Path:
         path = self.root / "snapshots" / f"{snapshot_id}.parquet"

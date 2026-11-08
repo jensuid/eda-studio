@@ -58,6 +58,7 @@ from backend.contracts import (
     HypothesisListRecord,
     HypothesisRecord,
     HypothesisStatus,
+    OpenProjectRecord,
     PdfRecord,
     PlanListRecord,
     PlanRecord,
@@ -71,6 +72,7 @@ from backend.contracts import (
     ProfileListRecord,
     ProfileRecord,
     ProfileSummary,
+    ProjectRecentListRecord,
     ProjectRecord,
     ProvenanceEdge,
     ProvenanceRecord,
@@ -78,6 +80,7 @@ from backend.contracts import (
     QualityRecord,
     ReadinessItemRecord,
     ReadinessRecord,
+    RecentProjectRecord,
     RecoveryStatusRecord,
     ReportRecord,
     ReportScope,
@@ -274,6 +277,29 @@ class WorkbenchService:
         if project is None:
             raise NotFoundError(f"project not found: {project_id}")
         return ProjectRecord(project_id=project.project_id, name=project.name)
+
+    def open_project_command(self, project_id: str) -> OpenProjectRecord:
+        """D-F4 command `project.open`: validate + return project and the
+        active dataset when stored in the backend (pattern `dataset.get`
+        for columns). Beta: "active" = most recently imported dataset."""
+        record = self.open_project(project_id)
+        dataset: DatasetRecord | None = None
+        latest = self.store.latest_dataset_id(project_id)
+        if latest is not None:
+            dataset = self.get_dataset(project_id, latest)
+        return OpenProjectRecord(
+            project_id=record.project_id, name=record.name, dataset=dataset)
+
+    def list_recent(self, limit: int = 10) -> ProjectRecentListRecord:
+        """D-F4 query `project.list_recent`: read-only, newest first."""
+        rows = self.store.list_recent_projects(limit)
+        return ProjectRecentListRecord(projects=[
+            RecentProjectRecord(
+                project_id=r["project_id"], name=r["name"],
+                dataset_count=int(r["dataset_count"]),
+            )
+            for r in rows
+        ])
 
     def get_dataset(self, project_id: str, dataset_id: str) -> DatasetRecord:
         """D-F3: DatasetRecord lengkap untuk rehidrasi resume.

@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type {
   BackupRecord,
@@ -28,7 +28,7 @@ interface ProjectForm {
 }
 
 export function ProjectSetup() {
-  const { projectId, dataset, setProjectId, setDataset } = useProject();
+  const { projectId, dataset, setProjectId, setDataset, resetResume } = useProject();
   const toast = useToast();
   const { register, handleSubmit, getValues, formState: { errors } } = useForm<ProjectForm>();
   const [sourcePath, setSourcePath] = useState("");
@@ -41,6 +41,30 @@ export function ProjectSetup() {
       toast.success(SETUP_COPY.toastProjectCreated(p.name));
     },
     onError: (e) => toast.error(SETUP_COPY.toastProjectFail(e.message)),
+  });
+  // D-F4 (Beta): read-only recent list + open with D-F3 revalidation.
+  // Single active project: opening a recent project replaces the context.
+  const recent = useQuery({
+    queryKey: ["recent-projects"],
+    queryFn: () => ipcClient.listRecent(10),
+  });
+  const openRecent = useMutation({
+    mutationFn: (pid: string) => ipcClient.openProject(pid),
+    onSuccess: async (rec) => {
+      if (rec.dataset) {
+        // Reuse D-F3 resume revalidation: snapshots list + dataset.get.
+        await ipcClient.listSnapshots(rec.project_id);
+        const revalidated = await ipcClient.getDataset(
+          rec.project_id, rec.dataset.dataset_id);
+        setProjectId(rec.project_id);
+        setDataset(revalidated);
+      } else {
+        resetResume();
+        setProjectId(rec.project_id);
+      }
+      toast.success(SETUP_COPY.toastProjectOpened(rec.name));
+    },
+    onError: (e) => toast.error(SETUP_COPY.toastOpenFail(e.message)),
   });
   const doImport = useMutation({
     mutationFn: (v: ProjectForm) =>
@@ -124,6 +148,32 @@ export function ProjectSetup() {
           </button>
         </form>
         {projectId && <p>{SETUP_COPY.projectLabel(projectId)}</p>}
+      </section>
+      <section>
+        <h2>{SETUP_COPY.recentTitle}</h2>
+        {recent.isPending && <p aria-busy="true">…</p>}
+        {recent.isError && (
+          <p role="alert">{SETUP_COPY.toastOpenFail((recent.error as Error).message)}</p>
+        )}
+        {recent.data && recent.data.projects.length === 0 && (
+          <p>{SETUP_COPY.recentEmpty}</p>
+        )}
+        {recent.data && recent.data.projects.length > 0 && (
+          <ul>
+            {recent.data.projects.map((p) => (
+              <li key={p.project_id}>
+                <span>{p.name} · {SETUP_COPY.recentDatasetCount(p.dataset_count)}</span>{" "}
+                <button
+                  type="button"
+                  onClick={() => openRecent.mutate(p.project_id)}
+                  disabled={openRecent.isPending}
+                >
+                  {SETUP_COPY.recentOpenAction(p.name)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
       {projectId && (
         <section>

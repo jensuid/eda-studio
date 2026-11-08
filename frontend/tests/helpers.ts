@@ -143,6 +143,15 @@ function seedMap(): Record<string, unknown> {
     },
     "project.recovery.status": { unclean_previous: false },
     "project.create": { project_id: DATASET.project_id, name: "Proyek Seed" },
+    // D-F4: read-only recent list (newest first). `project.open` and
+    // `dataset.get` for recent ids are handled dynamically in `respond`.
+    "project.list_recent": {
+      projects: [
+        { project_id: "proj_recent", name: "Proyek Recent", dataset_count: 1 },
+        { project_id: DATASET.project_id, name: "Proyek Seed", dataset_count: 1 },
+      ],
+    },
+    "project.open": { project_id: "proj_recent", name: "Proyek Recent", dataset: null },
     "dataset.import": DATASET,
     "dataset.get": DATASET,
     "dataset.snapshot.activate": DATASET,
@@ -547,6 +556,35 @@ export async function mockBridge(
             protocol_version: 1,
             correlation_id: null,
           };
+        }
+        // D-F4 dynamic handlers: echo the requested project/dataset so
+        // opening a recent project yields matching columns.
+        if (c.seeded && (command === "project.open" || command === "dataset.get")) {
+          const payload = ((req as { payload?: Record<string, unknown> } | null)
+            ?.payload ?? {}) as Record<string, unknown>;
+          const pid = String(payload.project_id ?? "proj_recent");
+          if (pid !== "proj_seed") {
+            const ds = {
+              dataset_id: `ds_${pid}`,
+              project_id: pid,
+              name: "recent_sales.csv",
+              snapshot_id: `snap_${pid}`,
+              fingerprint: "fp_recent_0123456789abcdef0123456789abcdef012345",
+              row_count: 123,
+              columns: ["recent_col_a", "recent_col_b"],
+            };
+            const data =
+              command === "project.open"
+                ? { project_id: pid, name: "Proyek Recent", dataset: ds }
+                : ds;
+            return {
+              ok: true,
+              data,
+              error: null,
+              protocol_version: 1,
+              correlation_id: null,
+            };
+          }
         }
         let data: unknown = null;
         if (c.seeded) {

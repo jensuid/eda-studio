@@ -75,6 +75,22 @@ export interface ProjectRecord {
   name: string;
 }
 
+export interface RecentProjectRecord {
+  project_id: string;
+  name: string;
+  dataset_count: number;
+}
+
+export interface ProjectRecentListRecord {
+  projects: RecentProjectRecord[];
+}
+
+export interface OpenProjectRecord {
+  project_id: string;
+  name: string;
+  dataset?: DatasetRecord;
+}
+
 export interface DatasetRecord {
   dataset_id: string;
   project_id: string;
@@ -170,6 +186,10 @@ export interface GetDatasetProfilePayload {
 export interface GetDatasetPayload {
   project_id: string;
   dataset_id: string;
+}
+
+export interface ListRecentPayload {
+  limit?: number;
 }
 
 export interface RunProfilePayload {

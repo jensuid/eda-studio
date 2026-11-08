@@ -383,6 +383,13 @@ export const SETUP_COPY = {
   datasetNamePlaceholder: "Nama dataset",
   datasetNameLabel: "Nama dataset",
   importAction: "Import",
+  // Recent projects (D-F4, Beta): read-only list, single active project
+  recentTitle: "Project terbuka terakhir",
+  recentEmpty: "Belum ada project sebelumnya.",
+  recentDatasetCount: (n: number) => `${n} dataset`,
+  recentOpenAction: (name: string) => `Buka ${name}`,
+  toastProjectOpened: (name: string) => `Project dibuka: ${name}`,
+  toastOpenFail: (msg: string) => `Gagal membuka project: ${msg}`,
   snapshotInfo: (snapshotId: string, rowCount: number, fingerprintPrefix: string) =>
     `Snapshot ${snapshotId} · ${rowCount} rows · sha256 ${fingerprintPrefix}…`,
   backupRestoreTitle: "Backup & Restore",

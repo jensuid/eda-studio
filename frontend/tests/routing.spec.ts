@@ -4,6 +4,7 @@
  * datasetId} + revalidasi wajib; gagal → degraded beralasan).
  */
 import { expect, test } from "@playwright/test";
+import { SETUP_COPY } from "../src/shared/copy/featureCopy";
 import { SHELL_COPY } from "../src/shared/copy/shellCopy";
 import { mockBridge, setupWalkthrough } from "./helpers";
 
@@ -87,6 +88,41 @@ test.describe("B4 — hash routing (D-F2)", () => {
     await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
     await expect(page.getByText("Rute tidak dikenal")).toBeVisible();
     await expect(page.getByLabel("Nama project")).toBeVisible();
+  });
+});
+
+test.describe("D-F4 — project.open + recent read-only (Beta)", () => {
+  test("daftar recent tampil; klik recent → konteks aktif berganti + kolom dataset tersedia", async ({
+    page,
+  }) => {
+    await mockBridge(page, { seeded: true });
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
+    // Daftar recent read-only tampil via query project.list_recent.
+    await expect(page.getByText(SETUP_COPY.recentTitle)).toBeVisible();
+    await expect(page.getByText("Proyek Recent · 1 dataset", { exact: true })).toBeVisible();
+    await expect(page.getByText("Proyek Seed · 1 dataset", { exact: true })).toBeVisible();
+
+    // Klik recent → command project.open + revalidasi D-F3
+    // (dataset.snapshots.list + dataset.get) mengaktifkan konteks.
+    await page.getByRole("button", { name: SETUP_COPY.recentOpenAction("Proyek Recent") }).click();
+    await expect(page.getByText(SETUP_COPY.toastProjectOpened("Proyek Recent"))).toBeVisible();
+    await expect(page.getByText("Project: proj_recent")).toBeVisible();
+
+    // Kolom dataset hasil rehidrasi tersedia (dropdown Bivariat).
+    // Profil tidak dipersist lintas konteks (D-F3): jalankan dulu
+    // sebelum dropdown Bivariat dirender (pola routing.spec.ts D-F3).
+    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("button", { name: "Jalankan Profiling" }).click();
+    await expect(page.getByText("Profiling selesai")).toBeVisible();
+    await page.getByRole("link", { name: "Bivariat" }).click();
+    await expect(page).toHaveURL(/#\/bivariate$/);
+    const colA = page.getByLabel("Kolom A");
+    await expect(colA).toBeVisible();
+    const options = await colA.locator("option").allTextContents();
+    expect(options).toEqual(
+      expect.arrayContaining(["recent_col_a", "recent_col_b"]),
+    );
   });
 });
 

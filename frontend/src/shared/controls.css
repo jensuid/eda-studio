@@ -1,0 +1,106 @@
+/* ------------------------------------------------------------------ *
+ * controls.css — B7 [D-S4 Ratified]: base visual untuk 8 state kontrol
+ * `button` / `input` / `select` di layer shell, TANPA token warna baru
+ * (hanya var() yang sudah ada di tokens.css + outline/border/opacity,
+ * sesuai batas keras DS-SHELL-001 §3). File ADITIF — tokens.css tetap
+ * beku sampai G6; aturan ini di-load SETELAH tokens.css dan menimpa
+ * `display:none` aside pada ≤900px dengan pola drawer (DS §6: region
+ * berstatus tidak boleh hilang; R5/R7 ke drawer).
+ * ------------------------------------------------------------------ */
+
+button,
+input,
+select {
+  font: inherit;
+  color: var(--color-text);
+  min-height: 36px;
+}
+
+button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+/* State 2 hover: border ditegaskan + surface raised (bukan warna saja). */
+button:not(:disabled):hover,
+input:not(:disabled):hover,
+select:not(:disabled):hover {
+  background: var(--color-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+}
+
+/* State 4 pressed: sesaat, kembali pada release; reduced-motion aman
+   (transition hanya opacity milik tokens.css:101-103). */
+button:not(:disabled):active,
+input:not(:disabled):active,
+select:not(:disabled):active {
+  opacity: 0.85;
+}
+
+/* State 6 disabled: kursor + border-style berbeda (bukan opacity saja). */
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+  border-style: dashed;
+  opacity: 0.65;
+  background: var(--color-surface);
+}
+
+input,
+select {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* State 8 error: border berbeda + pesan inline berteks (kelas dipakai
+   komponen; teks selalu ada — warna hanya penegas). */
+input[aria-invalid="true"],
+select[aria-invalid="true"] {
+  border-color: var(--color-status-danger);
+  border-style: solid;
+}
+.field-error {
+  color: var(--color-status-danger);
+  font-size: var(--font-size-sm);
+  margin: var(--space-1) 0 0;
+}
+
+/* --- Drawer Job Center (R5b) pada ≤900px (B5 / DS §6) -----------------
+   tokens.css menyembunyikan .app-aside total; di sini aside menjadi
+   drawer yang dapat dibuka dari header (toggle R1), Esc menutup. */
+.drawer-toggle {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .drawer-toggle {
+    display: inline-flex;
+  }
+  .app-aside {
+    display: block;
+    position: fixed;
+    inset-block: 0;
+    right: 0;
+    width: 260px;
+    z-index: 50;
+    background: var(--color-surface);
+    box-shadow: none;
+    transform: translateX(100%);
+    transition: transform var(--duration-fast) ease;
+  }
+  .app-aside[data-open="true"] {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-aside {
+    transition: none;
+  }
+}

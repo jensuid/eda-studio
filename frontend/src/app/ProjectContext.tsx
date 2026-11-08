@@ -3,8 +3,16 @@
  * hasil analisis terakhir (profil + quality). State ini proyek frontend
  * (proyeksi), bukan otoritas — lifecycle job tetap backend-authoritative
  * (SYS-015). Konteks hidup di App agar pindah route tidak kehilangan dataset.
+ *
+ * [D-F3 Ratified 2026-11-08] Resume: hanya {projectId, datasetId} yang
+ * disimpan di localStorage. Saat boot, keduanya DIVALIDASI ke backend
+ * (dataset.snapshots.list) sebelum ditampilkan; gagal → resumeError
+ * (state degraded beralasan di App), bukan empty state. Record analisis
+ * TIDAK disimpan (anti artefak usang disajikan sebagai valid).
+ * Batasan Phase 0: DatasetRecord direhidrasi tanpa `columns` (belum ada
+ * IPC dataset.get) — ditandai sebagai gap Phase 1.
  */
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type {
   DatasetRecord,
@@ -12,11 +20,53 @@ import type {
   QualityRecord,
   ReadinessRecord,
 } from "../shared/ipc/generated";
+import { ipcClient } from "../shared/ipc/ipcClient";
+
+const PROJECT_KEY = "eda-resume:project-v1";
+
+interface StoredResume {
+  projectId: string;
+  datasetId: string;
+}
+
+function readStoredResume(): StoredResume | null {
+  try {
+    const raw = window.localStorage.getItem(PROJECT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredResume>;
+    if (typeof parsed.projectId === "string" && typeof parsed.datasetId === "string") {
+      return { projectId: parsed.projectId, datasetId: parsed.datasetId };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function storeResume(projectId: string | null, datasetId: string | null): void {
+  try {
+    if (projectId && datasetId) {
+      window.localStorage.setItem(PROJECT_KEY, JSON.stringify({ projectId, datasetId }));
+    } else {
+      window.localStorage.removeItem(PROJECT_KEY);
+    }
+  } catch {
+    /* storage unavailable — resume is best-effort */
+  }
+}
+
+export function clearStoredResume(): void {
+  try {
+    window.localStorage.removeItem(PROJECT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 interface ProjectValue {
   projectId: string | null;
   dataset: DatasetRecord | null;
-  setProjectId: (id: string) => void;
+  setProjectId: (id: string | null) => void;
   setDataset: (d: DatasetRecord) => void;
   savedProfile: ProfileRecord | null;
   setSavedProfile: (p: ProfileRecord) => void;
@@ -24,6 +74,10 @@ interface ProjectValue {
   setQualityRecord: (q: QualityRecord) => void;
   readinessRecord: ReadinessRecord | null;
   setReadinessRecord: (r: ReadinessRecord) => void;
+  /** Revalidasi resume gagal → degraded beralasan (D-F3), bukan empty state. */
+  resumeError: string | null;
+  /** Hapus simpanan resume + reset konteks (peringatan di App). */
+  resetResume: () => void;
 }
 
 const ProjectContext = createContext<ProjectValue | null>(null);
@@ -34,6 +88,69 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [savedProfile, setSavedProfile] = useState<ProfileRecord | null>(null);
   const [qualityRecord, setQualityRecord] = useState<QualityRecord | null>(null);
   const [readinessRecord, setReadinessRecord] = useState<ReadinessRecord | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const [booted, setBooted] = useState(false);
+  // Dibaca sekali sebelum efek persist apa pun menghapusnya (StrictMode
+  // memanggil efek setup→cleanup→setup; ref dipertahankan di antara setup).
+  const storedRef = useRef<StoredResume | null | undefined>(undefined);
+
+  // Boot: pulihkan {projectId, datasetId} lalu validasi ke backend.
+  useEffect(() => {
+    if (storedRef.current === undefined) storedRef.current = readStoredResume();
+    const stored = storedRef.current;
+    if (!stored) {
+      setBooted(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await ipcClient.listSnapshots(stored.projectId);
+        const snap = list.snapshots.find((s) => s.dataset_id === stored.datasetId);
+        if (!snap) throw new Error("Dataset tidak ditemukan di project tersimpan.");
+        if (cancelled) return;
+        setProjectId(stored.projectId);
+        // Gap Phase 0: columns belum dapat direhidrasi tanpa IPC dataset.get.
+        setDataset({
+          dataset_id: snap.dataset_id,
+          project_id: stored.projectId,
+          name: snap.dataset_name,
+          snapshot_id: snap.snapshot_id,
+          fingerprint: snap.fingerprint,
+          row_count: snap.row_count,
+          columns: [],
+        });
+        setBooted(true);
+      } catch (e) {
+        if (cancelled) return;
+        clearStoredResume();
+        setResumeError(
+          `Tidak dapat memulihkan konteks tersimpan — ${e instanceof Error ? e.message : String(e)}`,
+        );
+        setBooted(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Simpan {projectId, datasetId} saja — record analisis tidak disimpan.
+  // Hanya setelah boot agar mount pertama (null) tidak menghapus simpanan.
+  useEffect(() => {
+    if (!booted) return;
+    storeResume(projectId, dataset?.dataset_id ?? null);
+  }, [projectId, dataset, booted]);
+
+  const resetResume = () => {
+    clearStoredResume();
+    setResumeError(null);
+    setProjectId(null);
+    setDataset(null);
+    setSavedProfile(null);
+    setQualityRecord(null);
+    setReadinessRecord(null);
+  };
 
   const value: ProjectValue = {
     projectId,
@@ -46,6 +163,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setQualityRecord,
     readinessRecord,
     setReadinessRecord,
+    resumeError,
+    resetResume,
   };
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

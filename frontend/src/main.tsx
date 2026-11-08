@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App } from "./app/App";
 import "./shared/tokens.css";
+import "./shared/controls.css";
 
 // P2-2: QueryClient eksplisit per kartu — staleTime 3 dtk, retry 1,
 // refetchOnWindowFocus off (desktop shell; fokus jendela ≠ data baru).

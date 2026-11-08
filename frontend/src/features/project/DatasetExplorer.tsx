@@ -308,7 +308,7 @@ export function DatasetExplorer() {
       )}
 
       <section>
-        <h2>Export (Doc04 §11)</h2>
+        <h2>Export</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();

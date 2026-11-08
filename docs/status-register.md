@@ -1,6 +1,6 @@
 # Status Register — EDA Workbench
 
-Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
+Terakhir diperbarui: 2026-11-08 — sesi pemulihan audit (Crouton Alpha)
 
 ## Handoff note (untuk session berikutnya — baca ini dulu)
 - Posisi terakhir: **semua commit ter-push** (2026-11-07, `4d5529e..e06cdf5`, push via PAT browser — token sudah direvoke/expired). Sesi ini menutup: NXT-3 (ukur payload), NXT-4 (cap scatter 1500), dokumen keputusan (`docs/decisions-pending-2026-11-07.md`), keputusan **Beta unsigned** (`docs/beta-unsigned-guidance.md`), panduan build Beta (`docs/beta-build-guide.md`).
@@ -21,6 +21,12 @@ Terakhir diperbarui: 2026-11-07 — sesi pemulihan audit (Crouton Alpha)
 | JOB/SCREEN/DS/QA-REPORT-001 | Reporting | Approved | 2026-11-06 | docs/ux-contracts/reporting/ |
 | JOB/SCREEN/DS/QA-PDF-001 | PDF export | Approved | 2026-11-06 | docs/ux-contracts/reporting/ |
 | JOB/SCREEN/DS/QA-CLEAN-001 | Cleaning | Approved | 2026-11-06 | docs/ux-contracts/cleaning/ |
+| APP-ARCH-001 | Application Architecture (shell) | Approved (Ratified) | 2026-11-08 | docs/ux-contracts/shell/APP-ARCH-001.md |
+| JOB-SHELL-001 | Job Contract G1 (shell) | Approved (Ratified) | 2026-11-08 | docs/ux-contracts/shell/JOB-SHELL-001.md |
+| FLOW-SHELL-001 | Flow Contract G2 (shell) | Approved (Ratified) | 2026-11-08 | docs/ux-contracts/shell/FLOW-SHELL-001.md |
+| SCREEN-SHELL-001 | Screen & Interaction G3 (shell) | Approved (Ratified) | 2026-11-08 | docs/ux-contracts/shell/SCREEN-SHELL-001.md |
+| DS-SHELL-001 | Design System G4 (shell) | Approved (Ratified) | 2026-11-08 | docs/ux-contracts/shell/DS-SHELL-001.md |
+| QA-SHELL-001 | Acceptance & Validation G6 (shell) | Approved (Ratified — G6 PASS scope Phase 0, RATIF-SHELL-006; bukti B1–B12 di Add-11) | 2026-11-08 | docs/ux-contracts/shell/QA-SHELL-001.md |
 
 ## Kartu tugas (lihat docs/REMEDIATION-PLAN.md)
 | ID | Judul | Status | Bukti gate | Catatan |

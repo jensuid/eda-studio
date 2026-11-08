@@ -4,12 +4,13 @@
  * handshake protokol saat startup, ErrorBoundary per-route, Job Center.
  */
 import { useEffect, useRef, useState } from "react";
-import { ProjectProvider } from "./ProjectContext";
-import { ROUTES, RouterProvider, useRouter } from "./router";
+import { ProjectProvider, useProject } from "./ProjectContext";
+import { ROUTES, RouterProvider, hashFor, useRouter } from "./router";
 import type { RouteId } from "./router";
 import { ToastProvider } from "../shared/ui/Toaster";
 import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
 import { JobCenter } from "../shared/job/JobCenter";
+import { SHELL_COPY } from "../shared/copy/shellCopy";
 import { ipcClient } from "../shared/ipc/ipcClient";
 import type {
   AppInfoRecord,
@@ -55,7 +56,8 @@ function RouteContent() {
 }
 
 function Shell() {
-  const { route, navigate } = useRouter();
+  const { route, unknownHash } = useRouter();
+  const { resumeError, resetResume } = useProject();
   const [protocolError, setProtocolError] = useState<string | null>(null);
   const [protocolChecked, setProtocolChecked] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryStatusRecord | null>(null);
@@ -66,6 +68,21 @@ function Shell() {
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const prevRoute = useRef(route);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerToggleRef = useRef<HTMLButtonElement>(null);
+
+  // B5 [D-S6]: Esc menutup drawer + focus return ke toggle.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDrawerOpen(false);
+        drawerToggleRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
 
   // P2-5: fokus dipindah ke konten utama setelah navigasi route (dynamic
   // update) agar pengguna keyboard/screen reader tidak tertinggal di rail.
@@ -149,10 +166,21 @@ function Shell() {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
-        Lewati ke konten utama
+        {SHELL_COPY.skipToMain}
       </a>
       <header className="app-header">
-        <h1>EDA Workbench</h1>
+        <h1>{SHELL_COPY.appTitle}</h1>
+        <button
+          type="button"
+          className="drawer-toggle"
+          ref={drawerToggleRef}
+          aria-expanded={drawerOpen}
+          aria-controls="job-center-aside"
+          aria-label={SHELL_COPY.jobCenterToggle}
+          onClick={() => setDrawerOpen((v) => !v)}
+        >
+          {SHELL_COPY.jobCenterToggle}
+        </button>
         {protocolChecked && protocolError && (
           <p className="protocol-banner" role="alert">
             {protocolError}
@@ -161,20 +189,35 @@ function Shell() {
       </header>
       <nav className="app-rail" aria-label="Navigasi utama">
         {ROUTES.map((r) => (
-          <button
+          <a
             key={r.id}
-            type="button"
+            href={hashFor(r.id)}
             className={r.id === route ? "nav-item nav-item-active" : "nav-item"}
             aria-current={r.id === route ? "page" : undefined}
             // P2-5: aria-label wajib — .nav-label disembunyikan di ≤900px
-            // (P2-4), tanpa ini tombol rail kehilangan accessible name.
+            // (P2-4), tanpa ini link rail kehilangan accessible name.
+            // textDecoration/color inline: token CSS beku sampai G6
+            // (tokens.css), jembatan Phase 0 untuk <a> nav D-F2.
             aria-label={r.label}
-            onClick={() => navigate(r.id)}
+            style={{ textDecoration: "none", color: "inherit" }}
           >
             <span className="nav-label">{r.label}</span>
-          </button>
+          </a>
         ))}
       </nav>
+      {unknownHash && (
+        <p className="protocol-banner" role="alert">
+          {SHELL_COPY.unknownRoute}
+        </p>
+      )}
+      {resumeError && (
+        <div className="protocol-banner" role="alert">
+          <p>{resumeError}</p>
+          <button type="button" onClick={resetResume}>
+            {SHELL_COPY.startFresh}
+          </button>
+        </div>
+      )}
       <main
         className="app-main"
         id="main-content"
@@ -212,7 +255,12 @@ function Shell() {
         )}
         <RouteContent />
       </main>
-      <aside className="app-aside" aria-label="Panel samping">
+      <aside
+        className="app-aside"
+        id="job-center-aside"
+        aria-label="Panel samping"
+        data-open={drawerOpen}
+      >
         <JobCenter />
         <section className="version-panel" aria-label="Informasi versi dan update">
           <p>Versi {appInfo?.version ?? "—"} · {appInfo?.platform ?? ""}</p>

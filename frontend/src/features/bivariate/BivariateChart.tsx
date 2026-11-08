@@ -39,7 +39,7 @@ export function BivariateChart({ record }: Props) {
     if (!ref.current) return;
     const chart = init(ref.current);
     const title = `Hubungan ${record.column_a} × ${record.column_b}`;
-    const titleStyle = { fontSize: CHART_TITLE_SIZE, fontWeight: 600 } as const;
+    const titleStyle = { fontSize: CHART_TITLE_SIZE } as const;
     const scatterColor = cssVar("--color-chart-scatter-point");
     const heatLow = cssVar("--color-surface");
     const heatHigh = cssVar("--color-chart-heat-cell");

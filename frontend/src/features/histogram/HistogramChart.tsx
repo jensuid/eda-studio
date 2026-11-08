@@ -25,7 +25,7 @@ export function HistogramChart({ record }: Props) {
         text: `Distribusi ${record.column_name}`,
         left: 0,
         top: 0,
-        textStyle: { fontSize: CHART_TITLE_SIZE, fontWeight: 600 },
+        textStyle: { fontSize: CHART_TITLE_SIZE },
       },
       grid: { left: 56, right: 16, top: 56, bottom: 72, containLabel: true },
       tooltip: {

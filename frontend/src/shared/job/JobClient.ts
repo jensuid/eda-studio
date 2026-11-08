@@ -9,8 +9,10 @@
  *  1. `JobEvent` tidak membawa nama command, jadi invalidasi saat job terminal
  *     dilakukan ke SEMUA query aktif (bukan per-query). Saat kontrak event
  *     membawa command, persempit ke query key terkait.
- *  2. `JobEvent` tidak membawa angka progress; bar determinate di Job Center
- *     dipetakan dari state (lihat `jobProgress`) — bukan angka dari backend.
+ *  2. `JobEvent` tidak membawa angka progress; progress tampil INDETERMINATE
+ *     di Job Center sampai event membawa progress (D-F5: perpanjangan
+ *     Pydantic di backend, jangan frontend-first). Bar determinate +
+ *     `aria-valuenow` hanya untuk state terminal (100%).
  *
  * Di luar desktop shell (bridge absen) polling gagal diam-diam dan dicoba lagi
  * pada tick berikutnya — tidak memicu toast/error berulang.
@@ -35,29 +37,6 @@ const TERMINAL_STATES: ReadonlySet<JobState> = new Set([
   "Cancelled",
   "Interrupted",
 ]);
-
-/** Progress determinate (0–100) per state — proyeksi visual, bukan data backend. */
-export function jobProgress(state: JobState): number {
-  switch (state) {
-    case "Created":
-      return 5;
-    case "Queued":
-      return 15;
-    case "Preparing":
-      return 35;
-    case "Running":
-      return 70;
-    case "Cancelling":
-      return 85;
-    case "Completed":
-    case "Failed":
-    case "Cancelled":
-    case "Interrupted":
-      return 100;
-    default:
-      return 0;
-  }
-}
 
 export function isTerminal(state: JobState): boolean {
   return TERMINAL_STATES.has(state);

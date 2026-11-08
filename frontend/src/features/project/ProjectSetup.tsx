@@ -29,7 +29,7 @@ interface ProjectForm {
 export function ProjectSetup() {
   const { projectId, dataset, setProjectId, setDataset } = useProject();
   const toast = useToast();
-  const { register, handleSubmit, getValues } = useForm<ProjectForm>();
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm<ProjectForm>();
   const [sourcePath, setSourcePath] = useState("");
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
 
@@ -107,10 +107,17 @@ export function ProjectSetup() {
         <h2>Buat Project</h2>
         <form onSubmit={handleSubmit((v) => create.mutate(v.name))}>
           <input
-            {...register("name", { required: true })}
+            {...register("name", { required: "Nama project wajib diisi." })}
             placeholder="Nama project"
             aria-label="Nama project"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "name-error" : undefined}
           />
+          {errors.name && (
+            <p id="name-error" className="field-error" role="alert">
+              {errors.name.message}
+            </p>
+          )}
           <button type="submit" disabled={create.isPending}>
             Buat
           </button>
@@ -140,10 +147,17 @@ export function ProjectSetup() {
               disabled={doImport.isPending}
             />
             <input
-              {...register("datasetName", { required: true })}
+              {...register("datasetName", { required: "Nama dataset wajib diisi." })}
               placeholder="Nama dataset"
               aria-label="Nama dataset"
+              aria-invalid={!!errors.datasetName}
+              aria-describedby={errors.datasetName ? "dataset-name-error" : undefined}
             />
+            {errors.datasetName && (
+              <p id="dataset-name-error" className="field-error" role="alert">
+                {errors.datasetName.message}
+              </p>
+            )}
             <button type="submit" disabled={doImport.isPending}>
               Import
             </button>
@@ -158,7 +172,7 @@ export function ProjectSetup() {
       )}
       {projectId && (
         <section>
-          <h2>Backup &amp; Restore (Doc04 §12)</h2>
+          <h2>Backup &amp; Restore</h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -258,7 +272,7 @@ export function ProjectSetup() {
       )}
       {projectId && (
         <section>
-          <h2>Diagnostic Bundle (Doc15 §10)</h2>
+          <h2>Diagnostic Bundle</h2>
           <p>Bundle Basic yang ter-redaksi: metadata, health check, recent errors. Tanpa data mentah/DB.</p>
           <form
             onSubmit={(e) => {

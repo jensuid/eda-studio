@@ -1,16 +1,17 @@
 import type { CleaningOperation, CleaningStrategy, ColumnProfile } from "../../shared/ipc/generated";
+import { CLEANING_COPY } from "../../shared/copy/featureCopy";
 
 export const OPERATION_OPTIONS: { value: CleaningOperation; label: string; hint: string }[] = [
-  { value: "drop_duplicates", label: "Hapus baris duplikat", hint: "Snapshot-wide, duplikat persis" },
-  { value: "drop_missing", label: "Hapus baris hilang", hint: "Baris dengan nilai hilang di kolom dipilih" },
-  { value: "impute", label: "Isi nilai hilang", hint: "Isi sel kosong pada satu kolom" },
+  { value: "drop_duplicates", label: CLEANING_COPY.opDropDuplicates, hint: CLEANING_COPY.opDropDuplicatesHint },
+  { value: "drop_missing", label: CLEANING_COPY.opDropMissing, hint: CLEANING_COPY.opDropMissingHint },
+  { value: "impute", label: CLEANING_COPY.opImpute, hint: CLEANING_COPY.opImputeHint },
 ];
 
 export const STRATEGY_OPTIONS: { value: CleaningStrategy; label: string }[] = [
-  { value: "mean", label: "Rata-rata (mean)" },
-  { value: "median", label: "Median" },
-  { value: "mode", label: "Modus (mode)" },
-  { value: "constant", label: "Konstanta" },
+  { value: "mean", label: CLEANING_COPY.strategyMean },
+  { value: "median", label: CLEANING_COPY.strategyMedian },
+  { value: "mode", label: CLEANING_COPY.strategyMode },
+  { value: "constant", label: CLEANING_COPY.strategyConstant },
 ];
 
 /** F2 eligibility: which strategies a column type allows. */
@@ -43,11 +44,11 @@ export function constantError(
   if (constantValue === "") return null;
   if (inferredType === "numeric") {
     return Number.isNaN(Number(constantValue))
-      ? "Masukkan angka yang valid untuk kolom ini."
+      ? CLEANING_COPY.constantNumericError
       : null;
   }
   return constantValue.trim() === ""
-    ? "Masukkan teks yang tidak kosong."
+    ? CLEANING_COPY.constantTextError
     : null;
 }
 
@@ -61,7 +62,7 @@ export function CleaningOperationPicker(props: Props) {
   return (
     <div>
       <fieldset>
-        <legend>Pilih operasi</legend>
+        <legend>{CLEANING_COPY.chooseOperation}</legend>
         {OPERATION_OPTIONS.map((o) => (
           <label key={o.value} className="cleaning-operation-id">
             <input
@@ -78,12 +79,12 @@ export function CleaningOperationPicker(props: Props) {
       </fieldset>
 
       {operation === "drop_duplicates" && (
-        <p>Berlaku snapshot-wide. Duplikat berakhir dihitung ulang dari snapshot aktif.</p>
+        <p>{CLEANING_COPY.dropDuplicatesNote}</p>
       )}
 
       {operation === "drop_missing" && (
         <fieldset>
-          <legend>Kolom (gabungan — union)</legend>
+          <legend>{CLEANING_COPY.columnsUnionLegend}</legend>
           <div className="form-scroll-list">
             {columnNames.map((c) => (
               <label key={c} className="form-label-block">
@@ -107,23 +108,23 @@ export function CleaningOperationPicker(props: Props) {
 
       {operation === "impute" && (
         <div>
-          <label htmlFor="cleaning-impute-column">Kolom</label>{" "}
+          <label htmlFor="cleaning-impute-column">{CLEANING_COPY.columnLabel}</label>{" "}
           <select
             id="cleaning-impute-column"
             value={imputeColumn ?? ""}
             disabled={props.disabled}
             onChange={(e) => props.onSelectedColumnsChange(e.target.value ? [e.target.value] : [])}
           >
-            <option value="">— pilih —</option>
+            <option value="">{CLEANING_COPY.choosePlaceholder}</option>
             {columnNames.map((c) => (
               <option key={c} value={c}>{c} ({colType(c)})</option>
             ))}
           </select>
           {imputeColumn && colType(imputeColumn) === "empty" && (
-            <p>Kolom ini kosong — hanya konstanta yang tersedia.</p>
+            <p>{CLEANING_COPY.emptyColumnNote}</p>
           )}
           <fieldset>
-            <legend>Strategi</legend>
+            <legend>{CLEANING_COPY.strategyLegend}</legend>
             {STRATEGY_OPTIONS.map((s) => {
               const ok = allowed.includes(s.value);
               return (
@@ -136,20 +137,20 @@ export function CleaningOperationPicker(props: Props) {
                     disabled={props.disabled || !ok}
                     onChange={() => props.onStrategyChange(s.value)}
                   />{" "}
-                  {s.label}{!ok ? " — Strategi ini tidak tersedia untuk tipe kolom ini." : ""}
+                  {s.label}{!ok ? CLEANING_COPY.strategyUnavailable : ""}
                 </label>
               );
             })}
           </fieldset>
           {strategy === "constant" && (
             <div>
-              <label htmlFor="cleaning-constant">Nilai konstanta</label>{" "}
+              <label htmlFor="cleaning-constant">{CLEANING_COPY.constantValueLabel}</label>{" "}
               <input
                 id="cleaning-constant"
                 value={props.constantValue}
                 disabled={props.disabled}
                 onChange={(e) => props.onConstantValueChange(e.target.value)}
-                placeholder="Nilai pengisi"
+                placeholder={CLEANING_COPY.constantValuePlaceholder}
               />
               {constantError(
                 imputeColumn ? colType(imputeColumn) : "empty",

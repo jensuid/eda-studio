@@ -6,6 +6,7 @@
 import { useProject } from "../../app/ProjectContext";
 import { useRouter } from "../../app/router";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
+import { CLEANING_COPY, COMMON_COPY } from "../../shared/copy/featureCopy";
 import { CleaningSection } from "./CleaningSection";
 
 export function CleaningPage() {
@@ -14,10 +15,10 @@ export function CleaningPage() {
 
   if (!projectId || !dataset) {
     return (
-      <EmptyState title="Cleaning">
-        <p>Belum ada dataset aktif.</p>
+      <EmptyState title={CLEANING_COPY.heading}>
+        <p>{COMMON_COPY.noActiveDataset}</p>
         <button type="button" onClick={() => navigate("setup")}>
-          Ke Setup
+          {COMMON_COPY.goToSetup}
         </button>
       </EmptyState>
     );

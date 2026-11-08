@@ -3,7 +3,10 @@
  *
  * Modul ini memuat string UI milik layar-layar fitur
  * (ProfilingPage, QualityPage, BivariatePage, CleaningSection,
- * ReadinessPage, ReportPage, DatasetExplorer, ProjectSetup) yang
+ * ReadinessPage, ReportPage, DatasetExplorer, ProjectSetup, plus
+ * komponen fitur Cleaning*, ReportSection, PdfSection, BivariateSection,
+ * chart Bivariate/Histogram, dan kontrol proyek FilePathInput /
+ * DestructiveConfirmDialog) yang
  * sebelumnya inline di komponen. ISI TEKS TIDAK BERUBAH: nilai di
  * sini adalah pindahan verbatim dari JSX/toast/aria-label/placeholder
  * yang ada — copy fitur ratified (mis. `SCREEN-*`) tetap menang,
@@ -85,6 +88,24 @@ export const QUALITY_COPY = {
 
 export const BIVARIAT_COPY = {
   emptyTitle: "Bivariat",
+  heading: "Analisis Bivariat",
+  columnALabel: "Kolom A",
+  columnBLabel: "Kolom B",
+  choosePlaceholder: "— pilih —",
+  modeNumNum: "Korelasi (numerik × numerik)",
+  modeCatNum: "Grup (kategorikal × numerik)",
+  modeNumCat: "Grup (numerik × kategorikal)",
+  modeCatCat: "Silang (kategorikal × kategorikal)",
+  modeUnsupported: "Tipe tidak didukung",
+  pairError: "Pilih dua kolom yang berbeda.",
+  unsupportedPair: "Pasangan tipe ini tidak didukung untuk analisis bivariat.",
+  run: "Jalankan Analisis Bivariat",
+  running: "Menghitung bivariat…",
+  toastFail: (message: string) => `Analisis bivariat gagal. Silakan coba lagi. — ${message}`,
+  stale: "Hasil mungkin usang — jalankan ulang.",
+  constantColumn: "Kolom ini konstan.",
+  undefinedCorrelation: "Korelasi tidak terdefinisi untuk kolom konstan.",
+  noPairs: "Tidak ada pasangan nilai untuk dihitung.",
 } as const;
 
 export const CLEANING_COPY = {
@@ -107,6 +128,55 @@ export const CLEANING_COPY = {
   filledRows: (rows: number, columns: string) =>
     `Baris diisi: ${rows} pada kolom ${columns}.`,
   cancelled: "Cleaning dibatalkan. Tidak ada snapshot baru.",
+  chooseOperation: "Pilih operasi",
+  opDropDuplicates: "Hapus baris duplikat",
+  opDropDuplicatesHint: "Snapshot-wide, duplikat persis",
+  opDropMissing: "Hapus baris hilang",
+  opDropMissingHint: "Baris dengan nilai hilang di kolom dipilih",
+  opImpute: "Isi nilai hilang",
+  opImputeHint: "Isi sel kosong pada satu kolom",
+  strategyMean: "Rata-rata (mean)",
+  strategyMedian: "Median",
+  strategyMode: "Modus (mode)",
+  strategyConstant: "Konstanta",
+  constantNumericError: "Masukkan angka yang valid untuk kolom ini.",
+  constantTextError: "Masukkan teks yang tidak kosong.",
+  dropDuplicatesNote:
+    "Berlaku snapshot-wide. Duplikat berakhir dihitung ulang dari snapshot aktif.",
+  columnsUnionLegend: "Kolom (gabungan — union)",
+  columnLabel: "Kolom",
+  choosePlaceholder: "— pilih —",
+  emptyColumnNote: "Kolom ini kosong — hanya konstanta yang tersedia.",
+  strategyLegend: "Strategi",
+  strategyUnavailable: " — Strategi ini tidak tersedia untuk tipe kolom ini.",
+  constantValueLabel: "Nilai konstanta",
+  constantValuePlaceholder: "Nilai pengisi",
+  impactColumns: (columns: string) => `Kolom: ${columns}`,
+  impactRows: (before: number, after: number, affected: number, pct: number) =>
+    `Baris: ${before} → ${after} · Terdampak: ${affected} (${pct}%)`,
+  impactFilled: (filled: number) => `Diisi: ${filled} sel`,
+  impactPerColumn: (column: string, affected: number) =>
+    `${column}: ${affected} baris`,
+  impactParent: (fingerprintPrefix: string) =>
+    `Snapshot induk: ${fingerprintPrefix}…`,
+  impactNoDuplicates: "Tidak ditemukan baris duplikat pada snapshot ini.",
+  impactNoMissing: "Tidak ada nilai kosong pada kolom yang dipilih.",
+  impactCalculating: "Menghitung dampak…",
+  confirmTitle: "Terapkan cleaning?",
+  confirmDesc:
+    "Operasi ini bersifat destruktif. Periksa ringkasan dampak berikut sebelum melanjutkan.",
+  confirmOperationLine: (operation: string, columns: string) =>
+    `Operasi: ${operation} · Kolom: ${columns}`,
+  confirmSourceUnchanged:
+    "Snapshot sumber tidak diubah. Hasilnya disimpan sebagai snapshot baru dan perlu diaktifkan secara manual.",
+  confirmImputeAgree: (rows: number, columns: string) =>
+    `Saya memahami ${rows} sel akan diisi pada kolom ${columns}.`,
+  confirmDeleteAgree: (rows: number) =>
+    `Saya memahami ${rows} baris akan dihapus dari snapshot ini.`,
+  confirmHighImpact: "Lebih dari setengah baris akan dihapus.",
+  cancel: "Batal",
+  applying: "Menerapkan cleaning…",
+  apply: "Terapkan cleaning",
 };
 
 export const READINESS_COPY = {
@@ -138,7 +208,115 @@ export const READINESS_COPY = {
 
 export const REPORT_COPY = {
   emptyTitle: "Report",
-} as const;
+  heading: "Report HTML",
+  scopeAll: "Semua analisis yang ada",
+  scopeProfileQuality: "Profiling + Quality saja",
+  scopeWithCharts: "+ Histogram",
+  scopeWithVisuals: "+ Bivariate",
+  scopeLegend: "Cakupan",
+  create: "Buat Report HTML",
+  profilingFingerprint: (fingerprintPrefix: string) =>
+    `Profiling · fingerprint ${fingerprintPrefix}…`,
+  staleSource: "Usang — Jalankan ulang.",
+  staleList: "Ada hasil usang — lihat daftar sebelum mengunduh.",
+  creating: "Membuat report…",
+  toastFail: (message: string) => `Report gagal dibuat. Silakan coba lagi. — ${message}`,
+  ready: (sections: number, fingerprintPrefix: string, bytes: number, filePath: string) =>
+    `Report siap diunduh. ${sections} section · fingerprint ${fingerprintPrefix}… · ${bytes} bytes · ${filePath}`,
+  final: "Final.",
+  draft: "Draft — bukan final export.",
+};
+
+export const PDF_COPY = {
+  title: "PDF Report",
+  primer: "Buat PDF",
+  unduh: "Unduh PDF",
+  loading: "Membuat PDF…",
+  error: "PDF gagal dibuat. Silakan coba lagi.",
+  emptyFirst: "Buat Report HTML terlebih dahulu.",
+  partial: "Ada hasil usang — lihat daftar sebelum mengunduh.",
+  done: "PDF siap diunduh.",
+  stale: "Hasil mungkin usang — jalankan ulang.",
+  draft: "Draft — bukan final export.",
+  final: "Final.",
+  ready: (
+    sections: number,
+    pages: number,
+    pdfFingerprintPrefix: string,
+    sourceFingerprintPrefix: string,
+    renderer: string,
+    bytes: number,
+  ) =>
+    `PDF siap diunduh. — ${sections} section · ${pages} halaman · pdf fingerprint ${pdfFingerprintPrefix}… · sumber ${sourceFingerprintPrefix}… · renderer ${renderer} · ${bytes} bytes`,
+};
+
+export const PROJECT_COPY = {
+  pick: "Pilih…",
+  picking: "…",
+  pathLabel: "Path",
+  destructiveAck: "Saya mengerti tindakan ini akan menulis file ke disk.",
+  cancel: "Batal",
+  processing: "Memproses…",
+};
+
+export const CHART_COPY = {
+  dataTable: "Data tabel",
+  categoryHeader: "Kategori",
+  countHeader: "Count",
+  meanHeader: "Mean",
+  medianHeader: "Median",
+  minHeader: "Min",
+  maxHeader: "Max",
+  totalHeader: "Total",
+  sampled: (sample: number, pairs: number) => `Sampled ${sample} dari ${pairs} pasangan.`,
+  sampledBadge: (sample: number) => `Sampled (${sample})`,
+  exact: "Exact",
+  pairs: (pairs: number) => `${pairs} pasangan`,
+  missingPairs: (missing: number) => `${missing} berpasangan-baris hilang`,
+  fingerprint: (fingerprintPrefix: string) => `Fingerprint: ${fingerprintPrefix}…`,
+  correlationFootnote: "Korelasi ≠ sebab-akibat.",
+  bivariatTitle: (columnA: string, columnB: string) =>
+    `Hubungan ${columnA} × ${columnB}`,
+  bivariatSummaryNumNum: (a: string, b: string, r: string, rho: string, pairs: number) =>
+    `Korelasi ${a} dengan ${b}: Pearson ${r}, Spearman ${rho}, ${pairs} pasangan.`,
+  bivariatSummaryCatNum: (
+    valueColumn: string,
+    groupColumn: string,
+    hiMean: string,
+    hiLabel: string,
+    loMean: string,
+    loLabel: string,
+    groups: number,
+  ) =>
+    `Rata-rata ${valueColumn} per ${groupColumn}: tertinggi ${hiMean} pada ${hiLabel}, terendah ${loMean} pada ${loLabel}, ${groups} grup.`,
+  bivariatSummaryCatCat: (a: string, b: string, rows: number, cols: number, pairs: number) =>
+    `Silang ${a} dengan ${b}: ${rows} baris × ${cols} kolom, total ${pairs} pasangan.`,
+  histogramTitle: (column: string) => `Distribusi ${column}`,
+  histogramSummaryEmpty: (column: string) => `Distribusi ${column} tidak memiliki nilai.`,
+  histogramSummaryFrequency: (column: string, values: number, topBin: string, topCount: number) =>
+    `Distribusi ${column}: ${values} nilai kategorikal, puncak di ${topBin} (${topCount} nilai).`,
+  histogramSummaryNumeric: (
+    column: string,
+    values: number,
+    min: string | number,
+    max: string | number,
+    topBin: string,
+    topCount: number,
+  ) =>
+    `Distribusi ${column}: ${values} nilai, rentang ${min}–${max}, puncak di ${topBin} (${topCount} nilai).`,
+  histogramEmpty: "Kolom ini tidak memiliki nilai.",
+  histogramCaption: (method: string, missingPct: number, fingerprintPrefix: string) =>
+    `Metode binning: ${method}. Missing: ${missingPct}%. Fingerprint: ${fingerprintPrefix}…`,
+  rangeHeader: "Rentang",
+  percentHeader: "%",
+  bivariatTooltipGroup: (name: string, mean: string, median: string, n: number) =>
+    `${name}: mean ${mean} · median ${median} · n ${n}`,
+  bivariatTooltipHeat: (row: string, col: string, count: number, pct: string) =>
+    `${row} × ${col}: ${count} (${pct}% dari ${row})`,
+  bivariatYMean: (column: string) => `mean ${column}`,
+  histogramTooltip: (name: string, value: number, pct: string) =>
+    `${name}: ${value} nilai (${pct}%)`,
+};
 
 export const DATASET_COPY = {
   emptyTitle: "Dataset",

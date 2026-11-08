@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PROJECT_COPY } from "../../shared/copy/featureCopy";
 
 export interface DestructiveConfirmDialogProps {
   title: string;
@@ -88,18 +89,18 @@ export function DestructiveConfirmDialog({
             disabled={pending}
             onChange={(e) => setAgreed(e.target.checked)}
           />
-          Saya mengerti tindakan ini akan menulis file ke disk.
+          {PROJECT_COPY.destructiveAck}
         </label>
         <div className="actions">
           <button ref={cancelRef} type="button" onClick={onCancel} disabled={pending}>
-            Batal
+            {PROJECT_COPY.cancel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             disabled={!agreed || pending}
           >
-            {pending ? "Memproses…" : confirmLabel}
+            {pending ? PROJECT_COPY.processing : confirmLabel}
           </button>
         </div>
       </div>

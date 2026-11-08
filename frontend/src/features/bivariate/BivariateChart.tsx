@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import { init } from "echarts";
 import type { BivariateRecord } from "../../shared/ipc/generated";
+import { CHART_COPY } from "../../shared/copy/featureCopy";
 import { CHART_TITLE_SIZE, FONT_SIZE_SM, cssVar } from "../../shared/tokens";
 
 interface Props {
@@ -19,17 +20,25 @@ export function summarySentence(record: BivariateRecord): string {
   if (record.mode === "num-num") {
     const r = record.pearson_r == null ? "-" : record.pearson_r.toFixed(2);
     const rho = record.spearman_rho == null ? "-" : record.spearman_rho.toFixed(2);
-    return `Korelasi ${a} dengan ${b}: Pearson ${r}, Spearman ${rho}, ${record.n_pairs} pasangan.`;
+    return CHART_COPY.bivariatSummaryNumNum(a, b, r, rho, record.n_pairs);
   }
   if (record.mode === "cat-num") {
     const gs = record.groups ?? [];
     const hi = gs.reduce((m, g) => (g.mean_value > (m?.mean_value ?? -Infinity) ? g : m), gs[0]);
     const lo = gs.reduce((m, g) => (g.mean_value < (m?.mean_value ?? Infinity) ? g : m), gs[0]);
-    return `Rata-rata ${record.value_column ?? b} per ${record.group_column ?? a}: tertinggi ${hi?.mean_value.toFixed(2) ?? "-"} pada ${hi?.label ?? "-"}, terendah ${lo?.mean_value.toFixed(2) ?? "-"} pada ${lo?.label ?? "-"}, ${gs.length} grup.`;
+    return CHART_COPY.bivariatSummaryCatNum(
+      record.value_column ?? b,
+      record.group_column ?? a,
+      hi?.mean_value.toFixed(2) ?? "-",
+      hi?.label ?? "-",
+      lo?.mean_value.toFixed(2) ?? "-",
+      lo?.label ?? "-",
+      gs.length,
+    );
   }
   const rows = record.row_labels?.length ?? 0;
   const cols = record.col_labels?.length ?? 0;
-  return `Silang ${a} dengan ${b}: ${rows} baris × ${cols} kolom, total ${record.n_pairs} pasangan.`;
+  return CHART_COPY.bivariatSummaryCatCat(a, b, rows, cols, record.n_pairs);
 }
 
 export function BivariateChart({ record }: Props) {
@@ -38,7 +47,7 @@ export function BivariateChart({ record }: Props) {
   useEffect(() => {
     if (!ref.current) return;
     const chart = init(ref.current);
-    const title = `Hubungan ${record.column_a} × ${record.column_b}`;
+    const title = CHART_COPY.bivariatTitle(record.column_a, record.column_b);
     const titleStyle = { fontSize: CHART_TITLE_SIZE } as const;
     const scatterColor = cssVar("--color-chart-scatter-point");
     const heatLow = cssVar("--color-surface");
@@ -66,7 +75,7 @@ export function BivariateChart({ record }: Props) {
           trigger: "item",
           formatter: (p: { name: string; value: number; dataIndex: number }) => {
             const g = gs[p.dataIndex];
-            return g ? `${p.name}: mean ${g.mean_value.toFixed(2)} · median ${g.median_value.toFixed(2)} · n ${g.count}` : `${p.name}: ${p.value}`;
+            return g ? CHART_COPY.bivariatTooltipGroup(p.name, g.mean_value.toFixed(2), g.median_value.toFixed(2), g.count) : `${p.name}: ${p.value}`;
           },
         },
         xAxis: {
@@ -74,7 +83,7 @@ export function BivariateChart({ record }: Props) {
           data: gs.map((g) => g.label),
           axisLabel: { rotate: gs.length > 8 ? 30 : 0, fontSize: FONT_SIZE_SM },
         },
-        yAxis: { type: "value", name: `mean ${record.value_column ?? ""}`, nameLocation: "middle", nameGap: 36, nameTextStyle: { fontSize: FONT_SIZE_SM } },
+        yAxis: { type: "value", name: CHART_COPY.bivariatYMean(record.value_column ?? ""), nameLocation: "middle", nameGap: 36, nameTextStyle: { fontSize: FONT_SIZE_SM } },
         series: [{ type: "bar", data: gs.map((g) => g.mean_value) }],
       });
     } else if (record.mode === "cat-cat") {
@@ -92,7 +101,7 @@ export function BivariateChart({ record }: Props) {
             const [j, i, c] = p.value;
             const rowTotal = cells[i]?.reduce((s, v) => s + v, 0) || 0;
             const pct = rowTotal ? ((c / rowTotal) * 100).toFixed(1) : "0";
-            return `${rows[i]} × ${cols[j]}: ${c} (${pct}% dari ${rows[i]})`;
+            return CHART_COPY.bivariatTooltipHeat(rows[i] ?? "", cols[j] ?? "", c, pct);
           },
         },
         xAxis: { type: "category", data: cols, axisLabel: { rotate: cols.length > 8 ? 30 : 0, fontSize: FONT_SIZE_SM } },
@@ -113,9 +122,9 @@ export function BivariateChart({ record }: Props) {
 
   const summary = summarySentence(record);
   const footnote = record.mode === "num-num"
-    ? "Korelasi ≠ sebab-akibat."
+    ? CHART_COPY.correlationFootnote
     : record.sampled
-      ? `Sampled ${record.sample_size} dari ${record.n_pairs} pasangan.`
+      ? CHART_COPY.sampled(record.sample_size, record.n_pairs)
       : "";
 
   return (
@@ -127,9 +136,9 @@ export function BivariateChart({ record }: Props) {
         className="chart-canvas"
       />
       <p className="chart-caption">
-        {summary}{footnote ? ` ${footnote}` : ""} Fingerprint: {record.fingerprint.slice(0, 12)}…{" "}
-        {record.sampled ? `Sampled (${record.sample_size})` : "Exact"} · {record.n_pairs} pasangan
-        {record.missing_pairs > 0 ? ` · ${record.missing_pairs} berpasangan-baris hilang` : ""}
+        {summary}{footnote ? ` ${footnote}` : ""} {CHART_COPY.fingerprint(record.fingerprint.slice(0, 12))}{" "}
+        {record.sampled ? CHART_COPY.sampledBadge(record.sample_size) : CHART_COPY.exact} · {CHART_COPY.pairs(record.n_pairs)}
+        {record.missing_pairs > 0 ? ` · ${CHART_COPY.missingPairs(record.missing_pairs)}` : ""}
       </p>
       <BivariateDataTable record={record} />
     </div>
@@ -139,7 +148,7 @@ export function BivariateChart({ record }: Props) {
 export function BivariateDataTable({ record }: Props) {
   return (
     <details>
-      <summary>Data tabel</summary>
+      <summary>{CHART_COPY.dataTable}</summary>
       <div className="table-scroll">
         {record.mode === "num-num" && (
           <table>
@@ -153,7 +162,7 @@ export function BivariateDataTable({ record }: Props) {
         )}
         {record.mode === "cat-num" && (
           <table>
-            <thead><tr><th>{record.group_column ?? "Kategori"}</th><th>Count</th><th>Mean</th><th>Median</th><th>Min</th><th>Max</th></tr></thead>
+            <thead><tr><th>{record.group_column ?? CHART_COPY.categoryHeader}</th><th>{CHART_COPY.countHeader}</th><th>{CHART_COPY.meanHeader}</th><th>{CHART_COPY.medianHeader}</th><th>{CHART_COPY.minHeader}</th><th>{CHART_COPY.maxHeader}</th></tr></thead>
             <tbody>
               {(record.groups ?? []).map((g) => (
                 <tr key={g.label}><td>{g.label}</td><td>{g.count}</td><td>{g.mean_value}</td><td>{g.median_value}</td><td>{g.min_value}</td><td>{g.max_value}</td></tr>
@@ -163,7 +172,7 @@ export function BivariateDataTable({ record }: Props) {
         )}
         {record.mode === "cat-cat" && (
           <table>
-            <thead><tr><th>{record.column_a} \\ {record.column_b}</th>{(record.col_labels ?? []).map((c) => <th key={c}>{c}</th>)}<th>Total</th></tr></thead>
+            <thead><tr><th>{record.column_a} \\ {record.column_b}</th>{(record.col_labels ?? []).map((c) => <th key={c}>{c}</th>)}<th>{CHART_COPY.totalHeader}</th></tr></thead>
             <tbody>
               {(record.cells ?? []).map((row, i) => {
                 const rowTotal = row.reduce((s, v) => s + v, 0);
@@ -176,7 +185,7 @@ export function BivariateDataTable({ record }: Props) {
                 );
               })}
               <tr>
-                <th>Total</th>
+                <th>{CHART_COPY.totalHeader}</th>
                 {(record.col_labels ?? []).map((c, j) => (
                   <td key={c}><strong>{(record.cells ?? []).reduce((s, row) => s + (row[j] ?? 0), 0)}</strong></td>
                 ))}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ipcClient } from "../../shared/ipc/ipcClient";
+import { PROJECT_COPY } from "../../shared/copy/featureCopy";
 
 export interface FilePathInputProps {
   value: string;
@@ -42,11 +43,11 @@ export function FilePathInput({
         readOnly
         placeholder={placeholder}
         onChange={() => undefined}
-        aria-label={title ?? "Path"}
+        aria-label={title ?? PROJECT_COPY.pathLabel}
         disabled={busy}
       />
       <button type="button" onClick={pick} disabled={busy}>
-        {picking ? "…" : "Pilih…"}
+        {picking ? PROJECT_COPY.picking : PROJECT_COPY.pick}
       </button>
       {error && <span role="alert">{error}</span>}
     </span>

@@ -6,6 +6,7 @@
 import { useEffect, useRef } from "react";
 import { init } from "echarts";
 import type { HistogramRecord } from "../../shared/ipc/generated";
+import { CHART_COPY } from "../../shared/copy/featureCopy";
 import { CHART_TITLE_SIZE, FONT_SIZE_SM } from "../../shared/tokens";
 
 interface Props {
@@ -22,7 +23,7 @@ export function HistogramChart({ record }: Props) {
       (best, b, i) => (b.count > (record.bins[best]?.count ?? -1) ? i : best), 0);
     chart.setOption({
       title: {
-        text: `Distribusi ${record.column_name}`,
+        text: CHART_COPY.histogramTitle(record.column_name),
         left: 0,
         top: 0,
         textStyle: { fontSize: CHART_TITLE_SIZE },
@@ -31,7 +32,7 @@ export function HistogramChart({ record }: Props) {
       tooltip: {
         trigger: "item",
         formatter: (p: { name: string; value: number }) =>
-          `${p.name}: ${p.value} nilai (${record.value_count ? ((p.value / record.value_count) * 100).toFixed(1) : 0}%)`,
+          CHART_COPY.histogramTooltip(p.name, p.value, record.value_count ? ((p.value / record.value_count) * 100).toFixed(1) : "0"),
       },
       xAxis: {
         type: "category",
@@ -67,13 +68,13 @@ export function HistogramChart({ record }: Props) {
   }, [record]);
 
   const summary = record.kind === "empty"
-    ? `Distribusi ${record.column_name} tidak memiliki nilai.`
+    ? CHART_COPY.histogramSummaryEmpty(record.column_name)
     : record.kind === "frequency"
-      ? `Distribusi ${record.column_name}: ${record.value_count} nilai kategorikal, puncak di ${record.top_bin ?? "-"} (${record.bins.find((b) => b.label === record.top_bin)?.count ?? 0} nilai).`
-      : `Distribusi ${record.column_name}: ${record.value_count} nilai, rentang ${record.min_value ?? ""}–${record.max_value ?? ""}, puncak di ${record.top_bin ?? "-"} (${record.bins.find((b) => b.label === record.top_bin)?.count ?? 0} nilai).`;
+      ? CHART_COPY.histogramSummaryFrequency(record.column_name, record.value_count, record.top_bin ?? "-", record.bins.find((b) => b.label === record.top_bin)?.count ?? 0)
+      : CHART_COPY.histogramSummaryNumeric(record.column_name, record.value_count, record.min_value ?? "", record.max_value ?? "", record.top_bin ?? "-", record.bins.find((b) => b.label === record.top_bin)?.count ?? 0);
 
   if (record.kind === "empty") {
-    return <p>Kolom ini tidak memiliki nilai.</p>;
+    return <p>{CHART_COPY.histogramEmpty}</p>;
   }
 
   return (
@@ -84,12 +85,12 @@ export function HistogramChart({ record }: Props) {
         aria-label={summary}
         className="chart-canvas"
       />
-      <p className="chart-caption">{summary} Metode binning: {record.bin_method}. Missing: {record.missing_pct}%. Fingerprint: {record.fingerprint.slice(0, 12)}…</p>
+      <p className="chart-caption">{summary} {CHART_COPY.histogramCaption(record.bin_method, record.missing_pct, record.fingerprint.slice(0, 12))}</p>
       <details>
-        <summary>Data tabel</summary>
+        <summary>{CHART_COPY.dataTable}</summary>
         <div className="table-scroll">
           <table>
-            <thead><tr><th>{record.inferred_type === "numeric" ? "Rentang" : "Kategori"}</th><th>Count</th><th>%</th></tr></thead>
+            <thead><tr><th>{record.inferred_type === "numeric" ? CHART_COPY.rangeHeader : CHART_COPY.categoryHeader}</th><th>{CHART_COPY.countHeader}</th><th>{CHART_COPY.percentHeader}</th></tr></thead>
             <tbody>
               {record.bins.map((b) => (
                 <tr key={b.label}>

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { DatasetRecord, ProfileRecord, ReportRecord, ReportScope } from "../../shared/ipc/generated";
+import { COMMON_COPY, REPORT_COPY } from "../../shared/copy/featureCopy";
 
 interface Props {
   projectId: string;
@@ -16,10 +17,10 @@ interface Props {
 }
 
 const SCOPES: { value: ReportScope; label: string }[] = [
-  { value: "all", label: "Semua analisis yang ada" },
-  { value: "profile-quality", label: "Profiling + Quality saja" },
-  { value: "with-charts", label: "+ Histogram" },
-  { value: "with-visuals", label: "+ Bivariate" },
+  { value: "all", label: REPORT_COPY.scopeAll },
+  { value: "profile-quality", label: REPORT_COPY.scopeProfileQuality },
+  { value: "with-charts", label: REPORT_COPY.scopeWithCharts },
+  { value: "with-visuals", label: REPORT_COPY.scopeWithVisuals },
 ];
 
 export function ReportSection({ projectId, dataset, savedProfile }: Props) {
@@ -35,17 +36,17 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
 
   return (
     <section>
-      <h2>Report HTML</h2>
+      <h2>{REPORT_COPY.heading}</h2>
       {!savedProfile && (
         <>
-          <p>Jalankan profiling terlebih dahulu.</p>
-          <p><button disabled>Buat Report HTML</button></p>
+          <p>{COMMON_COPY.runProfilingFirst}</p>
+          <p><button disabled>{REPORT_COPY.create}</button></p>
         </>
       )}
       {savedProfile && (
         <>
           <fieldset>
-            <legend>Cakupan</legend>
+            <legend>{REPORT_COPY.scopeLegend}</legend>
             {SCOPES.map((s) => (
               <label key={s.value} className="form-label-block">
                 <input
@@ -60,24 +61,27 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
             ))}
           </fieldset>
           <ul>
-            <li>Profiling · fingerprint {savedProfile.fingerprint.slice(0, 12)}…</li>
-            {savedProfile.fingerprint !== dataset.fingerprint && <li>Usang — Jalankan ulang.</li>}
+            <li>{REPORT_COPY.profilingFingerprint(savedProfile.fingerprint.slice(0, 12))}</li>
+            {savedProfile.fingerprint !== dataset.fingerprint && <li>{REPORT_COPY.staleSource}</li>}
           </ul>
-          {hasStale && <p>Ada hasil usang — lihat daftar sebelum mengunduh.</p>}
+          {hasStale && <p>{REPORT_COPY.staleList}</p>}
           <button disabled={runReport.isPending} onClick={() => runReport.mutate()}>
-            Buat Report HTML
+            {REPORT_COPY.create}
           </button>
-          {runReport.isPending && <p role="status">Membuat report…</p>}
-          {runReport.isError && <p role="alert">Report gagal dibuat. Silakan coba lagi. — {runReport.error.message}</p>}
+          {runReport.isPending && <p role="status">{REPORT_COPY.creating}</p>}
+          {runReport.isError && <p role="alert">{REPORT_COPY.toastFail(runReport.error.message)}</p>}
           {record && (
             <>
               <p aria-live="polite">
-                Report siap diunduh. {record.sections.length} section · fingerprint{" "}
-                {record.fingerprint.slice(0, 12)}… · {record.file_size_bytes} bytes ·{" "}
-                {record.file_path}
+                {REPORT_COPY.ready(
+                  record.sections.length,
+                  record.fingerprint.slice(0, 12),
+                  record.file_size_bytes,
+                  record.file_path,
+                )}
               </p>
               <p>{record.validation_summary}</p>
-              <p>{record.is_final ? "Final." : "Draft — bukan final export."}</p>
+              <p>{record.is_final ? REPORT_COPY.final : REPORT_COPY.draft}</p>
             </>
           )}
         </>

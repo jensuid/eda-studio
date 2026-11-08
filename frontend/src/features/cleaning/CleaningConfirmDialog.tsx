@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CleaningPreviewSummary } from "../../shared/ipc/generated";
+import { CLEANING_COPY } from "../../shared/copy/featureCopy";
 
 interface Props {
   preview: CleaningPreviewSummary;
@@ -71,21 +72,20 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
         onKeyDown={onKeyDown}
       >
         <div className="dialog-scroll">
-          <h3 id="cleaning-dialog-title" className="status-danger">Terapkan cleaning?</h3>
+          <h3 id="cleaning-dialog-title" className="status-danger">{CLEANING_COPY.confirmTitle}</h3>
           <p id="cleaning-dialog-desc">
-            Operasi ini bersifat destruktif. Periksa ringkasan dampak berikut sebelum melanjutkan.
+            {CLEANING_COPY.confirmDesc}
           </p>
           <p className="cleaning-impact">
-            Operasi: {preview.operation} &middot; Kolom: {preview.columns.join(", ") || "-"}
+            {CLEANING_COPY.confirmOperationLine(preview.operation, preview.columns.join(", ") || "-")}
           </p>
           <p className="cleaning-impact">
-            Baris: {preview.row_count_before} &rarr; {preview.row_count_after} &middot;
-            Terdampak: {preview.affected_rows} ({preview.affected_pct}%)
+            {CLEANING_COPY.impactRows(preview.row_count_before, preview.row_count_after, preview.affected_rows, preview.affected_pct)}
           </p>
           <p className="cleaning-impact">
-            Snapshot induk: {preview.parent_fingerprint.slice(0, 12)}&hellip;
+            {CLEANING_COPY.impactParent(preview.parent_fingerprint.slice(0, 12))}
           </p>
-          <p>Snapshot sumber tidak diubah. Hasilnya disimpan sebagai snapshot baru dan perlu diaktifkan secara manual.</p>
+          <p>{CLEANING_COPY.confirmSourceUnchanged}</p>
           <label className="dialog-field">
             <input
               type="checkbox"
@@ -93,8 +93,8 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
               onChange={(e) => setAgreed(e.target.checked)}
             />{" "}
             {preview.operation === "impute"
-              ? `Saya memahami ${preview.affected_rows} sel akan diisi pada kolom ${preview.columns.join(", ")}.`
-              : `Saya memahami ${preview.affected_rows} baris akan dihapus dari snapshot ini.`}
+              ? CLEANING_COPY.confirmImputeAgree(preview.affected_rows, preview.columns.join(", "))
+              : CLEANING_COPY.confirmDeleteAgree(preview.affected_rows)}
           </label>
           {highImpact && (
             <label className="dialog-field">
@@ -103,20 +103,20 @@ export function CleaningConfirmDialog({ preview, pending, onCancel, onConfirm }:
                 checked={highImpactAgreed}
                 onChange={(e) => setHighImpactAgreed(e.target.checked)}
               />{" "}
-              Lebih dari setengah baris akan dihapus.
+              {CLEANING_COPY.confirmHighImpact}
             </label>
           )}
         </div>
         <div className="dialog-actions">
           <button type="button" ref={cancelRef} onClick={onCancel} disabled={pending}>
-            Batal
+            {CLEANING_COPY.cancel}
           </button>
           <button
             type="button"
             disabled={!canConfirm}
             onClick={onConfirm}
           >
-            {pending ? "Menerapkan cleaning…" : "Terapkan cleaning"}
+            {pending ? CLEANING_COPY.applying : CLEANING_COPY.apply}
           </button>
         </div>
       </form>

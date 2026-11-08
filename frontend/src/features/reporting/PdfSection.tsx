@@ -8,25 +8,13 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { DatasetRecord, PdfRecord, ProfileRecord, ReportScope } from "../../shared/ipc/generated";
+import { PDF_COPY, REPORT_COPY } from "../../shared/copy/featureCopy";
 
 interface Props {
   projectId: string;
   dataset: DatasetRecord;
   savedProfile: ProfileRecord | null;
 }
-
-const COPY = {
-  title: "PDF Report",
-  primer: "Buat PDF",
-  unduh: "Unduh PDF",
-  loading: "Membuat PDF…",
-  error: "PDF gagal dibuat. Silakan coba lagi.",
-  emptyFirst: "Buat Report HTML terlebih dahulu.",
-  partial: "Ada hasil usang — lihat daftar sebelum mengunduh.",
-  done: "PDF siap diunduh.",
-  stale: "Hasil mungkin usang — jalankan ulang.",
-  draft: "Draft — bukan final export.",
-} as const;
 
 export function PdfSection({ projectId, dataset, savedProfile }: Props) {
   const [record, setRecord] = useState<PdfRecord | null>(null);
@@ -49,33 +37,37 @@ export function PdfSection({ projectId, dataset, savedProfile }: Props) {
 
   return (
     <section>
-      <h2>{COPY.title}</h2>
+      <h2>{PDF_COPY.title}</h2>
       {!savedProfile && (
         <>
-          <p>{COPY.emptyFirst}</p>
-          <p><button disabled>Buat Report HTML</button></p>
+          <p>{PDF_COPY.emptyFirst}</p>
+          <p><button disabled>{REPORT_COPY.create}</button></p>
         </>
       )}
       {savedProfile && (
         <>
-          {record && !record.is_final && <p role="alert">{COPY.partial}</p>}
+          {record && !record.is_final && <p role="alert">{PDF_COPY.partial}</p>}
           <button disabled={runPdf.isPending} onClick={() => runPdf.mutate()}>
-            {COPY.primer}
+            {PDF_COPY.primer}
           </button>
-          {runPdf.isPending && <p role="status">{COPY.loading}</p>}
-          {runPdf.isError && <p role="alert">{COPY.error} — {runPdf.error.message}</p>}
+          {runPdf.isPending && <p role="status">{PDF_COPY.loading}</p>}
+          {runPdf.isError && <p role="alert">{PDF_COPY.error} — {runPdf.error.message}</p>}
           {record && (
             <>
               <p aria-live="polite">
-                {COPY.done} — {record.sections.length} section · {record.page_count} halaman ·
-                pdf fingerprint {record.pdf_fingerprint.slice(0, 12)}… · sumber{" "}
-                {record.source_html_fingerprint.slice(0, 12)}… · renderer {record.renderer_version} ·{" "}
-                {record.file_size_bytes} bytes
+                {PDF_COPY.ready(
+                  record.sections.length,
+                  record.page_count,
+                  record.pdf_fingerprint.slice(0, 12),
+                  record.source_html_fingerprint.slice(0, 12),
+                  record.renderer_version,
+                  record.file_size_bytes,
+                )}
               </p>
               <p>{record.validation_summary}</p>
-              {record.is_final ? <p>Final.</p> : <p>{COPY.draft}</p>}
-              {hasStale && <p>{COPY.stale}</p>}
-              <button onClick={unduhPdf}>{COPY.unduh}</button>
+              {record.is_final ? <p>{PDF_COPY.final}</p> : <p>{PDF_COPY.draft}</p>}
+              {hasStale && <p>{PDF_COPY.stale}</p>}
+              <button onClick={unduhPdf}>{PDF_COPY.unduh}</button>
               <p>{record.file_path}</p>
             </>
           )}

@@ -275,6 +275,27 @@ class WorkbenchService:
             raise NotFoundError(f"project not found: {project_id}")
         return ProjectRecord(project_id=project.project_id, name=project.name)
 
+    def get_dataset(self, project_id: str, dataset_id: str) -> DatasetRecord:
+        """D-F3: DatasetRecord lengkap untuk rehidrasi resume.
+
+        Kolom diambil dari metadata snapshot terdaftar (baris registry),
+        tanpa memuat byte snapshot / whole-DataFrame JSON.
+        """
+        dataset = self.store.get_dataset(dataset_id)
+        if dataset is None or dataset.project_id != project_id:
+            raise NotFoundError(f"dataset not found: {dataset_id}")
+        columns = list(dataset.snapshot.columns)
+        snap = self.store.get_snapshot(dataset.snapshot.snapshot_id)
+        if snap is not None and snap.get("columns") is not None:
+            raw = snap["columns"]
+            columns = [str(c) for c in json.loads(raw)] if isinstance(raw, str) else [str(c) for c in raw]
+        return DatasetRecord(
+            dataset_id=dataset.dataset_id, project_id=dataset.project_id,
+            name=dataset.name, snapshot_id=dataset.snapshot.snapshot_id,
+            fingerprint=dataset.snapshot.fingerprint,
+            row_count=dataset.snapshot.row_count, columns=columns,
+        )
+
     def get_preview(self, project_id: str, dataset_id: str, limit: int = 20) -> PreviewRecord:
         dataset = self.store.get_dataset(dataset_id)
         if dataset is None or dataset.project_id != project_id:

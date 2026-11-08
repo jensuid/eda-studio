@@ -48,7 +48,7 @@ def test_protocol_info_lists_only_registered(bridge):
         "project.recovery.restore", "project.restore"]
     assert info["queries"] == [
         "app.info", "chart.spec.get", "chart.spec.list",
-        "dataset.cleaning.preview", "dataset.preview", "dataset.profile",
+        "dataset.cleaning.preview", "dataset.get", "dataset.preview", "dataset.profile",
         "dataset.profile.get", "dataset.profiles.list",
         "dataset.provenance", "dataset.snapshots.list", "insight.findings.list",
         "insight.hypotheses.list", "plan.get", "plan.list", "project.open",

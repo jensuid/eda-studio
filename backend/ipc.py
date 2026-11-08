@@ -43,6 +43,7 @@ from backend.contracts import (
     ExecutePlanPayload,
     ExportDatasetPayload,
     GetChartSpecPayload,
+    GetDatasetPayload,
     GetDatasetPreviewPayload,
     GetDatasetProfilePayload,
     GetDatasetProvenancePayload,
@@ -107,6 +108,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,
+    "dataset.get": GetDatasetPayload,  # D-F3 resume rehydration
     "dataset.preview": GetDatasetPreviewPayload,
     "dataset.profile": GetDatasetProfilePayload,  # M2 slice (compat)
     "dataset.profile.get": GetProfileByIdPayload,  # G6 history
@@ -423,6 +425,10 @@ class Bridge:
             if req.command == "project.open":
                 payload = cast(OpenProjectPayload, payload)
                 result = self.service.open_project(payload.project_id)
+            elif req.command == "dataset.get":
+                payload = cast(GetDatasetPayload, payload)
+                result = self.service.get_dataset(
+                    payload.project_id, payload.dataset_id)
             elif req.command == "dataset.preview":
                 payload = cast(GetDatasetPreviewPayload, payload)
                 result = self.service.get_preview(

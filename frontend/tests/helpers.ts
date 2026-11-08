@@ -144,6 +144,7 @@ function seedMap(): Record<string, unknown> {
     "project.recovery.status": { unclean_previous: false },
     "project.create": { project_id: DATASET.project_id, name: "Proyek Seed" },
     "dataset.import": DATASET,
+    "dataset.get": DATASET,
     "dataset.snapshot.activate": DATASET,
     "dataset.preview": PREVIEW,
     "dataset.profile": PROFILE,

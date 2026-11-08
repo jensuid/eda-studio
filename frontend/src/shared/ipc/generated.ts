@@ -167,6 +167,11 @@ export interface GetDatasetProfilePayload {
   dataset_id: string;
 }
 
+export interface GetDatasetPayload {
+  project_id: string;
+  dataset_id: string;
+}
+
 export interface RunProfilePayload {
   project_id: string;
   dataset_id: string;

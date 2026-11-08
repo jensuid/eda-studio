@@ -26,6 +26,7 @@ MODELS = [
     "SnapshotInfo", "SnapshotListRecord",
     "CreateProjectPayload", "ImportDatasetPayload",
     "GetDatasetPreviewPayload", "OpenProjectPayload", "GetDatasetProfilePayload",
+    "GetDatasetPayload",
     "RunProfilePayload", "ListProfilesPayload", "GetProfileByIdPayload",
     "ListSnapshotsPayload",
     "RunHistogramPayload", "HistogramBin", "HistogramRecord",

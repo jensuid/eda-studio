@@ -4,7 +4,7 @@
  * datasetId} + revalidasi wajib; gagal → degraded beralasan).
  */
 import { expect, test } from "@playwright/test";
-import { mockBridge } from "./helpers";
+import { mockBridge, setupWalkthrough } from "./helpers";
 
 test.describe("B4 — hash routing (D-F2)", () => {
   test("klik nav mengubah hash; reload memulihkan route + konteks project", async ({
@@ -31,6 +31,31 @@ test.describe("B4 — hash routing (D-F2)", () => {
     // masuk cabang "dataset aktif, profiling belum jalan" (bukan empty-state
     // "Belum ada dataset aktif").
     await expect(page.getByText("Jalankan profiling terlebih dahulu.")).toBeVisible();
+  });
+
+  test("reload → dataset.get merehidrasi columns (dropdown Bivariat berisi sales/qty)", async ({
+    page,
+  }) => {
+    await setupWalkthrough(page);
+    await page.getByRole("link", { name: "Bivariat" }).click();
+    await expect(page).toHaveURL(/#\/bivariate$/);
+    await expect(page.getByLabel("Kolom A")).toBeVisible();
+
+    await page.reload();
+    await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
+    await expect(page).toHaveURL(/#\/bivariate$/);
+    // Profil sengaja TIDAK dipersist (D-F3) → jalankan ulang setelah resume;
+    // kolom dropdown berasal dari dataset.columns hasil rehidrasi dataset.get.
+    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("button", { name: "Jalankan Profiling" }).click();
+    await expect(page.getByText("Profiling selesai")).toBeVisible();
+    await page.getByRole("link", { name: "Bivariat" }).click();
+    const colA = page.getByLabel("Kolom A");
+    await expect(colA).toBeVisible();
+    const options = await colA.locator("option").allTextContents();
+    expect(options).toEqual(expect.arrayContaining(["sales", "region", "qty"]));
+    const optionsB = await page.getByLabel("Kolom B").locator("option").allTextContents();
+    expect(optionsB).toEqual(expect.arrayContaining(["sales", "qty"]));
   });
 
   test("Back/Forward mengembalikan route tanpa menghapus konteks", async ({ page }) => {

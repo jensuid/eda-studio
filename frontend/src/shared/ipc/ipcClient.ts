@@ -219,6 +219,14 @@ export const ipcClient = {
     if (!res.ok || !res.data) throw ipcError(res, "getProfileById failed");
     return res.data;
   },
+  async getDataset(projectId: string, datasetId: string): Promise<DatasetRecord> {
+    const res = await (await bridge()).execute_query({
+      request_id: rid(), command: "dataset.get",
+      payload: { project_id: projectId, dataset_id: datasetId },
+    }) as BridgeResponse<DatasetRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "getDataset failed");
+    return res.data;
+  },
   async listSnapshots(projectId: string): Promise<SnapshotListRecord> {
     const res = await (await bridge()).execute_query({
       request_id: rid(), command: "dataset.snapshots.list",

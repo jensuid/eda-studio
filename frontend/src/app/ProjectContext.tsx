@@ -9,8 +9,9 @@
  * (dataset.snapshots.list) sebelum ditampilkan; gagal → resumeError
  * (state degraded beralasan di App), bukan empty state. Record analisis
  * TIDAK disimpan (anti artefak usang disajikan sebagai valid).
- * Batasan Phase 0: DatasetRecord direhidrasi tanpa `columns` (belum ada
- * IPC dataset.get) — ditandai sebagai gap Phase 1.
+ * Rehidrasi kolom: DatasetRecord lengkap (termasuk `columns`) dimuat
+ * via IPC query `dataset.get` (D-F3 — kolom dari metadata snapshot
+ * terdaftar di backend, tanpa whole-DataFrame JSON).
  */
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -108,18 +109,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         const list = await ipcClient.listSnapshots(stored.projectId);
         const snap = list.snapshots.find((s) => s.dataset_id === stored.datasetId);
         if (!snap) throw new Error("Dataset tidak ditemukan di project tersimpan.");
+        // D-F3: rehidrasi DatasetRecord lengkap incl. columns dari backend.
+        const full = await ipcClient.getDataset(stored.projectId, stored.datasetId);
         if (cancelled) return;
         setProjectId(stored.projectId);
-        // Gap Phase 0: columns belum dapat direhidrasi tanpa IPC dataset.get.
-        setDataset({
-          dataset_id: snap.dataset_id,
-          project_id: stored.projectId,
-          name: snap.dataset_name,
-          snapshot_id: snap.snapshot_id,
-          fingerprint: snap.fingerprint,
-          row_count: snap.row_count,
-          columns: [],
-        });
+        setDataset(full);
         setBooted(true);
       } catch (e) {
         if (cancelled) return;

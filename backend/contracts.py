@@ -138,6 +138,16 @@ class GetDatasetProfilePayload(BaseModel):
     dataset_id: str
 
 
+class GetDatasetPayload(BaseModel):
+    """D-F3: full DatasetRecord rehydration (columns from snapshot metadata).
+
+    Read-only query; never loads snapshot bytes (no whole-DataFrame JSON).
+    """
+
+    project_id: str
+    dataset_id: str
+
+
 # ---- G6: job-wrapped profiling + history ----
 class RunProfilePayload(BaseModel):
     project_id: str

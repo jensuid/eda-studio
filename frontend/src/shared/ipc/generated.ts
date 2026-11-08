@@ -56,6 +56,10 @@ export interface JobEvent {
   state: JobState;
   seq: number;
   message?: string;
+  command?: string;
+  progress?: number;
+  started_at?: string;
+  finished_at?: string;
 }
 
 export interface JobStatus {

@@ -137,6 +137,10 @@ test.describe("B6 — job berlanjut saat navigasi, progress indeterminate", () =
   const completedEvents = [
     { seq: 2, job_id: "job_seed_running", state: "Completed", message: "Selesai", at: "2026-11-08T04:10:05Z" },
   ];
+  // D-F5/D-S8: event ekstensi backend-first membawa perintah + progress nyata.
+  const progressEvents = [
+    { seq: 1, job_id: "job_seed_running", state: "Running", message: "Memproses", command: "history.run", progress: 0.42, started_at: "2026-11-08T04:10:00Z", finished_at: null },
+  ];
 
   test("event Running: progressbar TANPA aria-valuenow (indeterminate, D-F5)", async ({ page }) => {
     await mockBridge(page, { seeded: true, events: runningEvents });
@@ -158,6 +162,23 @@ test.describe("B6 — job berlanjut saat navigasi, progress indeterminate", () =
     await expect(page.getByText("Running")).toBeVisible();
     await page.getByRole("link", { name: "Profiling" }).click();
     await expect(page.getByText("Running")).toBeVisible();
+  });
+
+  test("D-F5: progress nyata tampil determinate aria-valuenow=42", async ({ page }) => {
+    await mockBridge(page, { seeded: true, events: progressEvents });
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
+    const bar = page.getByRole("progressbar");
+    await expect(bar).toBeVisible();
+    await expect(bar).toHaveAttribute("aria-valuenow", "42");
+  });
+
+  test("D-S8: command ada → label In Progress + nama perintah tampil", async ({ page }) => {
+    await mockBridge(page, { seeded: true, events: progressEvents });
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
+    await expect(page.getByText("In Progress")).toBeVisible();
+    await expect(page.getByText("history.run")).toBeVisible();
   });
 
   test("event Completed: progressbar terminal aria-valuenow=100", async ({ page }) => {

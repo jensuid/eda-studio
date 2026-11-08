@@ -81,7 +81,14 @@ class ProtocolInfo(BaseModel):
 
 
 class JobEvent(BaseModel):
-    """Durable lifecycle event (IPC-007). Progress is ephemeral and separate."""
+    """Durable lifecycle event (IPC-007). Progress is ephemeral and separate.
+
+    D-F5 extension (JOB-SHELL-001 §2): optional `command`, `progress`,
+    `started_at`, `finished_at`. All default to None so legacy events
+    (pre-extension rows) stay valid; old clients ignore the extra fields.
+    `progress` is a float in [0, 1] supplied by the backend job lifecycle
+    when a real measurement exists — never fabricated; None = unknown.
+    """
 
     event_id: str
     job_id: str
@@ -89,6 +96,10 @@ class JobEvent(BaseModel):
     state: JobState
     seq: int
     message: str = ""
+    command: str | None = None
+    progress: float | None = Field(default=None, ge=0.0, le=1.0)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
 
 
 class JobStatus(BaseModel):

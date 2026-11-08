@@ -5,14 +5,11 @@
  * event dari `ipcClient.getEvents(sinceSeq)` — tidak pernah mengarang status.
  * Polling tiap 1 dtk; sejak P2-2 `getEvents` tidak lagi tak-terpakai.
  *
- * Catatan jujur dua keterbatasan kontrak event saat ini:
- *  1. `JobEvent` tidak membawa nama command, jadi invalidasi saat job terminal
- *     dilakukan ke SEMUA query aktif (bukan per-query). Saat kontrak event
- *     membawa command, persempit ke query key terkait.
- *  2. `JobEvent` tidak membawa angka progress; progress tampil INDETERMINATE
- *     di Job Center sampai event membawa progress (D-F5: perpanjangan
- *     Pydantic di backend, jangan frontend-first). Bar determinate +
- *     `aria-valuenow` hanya untuk state terminal (100%).
+ * Kontrak event (D-F5, backend-first): `JobEvent` kini membawa `command`,
+ * `progress` (0..1 atau null bila tidak tersedia — tidak pernah dikarang),
+ * `started_at`, `finished_at`. `progress` null → bar INDETERMINATE di
+ * Job Center; angka nyata → bar determinate dengan `aria-valuenow`.
+ * `command` ada → state "In Progress" boleh ditampilkan (D-S8).
  *
  * Di luar desktop shell (bridge absen) polling gagal diam-diam dan dicoba lagi
  * pada tick berikutnya — tidak memicu toast/error berulang.
@@ -29,6 +26,11 @@ export interface JobView {
   state: JobState;
   seq: number;
   message: string;
+  command: string | null;
+  /** Real backend progress 0..1, or null when unknown (never fabricated). */
+  progress: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
 }
 
 const TERMINAL_STATES: ReadonlySet<JobState> = new Set([
@@ -71,6 +73,10 @@ export function useJobPoller(): JobView[] {
             state: e.state,
             seq: e.seq,
             message: e.message ?? "",
+            command: typeof e.command === "string" && e.command ? e.command : null,
+            progress: typeof e.progress === "number" ? e.progress : null,
+            startedAt: typeof e.started_at === "string" ? e.started_at : null,
+            finishedAt: typeof e.finished_at === "string" ? e.finished_at : null,
           });
         }
         return [...byId.values()].sort((a, b) => b.seq - a.seq);

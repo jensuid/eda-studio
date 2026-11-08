@@ -55,7 +55,11 @@ CREATE TABLE IF NOT EXISTS job_events (
     correlation_id TEXT,
     state TEXT NOT NULL,
     seq INTEGER NOT NULL,
-    message TEXT NOT NULL DEFAULT ''
+    message TEXT NOT NULL DEFAULT '',
+    command TEXT,
+    progress REAL,
+    started_at TEXT,
+    finished_at TEXT
 );
 CREATE TABLE IF NOT EXISTS profiles (
     profile_id TEXT PRIMARY KEY,
@@ -166,6 +170,7 @@ class Store:
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.executescript(SCHEMA)
         self._migrate_snapshots_file_fingerprint()
+        self._migrate_job_events_extension()
         self.db.commit()
         self._backfill_snapshots()
         self._init_runtime_state()
@@ -223,6 +228,26 @@ class Store:
             self.db.execute(
                 "ALTER TABLE snapshots ADD COLUMN file_fingerprint TEXT"
             )
+
+    def _migrate_job_events_extension(self) -> None:
+        """Add D-F5 columns to pre-existing job_events databases.
+
+        Existing rows keep NULL for command/progress/started_at/
+        finished_at: pre-extension events carry no such data, and reading
+        them back yields None (Pydantic defaults) instead of failing.
+        """
+        cols = {
+            r[1]
+            for r in self.db.execute("PRAGMA table_info(job_events)").fetchall()
+        }
+        for column, ddl in (
+            ("command", "ALTER TABLE job_events ADD COLUMN command TEXT"),
+            ("progress", "ALTER TABLE job_events ADD COLUMN progress REAL"),
+            ("started_at", "ALTER TABLE job_events ADD COLUMN started_at TEXT"),
+            ("finished_at", "ALTER TABLE job_events ADD COLUMN finished_at TEXT"),
+        ):
+            if column not in cols:
+                self.db.execute(ddl)
 
     def _backfill_snapshots(self) -> None:
         """Register pre-M3 dataset snapshots in the registry (idempotent)."""
@@ -445,11 +470,16 @@ class Store:
             self.db.commit()
 
     def save_event(self, event_id: str, job_id: str, correlation_id: str | None,
-                   state: str, seq: int, message: str) -> None:
+                   state: str, seq: int, message: str,
+                   command: str | None = None,
+                   progress: float | None = None,
+                   started_at: str | None = None,
+                   finished_at: str | None = None) -> None:
         with self._lock:
             self.db.execute(
-                "INSERT INTO job_events VALUES (?,?,?,?,?,?)",
-                (event_id, job_id, correlation_id, state, seq, message),
+                "INSERT INTO job_events VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (event_id, job_id, correlation_id, state, seq, message,
+                 command, progress, started_at, finished_at),
             )
             self.db.commit()
 

@@ -151,7 +151,7 @@ Daftar ini diverifikasi terhadap `frontend/src/shared/ipc/ipcClient.ts` (daftar 
 | `project.open` / `project.list` / daftar proyek terakhir | **tidak ada** (hanya `project.create`) | E4 diblokir. D-F4 memutuskan apakah RC menambahkannya. **Pydantic dulu** di `backend/contracts.py`, lalu `tools/generate_types.py`; `generated.ts` tidak boleh di-hand-edit |
 | `JobEvent.command`, `.progress`, `.started_at` | **tidak ada** | stepper `In Progress` per-stage, progress determinate, elapsed, dan invalidasi query tertarget tidak mungkin. Sementara: indeterminate, indikator global, `invalidateQueries()` boleh dipakai tetapi wajib dicatat sebagai utang performa |
 | `job.cancel` / `job.retry` | **tidak ada** | Job Center tidak boleh menampilkan tombol Cancel/Retry yang palsu; Doc08 §11.3 menuntut hasil authoritative |
-| Buka/unduh artefak (shell.reveal / save-as) | **tidak ada**; `PdfSection.tsx:43` memakai path filesystem mentah sebagai `a.href` | `finish` diblokir; copy "siap diunduh" tanpa kontrol adalah dead-end (`ReportSection.tsx:74-78`) |
+| Buka/unduh artefak (shell.reveal / save-as) | **`artifact.open` Ratified by PO 2026-11-09** | previously: **tidak ada**; `PdfSection.tsx` memakai path filesystem mentah sebagai `a.href` → `finish` diblokir; copy "siap diunduh" tanpa kontrol adalah dead-end. Kini: frontend mengirim identitas artefak (`snapshot_id` + fingerprint, TANPA path) dan backend host-side membukanya di bawah `<project root>/reports` (fail-closed SEC-004) |
 | Status artefak lintas-route (histogram, bivariate, report) | state lokal komponen | stage 6/7/10 tidak boleh dilabeli `Completed` (§2.2) |
 
 ### 2.8 Urutan rilis yang diusulkan (D-F8)

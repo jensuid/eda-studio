@@ -6,7 +6,9 @@ the fingerprint covers the ORIGINAL source bytes (provenance reproducibility).
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import webbrowser
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
@@ -31,6 +33,9 @@ from backend.contracts import (
     CHART_SPEC_MAX_BYTES,
     PLAN_MAX_SPEC_BYTES,
     AppInfoRecord,
+    ArtifactKind,
+    ArtifactOpenPayload,
+    ArtifactOpenRecord,
     BackupRecord,
     BivariateGroup,
     BivariateRecord,
@@ -203,10 +208,26 @@ def validate_path_input(path: str, allowed_exts: tuple[str, ...] = (),
     return p
 
 
+_ARTIFACT_EXTENSIONS: dict[ArtifactKind, str] = {
+    ArtifactKind.PDF: ".pdf",
+    ArtifactKind.HTML: ".html",
+}
+
+
+def _default_artifact_opener(path: Path) -> bool:
+    """Host-side open via the OS default application. Returns the success
+    flag of webbrowser.open (False when no browser/OS handler is found)."""
+    return bool(webbrowser.open(str(path)))
+
+
 class WorkbenchService:
-    def __init__(self, store: Store, jobs: JobManager) -> None:
+    def __init__(self, store: Store, jobs: JobManager,
+                 artifact_opener=None) -> None:
         self.store = store
         self.jobs = jobs
+        # FLOW §2.7 artifact.open host-side opener (injectable for tests;
+        # mirrors default_file_dialog pattern). Defaults to OS opener.
+        self.artifact_opener = artifact_opener or _default_artifact_opener
         # P4-2 allowlist: paths explicitly returned by dialog.pick_file
         # (and, in tests, paths registered via authorize_path).
         # In-memory only; resets on process restart by design.
@@ -321,6 +342,53 @@ class WorkbenchService:
             fingerprint=dataset.snapshot.fingerprint,
             row_count=dataset.snapshot.row_count, columns=columns,
         )
+
+    # -- artifact.open (FLOW-SHELL-001 §2.7, PO ratified 2026-11-09) -------
+    def open_artifact(self, payload: ArtifactOpenPayload) -> ArtifactOpenRecord:
+        """Open a generated report artifact host-side. Fail-closed (SEC-004).
+
+        The client supplies NO path — only (project, dataset, kind,
+        snapshot_id, fingerprint). The file is reconstructed strictly under
+        <store root>/reports by scanning for the backend naming convention
+        "*-<snapshot_id[:8]>-report.<ext>" and its SHA-256 must equal the
+        supplied fingerprint. Unknown kinds are rejected by the Pydantic
+        enum before this runs; traversal strings in snapshot_id cannot
+        escape because only the first 8 chars matching [A-Za-z0-9_-] are
+        used as a glob fragment and the result is re-checked to live under
+        the reports dir.
+        """
+        dataset = self.store.get_dataset(payload.dataset_id)
+        if dataset is None or dataset.project_id != payload.project_id:
+            raise NotFoundError(f"dataset not found: {payload.dataset_id}")
+        snap = payload.snapshot_id.strip()
+        ext = _ARTIFACT_EXTENSIONS.get(payload.kind)
+        if ext is None:  # defence in depth: enum normally guards this
+            raise ValidationError("kind artefak tidak dikenal")
+        if len(snap) < 8 or not all(c.isalnum() or c in "-_" for c in snap[:8]):
+            raise ValidationError("snapshot_id tidak valid")
+        reports_dir = (self.store.root / "reports").resolve()
+        if not reports_dir.is_dir():
+            raise NotFoundError("artefak tidak ditemukan")
+        fragment = f"*-{snap[:8]}-report{ext}"
+        candidates = sorted(
+            p for p in reports_dir.glob(fragment)
+            if p.is_file() and reports_dir in p.resolve().parents
+        )
+        if not candidates:
+            raise NotFoundError("artefak tidak ditemukan")
+        # Prefer an exact fingerprint match when several files share the
+        # snapshot fragment; otherwise verify the single candidate.
+        target: Path | None = None
+        for cand in candidates:
+            digest = hashlib.sha256(cand.read_bytes()).hexdigest()
+            if digest == payload.fingerprint:
+                target = cand
+                break
+        if target is None:
+            raise ValidationError("fingerprint artefak tidak cocok")
+        if not self.artifact_opener(target):
+            raise ValidationError("artefak tidak dapat dibuka di host ini")
+        return ArtifactOpenRecord(opened=True, kind=payload.kind)
 
     def get_preview(self, project_id: str, dataset_id: str, limit: int = 20) -> PreviewRecord:
         dataset = self.store.get_dataset(dataset_id)

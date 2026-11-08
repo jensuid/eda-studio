@@ -520,6 +520,33 @@ class PdfRecord(BaseModel):
     created_at: datetime
 
 
+# ---- Artifact open (FLOW-SHELL-001 §2.7, ratified PO 2026-11-09) ----
+# The frontend NEVER supplies a filesystem path. Identity is the artifact's
+# own fingerprint (pdf_fingerprint for pdf, content_fingerprint for html)
+# plus the snapshot it was generated from. The backend reconstructs the
+# on-disk location strictly under <project root>/reports by scanning for
+# "*-<snapshot_id[:8]>-report.<ext>" and verifying the SHA-256 of the file
+# bytes equals the supplied fingerprint. A raw path can therefore never be
+# smuggled through IPC (fail-closed, SEC-004); traversal, unknown kind,
+# missing artifact, and fingerprint mismatch are all rejected.
+class ArtifactKind(str, Enum):
+    PDF = "pdf"
+    HTML = "html"
+
+
+class ArtifactOpenPayload(BaseModel):
+    project_id: str
+    dataset_id: str
+    kind: ArtifactKind
+    snapshot_id: str
+    fingerprint: str  # pdf_fingerprint (pdf) / content_fingerprint (html)
+
+
+class ArtifactOpenRecord(BaseModel):
+    opened: bool
+    kind: ArtifactKind
+
+
 class CleaningOperation(str, Enum):
     DROP_DUPLICATES = "drop_duplicates"
     DROP_MISSING = "drop_missing"

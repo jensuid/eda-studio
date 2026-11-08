@@ -26,6 +26,7 @@ from backend.application import (
 from backend.contracts import (
     AppInfoPayload,
     ApprovePlanPayload,
+    ArtifactOpenPayload,
     BackupCreatePayload,
     BackupRestorePayload,
     CleaningPreviewPayload,
@@ -107,6 +108,7 @@ _COMMANDS: dict[str, type[BaseModel]] = {
     "plan.approve": ApprovePlanPayload,  # NXT-2
     "plan.execute": ExecutePlanPayload,  # NXT-2
     "dialog.pick_file": DialogPickFilePayload,  # P2-3 native file dialog
+    "artifact.open": ArtifactOpenPayload,  # FLOW §2.7 (PO ratified 2026-11-09)
 }
 _QUERIES: dict[str, type[BaseModel]] = {
     "project.open": OpenProjectPayload,  # compat: returns ProjectRecord
@@ -326,6 +328,9 @@ class Bridge:
                 result = self.service.create_diagnostic(
                     payload.project_id, payload.dest_path,
                     req.correlation_id or req.request_id)
+            elif req.command == "artifact.open":
+                payload = cast(ArtifactOpenPayload, payload)
+                result = self.service.open_artifact(payload)
             elif req.command == "dialog.pick_file":
                 payload = cast(DialogPickFilePayload, payload)
                 # Synchronous native dialog — no job, no mutation (P2-3).

@@ -2,12 +2,13 @@
  * PdfSection — SCREEN-PDF-001 + FLOW-PDF-001.
  * Primary action "Buat PDF" (JobManager-wrapped dataset.pdf.generate via
  * ipcClient), PdfSummary after done, partial (stale) banner, draft badge,
- * error copy. Komposisi di ReportPage (P2-2).
+ * error copy. "Unduh/Buka" opens host-side via artifact.open (FLOW §2.7) —
+ * never a raw file_path href. Komposisi di ReportPage (P2-2).
  */
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
-import type { DatasetRecord, PdfRecord, ProfileRecord, ReportScope } from "../../shared/ipc/generated";
+import type { DatasetRecord, PdfRecord, ProfileRecord } from "../../shared/ipc/generated";
 import { PDF_COPY, REPORT_COPY } from "../../shared/copy/featureCopy";
 
 interface Props {
@@ -23,17 +24,23 @@ export function PdfSection({ projectId, dataset, savedProfile }: Props) {
     onSuccess: (r) => setRecord(r),
   });
 
-  const hasStale = !!record && record.sections.some((s) => s.stale);
+  // FLOW §2.7: host-side open via artifact.open — never a raw-path href.
+  // Identity: (snapshot_id, pdf_fingerprint); the backend resolves and
+  // verifies the artifact strictly under <project root>/reports.
+  const openArtifact = useMutation({
+    mutationFn: () =>
+      record
+        ? ipcClient.openArtifact(
+            projectId,
+            dataset.dataset_id,
+            "pdf",
+            record.snapshot_id,
+            record.pdf_fingerprint,
+          )
+        : Promise.reject(new Error("no record")),
+  });
 
-  const unduhPdf = () => {
-    if (!record) return;
-    const a = document.createElement("a");
-    a.href = record.file_path;
-    a.download = `eda-report-${record.snapshot_id.slice(0, 8)}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
+  const hasStale = !!record && record.sections.some((s) => s.stale);
 
   return (
     <section>
@@ -64,11 +71,21 @@ export function PdfSection({ projectId, dataset, savedProfile }: Props) {
                   record.file_size_bytes,
                 )}
               </p>
+              <p>{`eda-report-${record.snapshot_id.slice(0, 8)}.pdf`}</p>
               <p>{record.validation_summary}</p>
               {record.is_final ? <p>{PDF_COPY.final}</p> : <p>{PDF_COPY.draft}</p>}
               {hasStale && <p>{PDF_COPY.stale}</p>}
-              <button onClick={unduhPdf}>{PDF_COPY.unduh}</button>
-              <p>{record.file_path}</p>
+              <button
+                type="button"
+                disabled={openArtifact.isPending}
+                onClick={() => openArtifact.mutate()}
+              >
+                {openArtifact.isPending ? PDF_COPY.opening : PDF_COPY.unduh}
+              </button>
+              {openArtifact.isSuccess && <p role="status">{PDF_COPY.opened}</p>}
+              {openArtifact.isError && (
+                <p role="alert">{PDF_COPY.openError(openArtifact.error.message)}</p>
+              )}
             </>
           )}
         </>

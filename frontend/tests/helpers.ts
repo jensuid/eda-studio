@@ -225,6 +225,7 @@ function seedMap(): Record<string, unknown> {
       validation_summary: "OK",
       created_at: "2026-11-08T04:06:00Z",
     },
+    "artifact.open": { opened: true, kind: "pdf" },
     "dataset.export": {
       dataset_id: DATASET.dataset_id,
       snapshot_id: DATASET.snapshot_id,
@@ -510,6 +511,8 @@ export interface MockBridgeOptions {
   eventsFail?: boolean;
   /** D-F6: project.list_recent shape rusak → crash render di Setup */
   crashRecent?: boolean;
+  /** FLOW §2.7: artifact.open gagal (NOT_FOUND) → error kanal fitur */
+  artifactOpenFail?: boolean;
 }
 
 /** Seed lengkap B1/B12: project → import → Profiling run.
@@ -546,7 +549,7 @@ export async function mockBridge(
   page: Page,
   opts: MockBridgeOptions = {},
 ): Promise<void> {
-  const { seeded = false, events = [], stale = false, stalePreview = false, resumeFail = false, protocolMismatch = false, updateFail = false, recoveryAvailable = false, recoveryRestoreFail = false, eventsFail = false, crashRecent = false } = opts;
+  const { seeded = false, events = [], stale = false, stalePreview = false, resumeFail = false, protocolMismatch = false, updateFail = false, recoveryAvailable = false, recoveryRestoreFail = false, eventsFail = false, crashRecent = false, artifactOpenFail = false } = opts;
   const cfg = {
     seeded,
     events,
@@ -558,6 +561,7 @@ export async function mockBridge(
     recoveryRestoreFail,
     eventsFail,
     crashRecent,
+    artifactOpenFail,
     fresh: seeded ? seedMap() : {},
     staleMap: seeded && stale ? staleMap() : {},
     stalePreviewMap: seeded && stalePreview
@@ -575,6 +579,7 @@ export async function mockBridge(
       recoveryRestoreFail: boolean;
       eventsFail: boolean;
       crashRecent: boolean;
+      artifactOpenFail: boolean;
       fresh: Record<string, unknown>;
       staleMap: Record<string, unknown>;
       stalePreviewMap: Record<string, unknown>;
@@ -616,6 +621,15 @@ export async function mockBridge(
             error: null,
             protocol_version: 1,
             correlation_id: null,
+          };
+        }
+        if (c.artifactOpenFail && command === "artifact.open") {
+          return {
+            ok: false,
+            data: null,
+            error: { code: "NOT_FOUND", message: "artefak tidak ditemukan di backend" },
+            protocol_version: 1,
+            correlation_id: "corr-artifact-1",
           };
         }
         if (c.resumeFail && command === "dataset.snapshots.list") {

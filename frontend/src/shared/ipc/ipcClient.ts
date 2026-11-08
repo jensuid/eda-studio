@@ -5,6 +5,8 @@
  */
 import type {
   AppInfoRecord,
+  ArtifactKind,
+  ArtifactOpenRecord,
   BackupRecord,
   DiagnosticRecord,
   DialogPickFileRecord,
@@ -362,6 +364,25 @@ export const ipcClient = {
       payload: { project_id: projectId, dataset_id: datasetId, scope },
     }) as BridgeResponse<PdfRecord>;
     if (!res.ok || !res.data) throw ipcError(res, "runPdf failed");
+    return res.data;
+  },
+  // FLOW §2.7: open/unduh artefak host-side via backend (no raw file_path href).
+  // Identity is (snapshot_id, fingerprint) — no filesystem path crosses IPC.
+  async openArtifact(
+    projectId: string,
+    datasetId: string,
+    kind: ArtifactKind,
+    snapshotId: string,
+    fingerprint: string,
+  ): Promise<ArtifactOpenRecord> {
+    const res = await (await bridge()).execute_command({
+      request_id: rid(), command: "artifact.open",
+      payload: {
+        project_id: projectId, dataset_id: datasetId, kind,
+        snapshot_id: snapshotId, fingerprint,
+      },
+    }) as BridgeResponse<ArtifactOpenRecord>;
+    if (!res.ok || !res.data) throw ipcError(res, "openArtifact failed");
     return res.data;
   },
   // NXT-2: Analysis Plan + DAG execution (gap G2) — backend-authoritative

@@ -254,8 +254,13 @@ export const REPORT_COPY = {
   staleList: "Ada hasil usang — lihat daftar sebelum mengunduh.",
   creating: "Membuat report…",
   toastFail: (message: string) => `Report gagal dibuat. Silakan coba lagi. — ${message}`,
-  ready: (sections: number, fingerprintPrefix: string, bytes: number, filePath: string) =>
-    `Report siap diunduh. ${sections} section · fingerprint ${fingerprintPrefix}… · ${bytes} bytes · ${filePath}`,
+  ready: (sections: number, fingerprintPrefix: string, bytes: number) =>
+    `Report siap dibuka. ${sections} section · fingerprint ${fingerprintPrefix}… · ${bytes} bytes`,
+  open: "Unduh/Buka",
+  opening: "Membuka…",
+  opened: "Artefak dibuka di aplikasi bawaan.",
+  openError: (message: string) =>
+    `Artefak gagal dibuka. Silakan coba lagi. — ${message}`,
   final: "Final.",
   draft: "Draft — bukan final export.",
 };
@@ -263,7 +268,11 @@ export const REPORT_COPY = {
 export const PDF_COPY = {
   title: "PDF Report",
   primer: "Buat PDF",
-  unduh: "Unduh PDF",
+  unduh: "Unduh/Buka",
+  opening: "Membuka…",
+  opened: "Artefak dibuka di aplikasi bawaan.",
+  openError: (message: string) =>
+    `Artefak gagal dibuka. Silakan coba lagi. — ${message}`,
   loading: "Membuat PDF…",
   error: "PDF gagal dibuat. Silakan coba lagi.",
   emptyFirst: "Buat Report HTML terlebih dahulu.",

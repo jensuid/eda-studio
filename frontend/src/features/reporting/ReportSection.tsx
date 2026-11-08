@@ -32,6 +32,20 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
     onSuccess: (r) => setRecord(r),
   });
 
+  // FLOW §2.7: host-side open via artifact.open — never a raw-path href.
+  const openArtifact = useMutation({
+    mutationFn: () =>
+      record
+        ? ipcClient.openArtifact(
+            projectId,
+            dataset.dataset_id,
+            "html",
+            record.snapshot_id,
+            record.content_fingerprint,
+          )
+        : Promise.reject(new Error("no record")),
+  });
+
   const hasStale = !!record && record.sections.some((s) => s.stale);
 
   return (
@@ -77,9 +91,23 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
                   record.sections.length,
                   record.fingerprint.slice(0, 12),
                   record.file_size_bytes,
-                  record.file_path,
                 )}
               </p>
+              <button
+                type="button"
+                disabled={openArtifact.isPending}
+                onClick={() => openArtifact.mutate()}
+              >
+                {openArtifact.isPending ? REPORT_COPY.opening : REPORT_COPY.open}
+              </button>
+              {openArtifact.isSuccess && (
+                <p role="status">{REPORT_COPY.opened}</p>
+              )}
+              {openArtifact.isError && (
+                <p role="alert">
+                  {REPORT_COPY.openError(openArtifact.error.message)}
+                </p>
+              )}
               <p>{record.validation_summary}</p>
               <p>{record.is_final ? REPORT_COPY.final : REPORT_COPY.draft}</p>
             </>

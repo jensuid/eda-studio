@@ -11,6 +11,8 @@ export type CleaningStrategy = "mean" | "median" | "mode" | "constant";
 
 export type ReportScope = "all" | "profile-quality" | "with-charts" | "with-visuals";
 
+export type ArtifactKind = "pdf" | "html";
+
 export type ExportFormat = "csv" | "parquet";
 
 export type DiagnosticLevel = "basic";
@@ -395,6 +397,19 @@ export interface PdfRecord {
   is_final: boolean;
   validation_summary: string;
   created_at: string;
+}
+
+export interface ArtifactOpenPayload {
+  project_id: string;
+  dataset_id: string;
+  kind: ArtifactKind;
+  snapshot_id: string;
+  fingerprint: string;
+}
+
+export interface ArtifactOpenRecord {
+  opened: boolean;
+  kind: ArtifactKind;
 }
 
 export interface CleaningPreviewPayload {

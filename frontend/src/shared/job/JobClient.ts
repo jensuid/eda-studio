@@ -11,13 +11,17 @@
  * Job Center; angka nyata → bar determinate dengan `aria-valuenow`.
  * `command` ada → state "In Progress" boleh ditampilkan (D-S8).
  *
- * Di luar desktop shell (bridge absen) polling gagal diam-diam dan dicoba lagi
- * pada tick berikutnya — tidak memicu toast/error berulang.
+ * D-F6 (FLOW-SHELL-001 §2.4 `load-failed`): kegagalan `getEvents` TIDAK
+ * boleh ditelan diam-diam dan disamarkan sebagai "Belum ada job".
+ * Hook mengembalikan `{ jobs, loadFailed, retry }` — Job Center adalah
+ * satu-satunya rekam jejak lifecycle job (§2.5), bukan toast.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ipcClient } from "../ipc/ipcClient";
 import type { JobEvent, JobState } from "../ipc/generated";
+import { describeConcernError } from "../copy/errorCopy";
+import type { ConcernError } from "../copy/errorCopy";
 
 export const JOB_POLL_INTERVAL_MS = 1000;
 
@@ -33,6 +37,16 @@ export interface JobView {
   finishedAt: string | null;
 }
 
+export interface JobPollResult {
+  jobs: JobView[];
+  /** `getEvents` gagal — Job Center wajib menampilkan load-failed state. */
+  loadFailed: boolean;
+  /** Error concern "jobs" (headline dari code, detail diagnostik). */
+  error: ConcernError | null;
+  /** Paksa poll ulang sekarang (tombol "Coba lagi"). */
+  retry: () => void;
+}
+
 const TERMINAL_STATES: ReadonlySet<JobState> = new Set([
   "Completed",
   "Failed",
@@ -45,10 +59,14 @@ export function isTerminal(state: JobState): boolean {
 }
 
 /** Poll `getEvents` tiap 1 dtk; kembalikan daftar job lintas fitur (terbaru dulu). */
-export function useJobPoller(): JobView[] {
+export function useJobPoller(): JobPollResult {
   const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<JobView[]>([]);
+  const [error, setError] = useState<ConcernError | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const sinceSeq = useRef(0);
+
+  const retry = useCallback(() => setRetryTick((t) => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,10 +75,19 @@ export function useJobPoller(): JobView[] {
       let events: JobEvent[];
       try {
         events = await ipcClient.getEvents(sinceSeq.current);
-      } catch {
-        return; // bridge absen / backend belum siap — coba lagi tick berikut
+      } catch (e) {
+        if (cancelled) return;
+        // D-F6 load-failed: jangan telan error; dedup by fingerprint
+        // supaya tick berulang dengan error sama tidak mengganti state.
+        const described = describeConcernError(e, "jobs");
+        setError((prev) =>
+          prev?.fingerprint === described.fingerprint ? prev : described,
+        );
+        return;
       }
-      if (cancelled || events.length === 0) return;
+      if (cancelled) return;
+      setError(null);
+      if (events.length === 0) return;
 
       let sawTerminal = false;
       setJobs((prev) => {
@@ -93,7 +120,7 @@ export function useJobPoller(): JobView[] {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [queryClient]);
+  }, [queryClient, retryTick]);
 
-  return jobs;
+  return { jobs, loadFailed: error !== null, error, retry };
 }

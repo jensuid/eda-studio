@@ -141,15 +141,22 @@ async function bridge(): Promise<PywebviewBridge> {
  *  never on message text. `code` is the ErrorContract code (e.g. CONFLICT). */
 export class IpcError extends Error {
   code: string;
-  constructor(message: string, code: string) {
+  /** Correlation id dari ErrorContract (D-F6: identity untuk dedup). */
+  correlationId: string | null;
+  constructor(message: string, code: string, correlationId: string | null = null) {
     super(message);
     this.name = "IpcError";
     this.code = code;
+    this.correlationId = correlationId;
   }
 }
 
 function ipcError<T>(res: BridgeResponse<T>, fallback: string): IpcError {
-  return new IpcError(res.error?.message ?? fallback, res.error?.code ?? "INTERNAL");
+  return new IpcError(
+    res.error?.message ?? fallback,
+    res.error?.code ?? "INTERNAL",
+    res.error?.correlation_id ?? res.correlation_id ?? null,
+  );
 }
 
 export const ipcClient = {

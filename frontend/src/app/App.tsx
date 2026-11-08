@@ -11,6 +11,9 @@ import { ToastProvider } from "../shared/ui/Toaster";
 import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
 import { JobCenter } from "../shared/job/JobCenter";
 import { SHELL_COPY } from "../shared/copy/shellCopy";
+import { describeConcernError } from "../shared/copy/errorCopy";
+import type { ConcernError } from "../shared/copy/errorCopy";
+import { DiagnosticDetail } from "../shared/ui/DiagnosticDetail";
 import { ipcClient } from "../shared/ipc/ipcClient";
 import type {
   AppInfoRecord,
@@ -48,8 +51,10 @@ function RouteContent() {
   const { route } = useRouter();
   const Page = ROUTE_PAGES[route];
   const label = ROUTES.find((r) => r.id === route)?.label ?? route;
+  // D-F6: key per-route supaya crash-state ErrorBoundary tidak terbawa
+  // antar-route dan retry tidak loop dari crash route sebelumnya.
   return (
-    <ErrorBoundary label={label}>
+    <ErrorBoundary key={route} label={label}>
       <Page />
     </ErrorBoundary>
   );
@@ -58,13 +63,17 @@ function RouteContent() {
 function Shell() {
   const { route, unknownHash } = useRouter();
   const { resumeError, resetResume } = useProject();
-  const [protocolError, setProtocolError] = useState<string | null>(null);
+  // D-F6 (FLOW §2.5): satu kanal per concern — tidak ada lagi satu
+  // `protocolError` untuk handshake + recovery + update sekaligus.
+  const [protocolError, setProtocolError] = useState<ConcernError | null>(null);
   const [protocolChecked, setProtocolChecked] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryStatusRecord | null>(null);
+  const [recoveryError, setRecoveryError] = useState<ConcernError | null>(null);
   const [restored, setRestored] = useState<RestoreRecord | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [appInfo, setAppInfo] = useState<AppInfoRecord | null>(null);
   const [update, setUpdate] = useState<UpdateCheckRecord | null>(null);
+  const [updateError, setUpdateError] = useState<ConcernError | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const prevRoute = useRef(route);
@@ -104,19 +113,36 @@ function Shell() {
         setProtocolChecked(true);
         const revision = info.protocol_revision;
         if (revision === undefined) {
-          setProtocolError("Backend tidak mengirim protocol_revision.");
+          setProtocolError({
+            headline: SHELL_COPY.protocolRevisionMissing,
+            detail: `code: PROTOCOL_REVISION_MISSING\nmessage: Backend tidak mengirim protocol_revision.`,
+            code: "PROTOCOL_REVISION_MISSING",
+            correlationId: null,
+            fingerprint: "protocol:PROTOCOL_REVISION_MISSING:",
+          });
         } else if (revision !== EXPECTED_PROTOCOL_REVISION) {
-          setProtocolError(
-            `Versi protokol tidak cocok: backend revisi ${revision}, frontend mengharapkan ${EXPECTED_PROTOCOL_REVISION}.`,
-          );
+          setProtocolError({
+            headline: SHELL_COPY.protocolMismatch(revision, EXPECTED_PROTOCOL_REVISION),
+            detail: `code: PROTOCOL_MISMATCH\nmessage: backend revisi ${revision}, frontend mengharapkan ${EXPECTED_PROTOCOL_REVISION}.`,
+            code: "PROTOCOL_MISMATCH",
+            correlationId: null,
+            fingerprint: "protocol:PROTOCOL_MISMATCH:",
+          });
         }
       })
       .catch((e: unknown) => {
         if (cancelled) return;
         setProtocolChecked(true);
-        setProtocolError(
-          `Backend tidak tersedia (${e instanceof Error ? e.message : String(e)}). Fitur yang butuh backend belum bisa dipakai.`,
-        );
+        // Handshake tanpa IpcError: pseudo-code BACKEND_UNAVAILABLE,
+        // pesan mentah hanya di detail diagnostik.
+        const raw = e instanceof Error ? e.message : String(e);
+        setProtocolError({
+          headline: SHELL_COPY.backendUnavailable,
+          detail: `code: BACKEND_UNAVAILABLE\nmessage: ${raw}`,
+          code: "BACKEND_UNAVAILABLE",
+          correlationId: null,
+          fingerprint: "protocol:BACKEND_UNAVAILABLE:",
+        });
       });
     return () => {
       cancelled = true;
@@ -145,8 +171,10 @@ function Shell() {
       const record = await ipcClient.recoveryRestore();
       setRestored(record);
       setRecovery(null);
+      setRecoveryError(null);
     } catch (e) {
-      setProtocolError(`Recovery gagal: ${e instanceof Error ? e.message : String(e)}`);
+      // D-F6 kanal recovery: banner di main, bukan banner app bar.
+      setRecoveryError(describeConcernError(e, "recovery"));
     } finally {
       setRestoring(false);
     }
@@ -156,8 +184,10 @@ function Shell() {
     setCheckingUpdate(true);
     try {
       setUpdate(await ipcClient.checkUpdate());
+      setUpdateError(null);
     } catch (e) {
-      setProtocolError(`Pemeriksaan update gagal: ${e instanceof Error ? e.message : String(e)}`);
+      // D-F6 kanal update: region versi saja, tidak boleh jadi banner protokol.
+      setUpdateError(describeConcernError(e, "update"));
     } finally {
       setCheckingUpdate(false);
     }
@@ -182,9 +212,10 @@ function Shell() {
           {SHELL_COPY.jobCenterToggle}
         </button>
         {protocolChecked && protocolError && (
-          <p className="protocol-banner" role="alert">
-            {protocolError}
-          </p>
+          <div className="protocol-banner" role="alert">
+            <p>{protocolError.headline}</p>
+            <DiagnosticDetail detail={protocolError.detail} />
+          </div>
         )}
       </header>
       <nav className="app-rail" aria-label="Navigasi utama">
@@ -225,31 +256,38 @@ function Shell() {
         tabIndex={-1}
         aria-label="Konten utama"
       >
+        {recoveryError && (
+          <section className="recovery-banner" role="alert">
+            <h2>{recoveryError.headline}</h2>
+            <DiagnosticDetail detail={recoveryError.detail} />
+            <button type="button" onClick={() => setRecoveryError(null)}>
+              {SHELL_COPY.close}
+            </button>
+          </section>
+        )}
         {recovery && (
           <section className="recovery-banner" role="alertdialog" aria-label="Pemulihan crash">
-            <h2>Aplikasi berhenti tanpa clean exit</h2>
-            <p>Autosave terakhir tersedia dan dapat dipulihkan ke root baru tanpa mengubah project saat ini.</p>
+            <h2>{SHELL_COPY.recoveryTitle}</h2>
+            <p>{SHELL_COPY.recoveryBody}</p>
             <p>
-              Dibuat: {recovery.autosave_created_at ?? "—"} · Path: {recovery.autosave_path ?? "—"}
+              {SHELL_COPY.recoveryCreatedAt} {recovery.autosave_created_at ?? "—"} · {SHELL_COPY.recoveryPath} {recovery.autosave_path ?? "—"}
             </p>
             <div>
               <button type="button" onClick={restoreRecovery} disabled={restoring}>
-                {restoring ? "Memulihkan…" : "Pulihkan autosave"}
+                {restoring ? SHELL_COPY.restoring : SHELL_COPY.restoreAction}
               </button>
               <button type="button" onClick={() => setRecovery(null)} disabled={restoring}>
-                Tutup
+                {SHELL_COPY.close}
               </button>
             </div>
           </section>
         )}
         {restored && (
           <section className="recovery-banner" role="status">
-            <h2>Recovery selesai</h2>
-            <p>
-              Project {restored.project_id} dipulihkan ke {restored.dest_root}.
-            </p>
+            <h2>{SHELL_COPY.recoveryDone}</h2>
+            <p>{SHELL_COPY.recoveryDoneBody(restored.project_id, restored.dest_root)}</p>
             <button type="button" onClick={() => setRestored(null)}>
-              OK
+              {SHELL_COPY.ok}
             </button>
           </section>
         )}
@@ -262,16 +300,25 @@ function Shell() {
         data-open={drawerOpen}
       >
         <JobCenter />
-        <section className="version-panel" aria-label="Informasi versi dan update">
-          <p>Versi {appInfo?.version ?? "—"} · {appInfo?.platform ?? ""}</p>
+        <section className="version-panel" aria-label={SHELL_COPY.versionPanelLabel}>
+          <p>{SHELL_COPY.versionLabel} {appInfo?.version ?? "—"} · {appInfo?.platform ?? ""}</p>
           <button type="button" onClick={runUpdateCheck} disabled={checkingUpdate}>
-            {checkingUpdate ? "Memeriksa…" : "Periksa update"}
+            {checkingUpdate ? SHELL_COPY.checkingUpdate : SHELL_COPY.checkUpdate}
           </button>
-          {update && (
+          {updateError && (
+            <div role="status">
+              <p>{updateError.headline}</p>
+              <DiagnosticDetail detail={updateError.detail} />
+              <button type="button" onClick={() => setUpdateError(null)}>
+                {SHELL_COPY.close}
+              </button>
+            </div>
+          )}
+          {update && !updateError && (
             <p>
               {update.latest_version
-                ? `Rilis terbaru: ${update.latest_version}. ${update.update_available ? "Update tersedia." : "Sudah versi terbaru."}`
-                : "Rilis feed tidak dapat dibaca."}
+                ? `${SHELL_COPY.latestRelease(update.latest_version)} ${update.update_available ? SHELL_COPY.updateAvailable : SHELL_COPY.upToDate}`
+                : SHELL_COPY.releaseFeedUnreadable}
             </p>
           )}
         </section>

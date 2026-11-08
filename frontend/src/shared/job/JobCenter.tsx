@@ -9,9 +9,14 @@
  * Bila `JobEvent.command` ada, state "In Progress" ditampilkan
  * (D-S8 mensyaratkannya); tanpa command tidak ada label karangan.
  * State terminal selalu complete (100%) bila progress belum 1.
+ *
+ * D-F6 (§2.4 `load-failed`): `getEvents` gagal → "Daftar job tidak dapat
+ * dimuat" + "Coba lagi". DILARANG menyamarkan sebagai "Belum ada job."
  */
 import { isTerminal, useJobPoller } from "./JobClient";
 import type { JobState } from "../ipc/generated";
+import { SHELL_COPY } from "../copy/shellCopy";
+import { DiagnosticDetail } from "../ui/DiagnosticDetail";
 
 function badgeClass(state: JobState): string {
   if (state === "Completed") return "status-success";
@@ -78,12 +83,21 @@ function JobProgressBar({
 }
 
 export function JobCenter() {
-  const jobs = useJobPoller();
+  const { jobs, loadFailed, error, retry } = useJobPoller();
 
   return (
-    <section aria-label="Job Center">
-      <h2>Job Center</h2>
-      {jobs.length === 0 && <p>Belum ada job. Jalankan analisis dari fitur mana pun.</p>}
+    <section aria-label={SHELL_COPY.jobCenterTitle}>
+      <h2>{SHELL_COPY.jobCenterTitle}</h2>
+      {loadFailed && error && (
+        <div role="alert">
+          <p>{SHELL_COPY.jobsLoadFailed}</p>
+          <DiagnosticDetail detail={error.detail} />
+          <button type="button" onClick={retry}>
+            {SHELL_COPY.tryAgain}
+          </button>
+        </div>
+      )}
+      {!loadFailed && jobs.length === 0 && <p>{SHELL_COPY.jobEmpty}</p>}
       <ul className="job-list">
         {jobs.map((job) => (
           <li key={job.jobId} className="job-item">

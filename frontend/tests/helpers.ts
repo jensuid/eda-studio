@@ -488,6 +488,18 @@ export interface MockBridgeOptions {
   stalePreview?: boolean;
   /** dataset.snapshots.list gagal → revalidasi resume gagal (D-F3 degraded) */
   resumeFail?: boolean;
+  /** D-F6: get_protocol_info mengembalikan revision salah */
+  protocolMismatch?: boolean;
+  /** D-F6: app.update.check gagal (NOT_FOUND) */
+  updateFail?: boolean;
+  /** D-F6: recovery tersedia (unclean + autosave) */
+  recoveryAvailable?: boolean;
+  /** D-F6: project.recovery.restore gagal (NOT_FOUND) */
+  recoveryRestoreFail?: boolean;
+  /** D-F6: get_events throw → Job Center load-failed */
+  eventsFail?: boolean;
+  /** D-F6: project.list_recent shape rusak → crash render di Setup */
+  crashRecent?: boolean;
 }
 
 /** Seed lengkap B1/B12: project → import → Profiling run.
@@ -524,12 +536,18 @@ export async function mockBridge(
   page: Page,
   opts: MockBridgeOptions = {},
 ): Promise<void> {
-  const { seeded = false, events = [], stale = false, stalePreview = false, resumeFail = false } = opts;
+  const { seeded = false, events = [], stale = false, stalePreview = false, resumeFail = false, protocolMismatch = false, updateFail = false, recoveryAvailable = false, recoveryRestoreFail = false, eventsFail = false, crashRecent = false } = opts;
   const cfg = {
     seeded,
     events,
     stale,
     resumeFail,
+    protocolMismatch,
+    updateFail,
+    recoveryAvailable,
+    recoveryRestoreFail,
+    eventsFail,
+    crashRecent,
     fresh: seeded ? seedMap() : {},
     staleMap: seeded && stale ? staleMap() : {},
     stalePreviewMap: seeded && stalePreview
@@ -541,6 +559,12 @@ export async function mockBridge(
       seeded: boolean;
       events: unknown[];
       resumeFail: boolean;
+      protocolMismatch: boolean;
+      updateFail: boolean;
+      recoveryAvailable: boolean;
+      recoveryRestoreFail: boolean;
+      eventsFail: boolean;
+      crashRecent: boolean;
       fresh: Record<string, unknown>;
       staleMap: Record<string, unknown>;
       stalePreviewMap: Record<string, unknown>;
@@ -548,6 +572,42 @@ export async function mockBridge(
       const respond = (req: unknown) => {
         const command =
           (req as { command?: string } | null)?.command ?? "";
+        if (c.updateFail && command === "app.update.check") {
+          return {
+            ok: false,
+            data: null,
+            error: { code: "NOT_FOUND", message: "feed rilis tidak ditemukan di backend" },
+            protocol_version: 1,
+            correlation_id: "corr-update-1",
+          };
+        }
+        if (c.recoveryAvailable && command === "project.recovery.status") {
+          return {
+            ok: true,
+            data: { unclean_previous: true, has_autosave: true, autosave_created_at: "2026-11-08T04:00:00Z", autosave_path: "/tmp/autosave.zip" },
+            error: null,
+            protocol_version: 1,
+            correlation_id: null,
+          };
+        }
+        if (c.recoveryRestoreFail && command === "project.recovery.restore") {
+          return {
+            ok: false,
+            data: null,
+            error: { code: "NOT_FOUND", message: "autosave hilang di backend" },
+            protocol_version: 1,
+            correlation_id: "corr-recovery-1",
+          };
+        }
+        if (c.crashRecent && command === "project.list_recent") {
+          return {
+            ok: true,
+            data: { projects: "boom-bukan-array" },
+            error: null,
+            protocol_version: 1,
+            correlation_id: null,
+          };
+        }
         if (c.resumeFail && command === "dataset.snapshots.list") {
           return {
             ok: false,
@@ -617,12 +677,15 @@ export async function mockBridge(
           get_protocol_info: async () => ({
             app_name: "EDA Workbench",
             app_version: "0.1.0",
-            protocol_revision: 1,
+            protocol_revision: c.protocolMismatch ? 2 : 1,
             protocol_version: 1,
           }),
           execute_command: async (req: unknown) => respond(req),
           execute_query: async (req: unknown) => respond(req),
-          get_events: async () => c.events,
+          get_events: async () => {
+            if (c.eventsFail) throw new Error("get_events putus");
+            return c.events;
+          },
         },
       };
     },

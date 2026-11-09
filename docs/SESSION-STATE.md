@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `<pending>` (UIUX-06 produk) · **Kartu aktif:** `UIUX-06` `done` → next `UIUX-07` `todo`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `cbcc5c3` (UIUX-06 produk) · **Kartu aktif:** `UIUX-06` `done` → next `UIUX-07` `todo`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -25,7 +25,7 @@ Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
 Kartu diambil: UIUX-06 (ROADMAP Fase 4) — Copy tunggal + error branch
 Scope file produk: frontend/src/shared/copy/shellCopy.ts, frontend/src/shared/copy/errorCopy.ts, frontend/src/app/App.tsx:59 (single protocolError → per-concern). TAMBAHAN yang mungkin bila terbukti: frontend/src/shared/copy/featureCopy.ts (copy fitur menang atas shell). TIDAK sentuh: backend/, generated.ts, tokens.css, docs/shell-contracts/, prototypes/, .workbuddy-ai/, notes/evaluasi-workbuddy/
 Tujuan sesi: Roadmap UIUX-06 acceptance vs kontrak D-S2 (Bahasa Indonesia tunggal) + D-F7 (error branch per-concern): tanpa ID dokumen internal / error.message mentah di headline; branching dari error.code via errorCopy.ts; copy fitur menang atas shell; gate hijau; commit atomik.
-Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `<pending>` (hash-record menyusul).
+Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `cbcc5c3` (hash-record menyusul).
 ```
 
 ## 4. Gate terakhir
@@ -81,7 +81,7 @@ Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `<pe
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-06` `done`, commit `<pending>` (2026-11-09). Kartu berikutnya: `UIUX-07` (Audit a11y & kontras 5 level, Fase 4).
+- `UIUX-06` `done`, commit `cbcc5c3` (2026-11-09). Kartu berikutnya: `UIUX-07` (Audit a11y & kontras 5 level, Fase 4).
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

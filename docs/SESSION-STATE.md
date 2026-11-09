@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `ee93c09` · **Kartu aktif:** `G6-B1` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `c2bb3a1` · **Kartu aktif:** `G6-B1` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 

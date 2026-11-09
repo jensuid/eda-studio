@@ -47,17 +47,26 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 - **Blocked by:** harness commit (sesi ini, `490fffa`). **Done:** tanpa
   perubahan visual (token belum dipakai; UIUX-02 konsumennya).
 
-### UIUX-02 — Ganti font shell ke `--shell-font-*` [todo, after UIUX-01]
+### UIUX-02 — Ganti font shell ke `--shell-font-*` [done 2026-11-09, after UIUX-01]
 
 - **Kontrak:** `docs/ux-contracts/shell/DS-SHELL-001.md:40-58` (§2.1
   24/18/15/14/12), §3 inventory R1–R7 (`docs/ux-contracts/shell/DS-SHELL-001.md:144-186`).
-- **File disentuh:** `frontend/src/app/App.tsx`, `frontend/src/shared/ui/Stepper.tsx`,
-  `frontend/src/shared/tokens.css` (hanya selektor shell).
-- **Pekerjaan:** h1 → display 24, section title → title 18, body → 14,
-  caption/meta (fingerprint 12 char, alasan stale, versi) → caption 12.
-  Hapus `fontSize:"var(--font-size-sm)"` di Stepper (`Stepper.tsx:74`).
-- **Acceptance:** di 1440px, hierarki terbaca tanpa skala lama; caption 12px
-  tetap kontras ≥4.5:1; screenshot real-app 1440 terlampir di `SESSION-STATE.md`.
+- **File disentuh:** `frontend/src/app/App.tsx` — **terbukti nol-edit** (tak ada
+  `font-size` inline; semua ukuran di `tokens.css`),
+  `frontend/src/shared/ui/Stepper.tsx` (`:74` chip → shell body 14),
+  `frontend/src/shared/tokens.css` (hanya selektor shell; `:root` & token lama
+  bit-perfect; 1 aturan aditif `.app-aside h2`).
+- **Pekerjaan:** `body→body 14` (+lh 1.5), nav/banner/toast/job-list → body 14,
+  section/caption dari `.app-aside h2` & `.recovery-banner h2` → title 18
+  (600/1.4), versi → caption 12, **h1 app bar → subtitle 15 (400)** — koreksi atas
+  frasa "h1 → display 24" di roadmap: kontrak §2.1 + §4 (`DS-SHELL-001.md:47-48`,
+  `:163-165`) melarang judul display di app bar; display 24 reserved untuk judul
+  ruang kerja R4 (belum ada di halaman shell). Bukti penuh di
+  `docs/SESSION-STATE.md` §5.
+- **Acceptance:** hierarki 1440 terbaca tanpa skala lama ✓; caption 12px
+  kontras **7.24–7.58:1** (≥4.5:1) ✓; screenshot real-app
+  `frontend/tests/__screenshots__/uiux-02-shell-1440.png` + `-900.png` ✓;
+  gate hijau (pytest 287, ruff, tsc, lint, visual 16/16) ✓.
 
 ## Fase 2 — Nav 7 grup/9 item + 900px berlabel (SCREEN D-S1/D-S3)
 

@@ -71,7 +71,7 @@ const chipStyle: CSSProperties = {
   padding: "var(--space-2) var(--space-3)",
   border: "1px solid var(--color-border-subtle)",
   borderRadius: "var(--radius-md)",
-  fontSize: "var(--font-size-sm)",
+  fontSize: "var(--shell-font-body)",
   textDecoration: "none",
   color: "inherit",
 };

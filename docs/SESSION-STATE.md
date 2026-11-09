@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `HASH` · **Kartu aktif:** `UIUX-07` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `156f90c` · **Kartu aktif:** `UIUX-07` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -15,7 +15,7 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `UIUX-07` `done`** — audit seeded (walkthrough penuh) 8 route: axe `wcag2aa` 0 critical/serious/moderate; sweep kontras 0 elemen <4.5:1 (52–99 teks terlihat/route; caption 12 muted 7.24–7.58:1); 2 pelanggaran target diperbaiki aditif: tombol tutup toast 34.7→36px (`frontend/src/shared/tokens.css:518-522`) dan aksi DatasetCard 31→36px (`frontend/src/shared/controls.css:156-162`); radio terbungkus label patuh (label 753×44.5 `ReportSection.tsx:83-92`); skip link + `:focus-visible` tak berubah (25/25 di `a11y.spec.ts`); bukti permanen `frontend/tests/a11y-audit.spec.ts` (5 test hijau). Commit produk: `HASH`.
+1. **Sesi ini `UIUX-07` `done`** — audit seeded (walkthrough penuh) 8 route: axe `wcag2aa` 0 critical/serious/moderate; sweep kontras 0 elemen <4.5:1 (52–99 teks terlihat/route; caption 12 muted 7.24–7.58:1); 2 pelanggaran target diperbaiki aditif: tombol tutup toast 34.7→36px (`frontend/src/shared/tokens.css:518-522`) dan aksi DatasetCard 31→36px (`frontend/src/shared/controls.css:156-162`); radio terbungkus label patuh (label 753×44.5 `ReportSection.tsx:83-92`); skip link + `:focus-visible` tak berubah (25/25 di `a11y.spec.ts`); bukti permanen `frontend/tests/a11y-audit.spec.ts` (5 test hijau). Commit produk: `156f90c`.
 2. **Next:** `UIUX-08` (Baseline visual ≤5% + regression gate, Fase 5). Jangan kerjakan di luar scope kartu. Radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — UIUX-04 TIDAK menyentuh `controls.css` (scope kartu = `Stepper.tsx`/`App.tsx`); pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). **Temuan non-blocking UIUX-07**: `--shell-font-display` terdaftar di `tokens.css:54` tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `prototypes/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
@@ -32,7 +32,7 @@ Tujuan sesi: Acceptance roadmap UIUX-07 vs kontrak DS-SHELL-001 §1.5/§2.1/§3/
 QA-SHELL-001 B5/B7: axe 0 critical 8 route; target kontrol ≥36px; kontras teks
 ≥4.5:1 terukur pada 5 tingkat tipografi (24/18/15/14/12) di surface dan
 surface-raised termasuk caption 12px muted; skip link + :focus-visible tetap.
-Status akhir: done 2026-11-09 — audit baseline seeded 8 route (axe 0 critical/serious/moderate; 0 elemen <4.5:1; 2 pelanggaran target diperbaiki aditif); bukti `frontend/tests/a11y-audit.spec.ts` 5/5; gate hijau (§4); commit produk: `HASH`.
+Status akhir: done 2026-11-09 — audit baseline seeded 8 route (axe 0 critical/serious/moderate; 0 elemen <4.5:1; 2 pelanggaran target diperbaiki aditif); bukti `frontend/tests/a11y-audit.spec.ts` 5/5; gate hijau (§4); commit produk: `156f90c`.
 ```
 
 ## 4. Gate terakhir
@@ -92,7 +92,7 @@ Status akhir: done 2026-11-09 — audit baseline seeded 8 route (axe 0 critical/
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-07` `done`, commit `HASH` (2026-11-09). Kartu berikutnya: `UIUX-08` (Baseline visual ≤5% + regression gate, Fase 5).
+- `UIUX-07` `done`, commit `156f90c` (2026-11-09). Kartu berikutnya: `UIUX-08` (Baseline visual ≤5% + regression gate, Fase 5).
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

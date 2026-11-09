@@ -89,7 +89,7 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ## Fase 3 — Komponen R3/R5/R4 (Stepper, CTA, JobCenter, DatasetCard)
 
-### UIUX-04 — Stepper 14px/36px + CTA primer "Lanjut: …" [done 2026-11-09, commit 870bb66; after UIUX-03]
+### UIUX-04 — Stepper 14px/36px + CTA primer "Lanjut: …" [done 2026-11-09, commit 9e97d9c; after UIUX-03]
 
 - **Apa yang dikerjakan:** chip Stepper `minHeight` token `--space-7: 40px`
   (`Stepper.tsx`, `tokens.css:38` aditif 1 baris); CTA primer `<button>`

@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `870bb66` (UIUX-04) · **Kartu aktif:** `UIUX-04` `done` → next `UIUX-05` `todo`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `9e97d9c` (UIUX-04) · **Kartu aktif:** `UIUX-04` `done` → next `UIUX-05` `todo`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,13 +9,13 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `UIUX-04` (Stepper R3 chip ≥36px + CTA primer "Lanjut: …") — done 2026-11-09, commit `870bb66` (gate di §4, pemetaan di §Bukti).
+- **Kartu terakhir selesai:** `UIUX-04` (Stepper R3 chip ≥36px + CTA primer "Lanjut: …") — done 2026-11-09, commit `9e97d9c` (gate di §4, pemetaan di §Bukti).
 - **Kartu berikutnya:** `UIUX-05` — JobCenter jujur + DatasetCard (Fase 3).
 - **Sesi aktif:** `UIUX-04` `done` (sesi ini).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `UIUX-04` `done`, commit `870bb66`** — Stepper R3 chip 40px + CTA primer tunggal ("Buat proyek"/"Lanjut: …") + disabled visual bukan-sekadar-opacity (`Stepper.tsx`, `shellCopy.ts`, aditif 1 baris `tokens.css`).
+1. **Sesi ini `UIUX-04` `done`, commit `9e97d9c`** — Stepper R3 chip 40px + CTA primer tunggal ("Buat proyek"/"Lanjut: …") + disabled visual bukan-sekadar-opacity (`Stepper.tsx`, `shellCopy.ts`, aditif 1 baris `tokens.css`).
 2. **Next:** `UIUX-05` (JobCenter jujur + DatasetCard). Jangan kerjakan UIUX-05 sebelum UIUX-04 selesai — UIUX-04 sudah selesai. Radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — UIUX-04 TIDAK menyentuh `controls.css` (scope kartu = `Stepper.tsx`/`App.tsx`); pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `backend/`, `generated.ts`, `docs/shell-contracts/`, `prototypes/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
@@ -25,7 +25,7 @@ Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
 Kartu diambil: UIUX-04 (ROADMAP Fase 3) — Stepper 14px/36px + CTA primer "Lanjut: …"
 Scope file produk: frontend/src/shared/ui/Stepper.tsx (chip minHeight token ≥36px, visual disabled selain opacity, next-step CTA), frontend/src/shared/copy/shellCopy.ts (copy CTA: "Lanjut: …"/"Buat proyek"/"Impor dataset"), frontend/src/shared/tokens.css (ADITIF 1 baris :root: --space-7: 40px; blok lain utuh). Test: frontend/tests/d-f1.spec.ts (assertion CTA + tinggi chip; CTA dirender <button> agar tidak mengotori hitung link stageLink). State: docs/SESSION-STATE.md + docs/ROADMAP-UIUX-OVERHAUL.md. TIDAK sentuh: backend/, generated.ts, docs/shell-contracts/, prototypes/, .workbuddy-ai/, notes/evaluasi-workbuddy/, App.tsx (focus-to-main P2-5 sudah ada App.tsx:164-168), frontend/src/shared/controls.css, fitur, router.tsx, stepperState.ts
 Tujuan sesi: Roadmap UIUX-04 acceptance vs kontrak FLOW-SHELL-001 §2.2 steps orient/advance + SCREEN-SHELL-001 stepper.next + DS-SHELL-001 §3 (CTA primer tunggal, selalu punya tujuan); chip Stepper ≥36px target font body 14; Stage 6/7/10 non-klik dengan visual selain opacity + kursor not-allowed (DS-SHELL-001:155); Stage 8 tanpa stage (tetap); gate hijau; bukti probe computed style 1440/900; commit atomik.
-Status akhir: DONE — UIUX-04 selesai, gate hijau, commit atomik `870bb66`; next card: UIUX-05 (JobCenter jujur + DatasetCard).
+Status akhir: DONE — UIUX-04 selesai, gate hijau, commit atomik `9e97d9c`; next card: UIUX-05 (JobCenter jujur + DatasetCard).
 ```
 
 ## 4. Gate terakhir
@@ -71,8 +71,8 @@ Status akhir: DONE — UIUX-04 selesai, gate hijau, commit atomik `870bb66`; nex
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-04` `done`, commit `870bb66` (2026-11-09). Kartu berikutnya: `UIUX-05` (JobCenter jujur + DatasetCard, Fase 3).
-- Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `870bb66` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
+- `UIUX-04` `done`, commit `9e97d9c` (2026-11-09). Kartu berikutnya: `UIUX-05` (JobCenter jujur + DatasetCard, Fase 3).
+- Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).
 - Arrow IPC ADR-003 belum diterapkan (cap preview ≤200 / scatter ≤1500 / bin ≤30).

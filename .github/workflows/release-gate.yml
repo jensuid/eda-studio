@@ -53,10 +53,10 @@ jobs:
         run: |
           git fetch --tags
           # Runner CI tidak punya allowed signers — tulis dari input dispatch
-          # (public key bersifat publik, bukan rahasia).
+          # (public key bersifat publik, bukan rahasia). Baris allowed_signers
+          # harus: <principal> <type> <key> (tanpa kolom komentar).
           mkdir -p "$HOME/.ssh"
-          TAGGER="$(git for-each-ref "refs/tags/$TAG" --format='%(taggername)')"
-          printf '%s %s\n' "${TAGGER:-release-signer}" "$SSH_PUBKEY" > "$HOME/.ssh/allowed_signers"
+          printf '%s %s\n' "$(whoami)" "$(printf '%s' "$SSH_PUBKEY" | cut -d' ' -f1,2)" > "$HOME/.ssh/allowed_signers"
           git config --global gpg.ssh.allowedSignersFile "$HOME/.ssh/allowed_signers"
           git tag -v "$TAG" || {
             echo "::error::Tag $TAG tidak terverifikasi — tanda tangan tidak valid, kunci salah, atau kunci belum terdaftar sebagai signing key di GitHub."

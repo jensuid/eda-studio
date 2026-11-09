@@ -14,14 +14,15 @@ Checklist berbasis evidence. Status diisi dari gate yang benar-benar dijalankan.
 - [x] Performance envelope baseline — `tools/benchmark.py`, `tests/test_benchmark.py`
 - [x] Cross-platform evidence — macOS observed locally + Windows/Linux via CI matrix hijau 3 OS ([run 42321701878](https://github.com/jensuid/eda-studio/actions/runs/42321701878), SHA `166dd18`, dilaporkan pemilik 2026-11-07; lihat [cross-platform-evidence.md](cross-platform-evidence.md), [`.github/workflows/ci.yml`](../.github/workflows/ci.yml))
 - [ ] Packaging + signing installer — perlu build host bertanda tangan (manual; bukan kode). **Beta:** sengaja unsigned per keputusan pemilik 2026-11-07 (panduan tester: `docs/beta-unsigned-guidance.md`); signing wajib sebelum Stable.
+  Verifikasi agent 2026-11-09 (HEAD `6a1a05a`): `pnpm --filter ./frontend build` sukses (13,97 dtk, hanya warning chunk-size); `tools/build_packaging.py --check-only` melaporkan blocker `pyinstaller not on PATH` — checker/manifest valid, kompilasi tetap butuh build host pemilik. Frontend siap dibundel.
 - [x] Release compatibility documentation — target matrix + evidence di [cross-platform-evidence.md](cross-platform-evidence.md); operasional di [operational-runbook.md](operational-runbook.md)
 
-## Gates terakhir (2026-11-06, macOS)
+## Gates terakhir (2026-11-09, macOS — HEAD `6a1a05a`)
 
-- `pytest -q`: **70 passed**
-- `ruff check backend tests tools`: **All checks passed**
+- `pytest -q`: **287 passed**
+- `ruff check backend tests`: **All checks passed**
 - `tsc --noEmit`: clean
-- frontend `npm run build`: sukses (warning chunk-size saja)
+- `vite build`: sukses 13,97 dtk (warning chunk-size non-blocking)
 
 ## Sign-off rilis (P3-1, manual)
 

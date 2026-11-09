@@ -114,7 +114,7 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
   CTA primer satu per layar dengan copy `Lanjut: …`; Stage 6/7/10
   "Belum tersedia" tidak bisa diklik; Stage 8 tanpa stage.
 
-### UIUX-05 — JobCenter jujur + DatasetCard [todo, after UIUX-04]
+### UIUX-05 — JobCenter jujur + DatasetCard [done 2026-11-09]
 
 - **Kontrak:** DS §3 (Job item indeterminate berlabel, badge teks+warna),
   `frontend/src/shared/job/JobCenter.tsx:32-125` (sudah jujur, belum visual).
@@ -124,6 +124,17 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 - **Acceptance:** tidak ada "Belum ada job" palsu saat `loadFailed`
   (sudah `frontend/src/shared/job/JobCenter.tsx:85-125`); badge teks+warna;
   progress numeric hanya bila backend mengizinkan (D-F5).
+- **Jawaban (done):** banner `.job-load-failed` (tokens.css, aditif 16+/0-,
+  cermin `.recovery-banner` border-left danger) dipasang di alert loadFailed
+  `JobCenter.tsx:93` — dedup correlation-id sudah ada via fingerprint
+  `errorCopy.ts:49-75` + `JobClient.ts:82-85`; DatasetCard baru
+  (`DatasetCard.tsx`, ganti `<p>` di `ProjectSetup.tsx:216`): nama +
+  "baris × kolom" + `sha256` 12 char + aksi cepat `#/explorer`/`#/profiling`
+  (copy Indonesia `featureCopy.ts` SETUP_COPY.datasetCard*); gaya fitur
+  `.dataset-card*` di `controls.css` (tanpa `--shell-font-*`, tanpa
+  font-size literal); gate hijau (pytest 287, ruff, tsc, token lint,
+  `dataset-card.spec.ts` 3/3 baru, visual 16/16, a11y 25/25; `d-f6:13/:41`
+  hijau isolasi — flake order-dependent tercatat).
 
 ## Fase 4 — Copy & a11y (Bahasa Indonesia, kontras)
 

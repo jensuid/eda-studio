@@ -16,6 +16,7 @@ import type {
 import { useProject } from "../../app/ProjectContext";
 import { useToast } from "../../shared/ui/Toaster";
 import { FilePathInput } from "./FilePathInput";
+import { DatasetCard } from "./DatasetCard";
 import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
 import { SETUP_COPY } from "../../shared/copy/featureCopy";
 
@@ -213,11 +214,7 @@ export function ProjectSetup() {
               {SETUP_COPY.importAction}
             </button>
           </form>
-          {dataset && (
-            <p>
-              {SETUP_COPY.snapshotInfo(dataset.snapshot_id, dataset.row_count, dataset.fingerprint.slice(0, 12))}
-            </p>
-          )}
+          {dataset && <DatasetCard dataset={dataset} />}
         </section>
       )}
       {projectId && (

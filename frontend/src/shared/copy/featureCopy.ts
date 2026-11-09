@@ -445,6 +445,12 @@ export const SETUP_COPY = {
   toastOpenFail: (msg: string) => `Gagal membuka project: ${msg}`,
   snapshotInfo: (snapshotId: string, rowCount: number, fingerprintPrefix: string) =>
     `Snapshot ${snapshotId} · ${rowCount} rows · sha256 ${fingerprintPrefix}…`,
+  // DatasetCard (UIUX-05): nama + rows/cols + fingerprint 12 char + aksi cepat
+  datasetCardRowsCols: (rowCount: number, columnCount: number) =>
+    `${rowCount} baris × ${columnCount} kolom`,
+  datasetCardFingerprint: (fingerprintPrefix: string) => `sha256 ${fingerprintPrefix}…`,
+  datasetCardOpenDataset: "Buka dataset",
+  datasetCardRunProfile: "Profil dataset",
   backupRestoreTitle: "Backup & Restore",
   saveBackupFile: "Simpan backup proyek",
   selectBackupFile: "Pilih file backup",

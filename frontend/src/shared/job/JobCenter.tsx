@@ -89,7 +89,7 @@ export function JobCenter() {
     <section aria-label={SHELL_COPY.jobCenterTitle}>
       <h2>{SHELL_COPY.jobCenterTitle}</h2>
       {loadFailed && error && (
-        <div role="alert">
+        <div className="job-load-failed" role="alert">
           <p>{SHELL_COPY.jobsLoadFailed}</p>
           <DiagnosticDetail detail={error.detail} />
           <button type="button" onClick={retry}>

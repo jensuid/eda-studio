@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `28f5d37` · **Kartu aktif:** `UIUX-09` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `5821a84` (+ commit produk G6-B1 menyusul) · **Kartu aktif:** `G6-B1` `done` (menunggu hash-record)
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,28 +9,24 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `UIUX-09` (Hapus baseline legacy visual.spec.ts-snapshots/) — done 2026-11-09, commit produk tercetak di §2/§6 (gate di §4, pemetaan di §Bukti).
-- **Kartu berikutnya:** tidak ada kartu actionable tersisa di ROADMAP Fase 5 — Phase 1 visual selesai. Sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `UIUX-09` `done` (sesi ini).
+- **Kartu terakhir selesai:** `G6-B1` (Walkthrough Doc01 §11.1 keyboard-only, 900px + 1440px, seeded fixtures) — done 2026-11-09, gate §4, per-task evidence §Bukti. Sebelumnya: `UIUX-09` commit `28f5d37`.
+- **Kartu berikutnya:** `G6-B2` — bukti G6 berikutnya (`QA-SHELL-001:86`); bukan kartu UIUX. Urutan G6 tetap: B1 done → B2. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
+- **Sesi aktif:** `G6-B1` `done` (sesi ini, menunggu commit produk).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `UIUX-09` `done`** — 14 PNG legacy `frontend/tests/__screenshots__/visual.spec.ts-snapshots/` dihapus via `git rm` (dir kosong dihapus); baseline aktif `visual.spec.ts/` 16 PNG utuh; `visual.spec.ts` tetap **16/16 hijau**; gate hijau (§4); `src/` tak tersentuh. Commit produk: `28f5d37`.
-2. **Next:** tidak ada kartu actionable Fase 5 tersisa (Phase 1 visual selesai). Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `G6-B1` `done`** — walkthrough Doc01 §11.1 keyboard-only 900px + 1440px (T1–T8, seeded fixtures) hijau 2/2 di `frontend/tests/g6-b1.spec.ts`; bukti §Bukti. Commit produk + hash-record menyusul sesi ini.
+2. **Next:** `G6-B2` (`QA-SHELL-001:86`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: UIUX-09 (ROADMAP Fase 5) — Hapus baseline legacy visual.spec.ts-snapshots/
-Scope file produk: git rm 14 PNG legacy `frontend/tests/__screenshots__/
-visual.spec.ts-snapshots/` (tak dibaca: template `{snapshotDir}/{testFilePath}/
-{arg}` di playwright.config.ts); baseline aktif `visual.spec.ts/` tetap.
-TIDAK sentuh: src/, backend/, generated.ts, docs/shell-contracts/,
-.workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: rapikan sisa UIUX-08 tanpa mengubah bukti visual; visual.spec.ts
-tetap 16/16 hijau di 900/1440; gate HARNESS-5 hijau.
-Status akhir: done 2026-11-09 — 14 PNG legacy visual.spec.ts-snapshots/ dihapus (git rm); baseline aktif utuh; visual 16/16; gate hijau (§4); commit produk: `28f5d37`.
+Kartu diambil: G6-B1 (ROADMAP bagian Gerbang G6) — Walkthrough Doc01 §11.1 keyboard-only 900px + 1440px, seeded fixtures (QA-SHELL-001:85, JOB-SHELL-001 §1)
+Scope file produk: frontend/tests/g6-b1.spec.ts (baru; satu test per viewport; T1–T8 = Import→Report per Doc01 §11.1; tab-focus helper tanpa pointer).
+TIDAK sentuh (tanpa amandemen PO): backend/, generated.ts, docs/shell-contracts/, docs/ux-contracts/shell/QA-SHELL-001.md, .workbuddy-ai/, notes/evaluasi-workbuddy/
+Tujuan sesi: bukti B1 threshold G5-07: ≥5 tugas, keyboard-only, 2 viewport, dicatat per tugas; celah kini: seeded.spec.ts keyboard-only baru T1 (create project) dan jalan di viewport default 1280x720.
+Status akhir: done 2026-11-09 — spec hijau 2/2, gate hijau, `src/` tak tersentuh.
 ```
 
 ## 4. Gate terakhir
@@ -50,7 +46,26 @@ Status akhir: done 2026-11-09 — 14 PNG legacy visual.spec.ts-snapshots/ dihapu
 
 - Gate UIUX-09 (2026-11-09, sesi ini): `pytest` **287 passed** (21.68s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (baseline-only) · Playwright: `tests/visual.spec.ts` **16/16 hijau** (2.4m) · keyboard/AT tak diubah kartu ini (a11y 25/25 + a11y-audit 5/5 hijau dari UIUX-07). `git diff --cached --stat`: docs + 14 D PNG legacy. Bukti acceptance di §Bukti.
 
+- Gate G6-B1 (2026-11-09, sesi ini): `pytest` **287 passed** (32.21s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b1.spec.ts` **2/2 hijau** (T1–T8 keyboard-only @900px + @1440px, log per tugas; 1 flake transien pada run pertama @900px, hijau pada rerun penuh) · regresi terkait: `seeded+vertical+a11y` **42 passed** (6.2m) · `git diff --stat`: docs + spec baru `g6-b1.spec.ts` (untracked). Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
+
+- G6-B1 done 2026-11-09 — bukti walkthrough (QA-SHELL-001:85, threshold G5-07 ≥5 tugas, keyboard-only, seeded, 900px + 1440px, per tugas):
+
+  | Tugas (Doc01 §11.1) | Bukti (log `[B1 @ ...px]` di `g6-b1.spec.ts`) | Status |
+  |---|---|---|
+  | T1 Import | project+dataset dibuat, "Dataset diimport" ✓ | Confirmed |
+  | T2 Snapshot | DatasetCard `5000 baris × 3 kolom`, `sha256 fp_seed_0123` ✓ | Confirmed |
+  | T3 Profile | run selesai, kolom `sales`/`region` tampil ✓ | Confirmed |
+  | T4 Assess Quality | finding "18 baris tanpa region" + readiness skor ✓ | Confirmed |
+  | T5 Clean | preview → dialog (checkbox via Space) → "Snapshot baru telah dibuat" ✓ | Confirmed |
+  | T6 Analyze | r = 0.87 (mode num-num, seeded) ✓ | Confirmed |
+  | T7 Visualize | elemen visual (svg/canvas) bivariat ter-render ✓ | Confirmed |
+  | T8 Report | "Report siap dibuka. N section…" ✓ | Confirmed |
+
+  - **Drift kontrak (Confirmed):** `QA-SHELL-001:85` (B1) masih menyebut `helpers.ts` `data:null`; seeded fixtures sudah ada (`helpers.ts:522-547` mockBridge seeded). **B10:94** juga stale ("14 baseline masih empty state" — hasil UIUX-08/09). Ratified contract tidak diedit sesi ini; drift tercatat di sini + ROADMAP:229-231.
+  - **Observasi Likely (dicatat, bukan defect blocking; tanpa fix `src/`):** (1) `Enter` pada tombol dialog konfirmasi cleaning (`CleaningConfirmDialog`, `type="button"` dalam `<form>`) memicu implicit submit form, BUKAN click — aktivasi sah via `Space`; bukti: sebelum Space dialog tetap terbuka & `applyDisabled=false`, sesudah Space run selesai (`snap_see · fp_child_012… · 5000 → 4997`). (2) `ArrowDown` pada native `<select>` tertutup (`#bivar-a`/`#bivar-b`, `BivariateSection.tsx:75-80`) no-op di Chromium headless ini (juga pola popup Space+ArrowDown+Enter no-op); jalur keyboard yang berfungsi: type-ahead huruf pertama.
+  - Celah yang ditutup: `seeded.spec.ts:73-93` keyboard-only sebelumnya hanya T1 @ viewport default 1280x720; B1 kini T1–T8 @900px + @1440px.
 
 - UIUX-06 done 2026-11-09 — D-S2/D-F7 vs `frontend/src/shared/copy/shellCopy.ts:7-9` (larangan ID internal / `error.message` mentah / hash-byte di headline; D-S2 Indonesia tunggal) + acceptance kartu:
   - Mekanisme cabang: `describeFeatureError(e, byCode, fallback)` baru di `frontend/src/shared/copy/errorCopy.ts:86-101` — headline = `byCode[code] ?? fallback`, `detail` via `detailOf(e, code)` (code + pesan mentah, disalin lewat `DiagnosticDetail`); copy fitur di `frontend/src/shared/copy/featureCopy.ts` kini `{byCode, generic}` per aksi via helper `failByCode(op)` — copy fitur menang atas shell (tidak ada shell string meng-override fitur).
@@ -97,7 +112,7 @@ Status akhir: done 2026-11-09 — 14 PNG legacy visual.spec.ts-snapshots/ dihapu
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-09` `done`, commit `28f5d37` (2026-11-09). Phase 1 visual selesai — tidak ada kartu actionable tersisa di ROADMAP.
+- `G6-B1` `done` (2026-11-09) — kartu bukti test-only; gate §4; per-task evidence §Bukti. `src/` tak tersentuh; 2 observasi keyboard Likely tercatat (§Bukti). Status resmi G6 tetap FAIL by default sampai bukti B2–B12 terkumpul (QA-SHELL-001:110).
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

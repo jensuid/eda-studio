@@ -221,6 +221,34 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ---
 
+## Gerbang G6 — Bukti QA-SHELL-001 (B1–B12)
+
+Status resmi G6: **FAIL by default** — bukan karena gagal, melainkan belum
+ada bukti yang dijalankan (`QA-SHELL-001:110`). Kartu di bagian ini adalah
+bukti terukur per gate B1–B12; status per gate juga dicatat di kolom
+Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
+`helpers.ts` `data:null` — drift; seeded fixtures sudah ada di
+`frontend/tests/helpers.ts:522-547`, bukan diedit tanpa amandemen PO).
+
+### G6-B1 — Walkthrough Doc01 §11.1 keyboard-only, 900px + 1440px [done 2026-11-09]
+
+- **Kontrak:** `QA-SHELL-001:85` (B1) + `JOB-SHELL-001:33-37` (§1 success
+  signal) + Doc01 §11.1 (`docs/01 — Product Vision & Requirements v0.2.md:645-649` —
+  Import → Snapshot → Profile → Assess Quality → Clean → Analyze →
+  Visualize → Report).
+- **Threshold (G5-07, Add-09):** ≥5 tugas; jalur keyboard-only; seeded
+  fixtures (bukan `data:null`); 900px + 1440px; dicatat per tugas.
+- **Acceptance:** `frontend/tests/g6-b1.spec.ts` hijau 2 viewport;
+  per-tugas assertion lolos tanpa satu pun input pointer; gate
+  HARNESS-5 hijau; `src/` tak tersentuh kecuali bila bug keyboard ditemukan
+  (→ defect tercatat, bukan diam-diam diperbaiki di kartu ini).
+- **Bukti:** `frontend/tests/g6-b1.spec.ts` 2/2 hijau (T1–T8 lolos di
+  900px + 1440px, log per tugas di output) · gate §4 SESSION-STATE ·
+  pemetaan per tugas + 2 observasi keyboard (Likely) di §Bukti. Commit
+  produk tertera di SESSION-STATE §2/§5.
+
+---
+
 ## Urutan esensial & utang
 
 Urutan ratified Phase 1: D-F5 (backend `JobEvent.progress`) → D-S8 →

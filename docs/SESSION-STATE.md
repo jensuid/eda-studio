@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `HASH` · **Kartu aktif:** `UIUX-08` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `ec15faf` · **Kartu aktif:** `UIUX-08` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -15,7 +15,7 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `UIUX-08` `done`** — 16 baseline visual B10 diregen dari nol (hapus 16 lama + `--update-snapshots`: `frontend/tests/__screenshots__/visual.spec.ts/`, 8 route × 900/1440 termasuk Readiness, fixture seeded); verifikasi tanpa flag **16/16 hijau** `maxDiffPixelRatio: 0.05`; baseline aktif tracked & ter-commit; `prototypes/shell-v0/` dihapus lokal (DISPOSABLE, HARNESS-4.6); tanpa sentuhan `src/`. Commit produk: `HASH`.
+1. **Sesi ini `UIUX-08` `done`** — 16 baseline visual B10 diregen dari nol (hapus 16 lama + `--update-snapshots`: `frontend/tests/__screenshots__/visual.spec.ts/`, 8 route × 900/1440 termasuk Readiness, fixture seeded); verifikasi tanpa flag **16/16 hijau** `maxDiffPixelRatio: 0.05`; baseline aktif tracked & ter-commit; `prototypes/shell-v0/` dihapus lokal (DISPOSABLE, HARNESS-4.6); tanpa sentuhan `src/`. Commit produk: `ec15faf`.
 2. **Next:** tidak ada kartu actionable Fase 5 tersisa (Phase 1 visual selesai). Sisa utang: 14 baseline legacy `frontend/tests/__screenshots__/visual.spec.ts-snapshots/` tidak dibaca lagi (template `{snapshotDir}/{testFilePath}/{arg}` di `frontend/playwright.config.ts`) — kartu kelak boleh menghapus; radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
@@ -32,7 +32,7 @@ per README:84). TIDAK sentuh: backend/, generated.ts, docs/shell-contracts/,
 Tujuan sesi: B10 QA-SHELL-001:94 (regenerasi baseline visual sesuai D-DS4,
 toleransi ≤5% setelah D-S7) + regression gate HARNESS-5. Keyboard/AT:
 tidak diubah kartu ini (a11y 25/25 + a11y-audit 5/5 dari UIUX-07).
-Status akhir: done 2026-11-09 — B10 diregen (16 baseline seeded, 16/16 hijau ≤5%, kini tracked); prototypes/shell-v0 dihapus lokal; gate hijau (§4); commit produk: `HASH`.
+Status akhir: done 2026-11-09 — B10 diregen (16 baseline seeded, 16/16 hijau ≤5%, kini tracked); prototypes/shell-v0 dihapus lokal; gate hijau (§4); commit produk: `ec15faf`.
 ```
 
 ## 4. Gate terakhir
@@ -96,7 +96,7 @@ Status akhir: done 2026-11-09 — B10 diregen (16 baseline seeded, 16/16 hijau �
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-08` `done`, commit `HASH` (2026-11-09). Phase 1 visual selesai — tidak ada kartu actionable tersisa di ROADMAP.
+- `UIUX-08` `done`, commit `ec15faf` (2026-11-09). Phase 1 visual selesai — tidak ada kartu actionable tersisa di ROADMAP.
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

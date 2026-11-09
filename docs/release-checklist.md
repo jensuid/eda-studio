@@ -49,6 +49,8 @@ workflow rilis tidak memuat signing apa pun.
 | Release owner | Approve Environment `release` di GitHub | akun + timestamp run otomatis |
 | Tester beta (≥2) | Beta validation script | hasil di GitHub Issues `beta-feedback` |
 
+**Bukti run pertama (2026-11-09)**: tag bertanda tangan `v0.1.0-beta` → SHA `07cc04f`; workflow *Release gate* [run 42560863442](https://github.com/jensuid/eda-studio/actions/runs/42560863442): verify ✅ (pytest+ruff+`git tag -v` terverifikasi di runner via allowed signers dari input) → approve ✅ oleh required reviewer → record ✅. Ini membuktikan gate digital B+C berfungsi end-to-end. HEAD rilis berikutnya: buat tag dari HEAD terbaru (saat ini `756d529`).
+
 Dokumen ini tidak lagi ditandatangani manual — persetujuan digital di GitHub
  menggantikan tanda tangan konvensional.
 

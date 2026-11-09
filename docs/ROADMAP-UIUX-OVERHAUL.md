@@ -261,6 +261,25 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
 - **Bukti:** tabel sel × bukti di §Bukti SESSION-STATE · gate §4 ·
   commit produk `7ed3bd4`.
 
+### G6-B3 — Uji fingerprint mismatch → artefak `Stale`, bukan `Current` [done 2026-11-09]
+
+- **Kontrak:** `QA-SHELL-001:87` (B3) + `JOB-SHELL-001:105` +
+  pengunci `D-F7` (`FLOW-SHELL-001:185`): "Semua artefak memeriksa
+  fingerprint; refresh hanya setelah persetujuan pengguna; CTA
+  menyebut dependency."
+- **Threshold:** matriks per-produk D-F7 — tiap artefak (Profiling,
+  Histogram, Quality, Readiness, Cleaning-quality, Bivariat) pada
+  fingerprint mismatch menampilkan `Stale` (banner "mungkin usang" +
+  disclaimer `bukan hasil yang berlaku untuk snapshot aktif`), bukan
+  `Current`/`Selesai`; fresh-negative membuktikan banner tidak
+  blanket; 900px + 1440px seeded.
+- **Acceptance:** `frontend/tests/g6-b3.spec.ts` hijau 4/4 (sapuan
+  stale 6 permukaan @900/@1440px, fresh-negative, baris persetujuan
+  kanonis); regresi `d-f7 + d-f7-followup + seeded + d-f1 + vertical`
+  31/31; gate HARNESS-5 hijau; `src/` tak tersentuh.
+- **Bukti:** tabel klausa × bukti di §Bukti SESSION-STATE · gate §4 ·
+  commit produk ditulis sesi ini.
+
 ---
 
 ## Urutan esensial & utang

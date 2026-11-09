@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `7ed3bd4` · **Kartu aktif:** `G6-B2` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `7ed3bd4` · **Kartu aktif:** `G6-B3` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,24 +9,24 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `G6-B2` (Tabel sinyal × status stepper 5 tahap D-F1, seeded fixtures, 900px + 1440px) — done 2026-11-09, commit produk `7ed3bd4`, gate §4. Sebelumnya: `G6-B1` commit produk `ee93c09`.
-- **Kartu berikutnya:** `G6-B3` (`QA-SHELL-001:87`); bukan kartu UIUX. Urutan G6 tetap: B1, B2 done → B3. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B2` `done` (sesi ini, fresh session 2026-11-09).
+- **Kartu terakhir selesai:** `G6-B3` (Uji fingerprint mismatch → artefak `Stale`, bukan `Current` D-F7, seeded fixtures, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B2` commit produk `7ed3bd4`, `G6-B1` commit produk `ee93c09`.
+- **Kartu berikutnya:** `G6-B4` (`QA-SHELL-001:88`); bukan kartu UIUX. Urutan G6 tetap: B1, B2, B3 done → B4. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
+- **Sesi aktif:** `G6-B3` `done` (sesi ini, fresh session 2026-11-09).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `G6-B2` `done`** — tabel sinyal × status stepper 5 tahap (`QA-SHELL-001:86`, kontrak pengunci `D-F1`) terverifikasi 23/23 di `frontend/tests/g6-b2.spec.ts`: truth-table Node (14 sel + kunci + vocabulary + kemurnian) + render matrix UI seeded @900/1440px (fresh/stale/boot). `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
-2. **Berikutnya setelah B2:** `G6-B3` (`QA-SHELL-001:87`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `G6-B3` `done`** — uji fingerprint mismatch → artefak `Stale`, bukan `Current` (`QA-SHELL-001:87`, kontrak pengunci `D-F7`) terverifikasi 4/4 di `frontend/tests/g6-b3.spec.ts`: sapuan stale 6 permukaan @900/1440px (Profiling, Histogram, Quality, Readiness, Cleaning-quality, Bivariat) + fresh-negative + baris persetujuan kanonis. `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
+2. **Berikutnya setelah B3:** `G6-B4` (`QA-SHELL-001:88`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: G6-B2 (ROADMAP bagian Gerbang G6) — Tabel sinyal × status stepper 5 tahap (QA-SHELL-001:86, kontrak pengunci D-F1; FLOW-SHELL-001 §2.2:55-65).
-Scope file produk: frontend/tests/g6-b2.spec.ts (baru; truth-table Node atas resolveStepperState + render matrix UI seeded di 900px & 1440px).
+Kartu diambil: G6-B3 (ROADMAP bagian Gerbang G6) — Uji fingerprint mismatch → artefak `Stale`, bukan `Current` (QA-SHELL-001:87, kontrak pengunci D-F7; FLOW-SHELL-001:185; JOB-SHELL-001:105).
+Scope file produk: frontend/tests/g6-b3.spec.ts (baru; sapuan stale 6 permukaan @900 & 1440px + fresh-negative + baris persetujuan kanonis).
 TIDAK sentuh (tanpa amandemen PO): backend/, generated.ts, docs/shell-contracts/, docs/ux-contracts/shell/QA-SHELL-001.md, .workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: bukti B2: tiap sel matriks sinyal×status stepper 5 tahap terverifikasi (incl. sel tak terjangkau via UI: record tanpa dataset); render cocok di 2 viewport; tahap 6/7/10 non-klik, tahap 8 absen, tahap 5 bukan stage.
-Status akhir: done 2026-11-09 — spec hijau 23/23, gate hijau, `src/` tak tersentuh.
+Tujuan sesi: bukti B3: semua artefak memeriksa fingerprint (C1), tampil Stale dengan disclaimer bukan-Current (C2), refresh hanya setelah persetujuan (C3), CTA menyebut dependency (C4).
+Status akhir: done 2026-11-09 — spec hijau 4/4, gate hijau, `src/` tak tersentuh.
 ```
 
 ## 4. Gate terakhir
@@ -50,7 +50,22 @@ Status akhir: done 2026-11-09 — spec hijau 23/23, gate hijau, `src/` tak terse
 
 - Gate G6-B2 (2026-11-09, sesi ini, HEAD `f934beb` pra-commit produk `7ed3bd4`): `pytest` **287 passed** (58.22s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b2.spec.ts` **23/23 hijau** (1.9m) run pertama tanpa flake — 17 tests truth-table Node + 6 render-matrix UI seeded @900px/@1440px · regresi `frontend/tests/d-f1.spec.ts` **10/10 hijau** (3.5m) · `git diff --stat`: `docs/SESSION-STATE.md` + spec baru `g6-b2.spec.ts` (untracked). Bukti acceptance di §Bukti.
 
+- Gate G6-B3 (2026-11-09, sesi ini, HEAD `75b2d99` pra-commit produk): `pytest` **287 passed** (53.70s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b3.spec.ts` **4/4 hijau** (1.9m) — sapuan stale 6 permukaan @900px + @1440px, fresh-negative, baris persetujuan kanonis · regresi `d-f7 + d-f7-followup + seeded + d-f1 + vertical` **31/31 hijau** (6.0m) · `git diff --stat`: `docs/SESSION-STATE.md` + spec baru `g6-b3.spec.ts` (untracked). Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
+
+- G6-B3 done 2026-11-09 — bukti fingerprint mismatch → artefak `Stale`, bukan `Current` (QA-SHELL-001:87; kontrak pengunci D-F7 `FLOW-SHELL-001:185`; JOB-SHELL-001:105; derivasi `record.fingerprint !== dataset.fingerprint` di `ProfilingPage.tsx:207`, `DatasetExplorer.tsx:221`, `QualityPage.tsx:56`, `ReadinessPage.tsx:49`, `CleaningSection.tsx:41`, `BivariateSection.tsx:52`; copy stale `featureCopy.ts:106-116,136-146,177,273-283,415-425`; mock stale `helpers.ts` `STAT_PATCHED` FP_OLD vs dataset FP_SEED; seeded, 900px + 1440px; `frontend/tests/g6-b3.spec.ts`):
+
+  | Klausa D-F7 | Bukti | Status |
+  |---|---|---|
+  | C1 semua artefak memeriksa fingerprint | sapuan stale 6 permukaan @900/@1440px: Profiling `.cleaning-stale`, Histogram banner + `fp_old`, Quality banner, Readiness banner, Cleaning gate `Hasil mungkin usang — jalankan ulang.`, Bivariat `Hasil mungkin usang — jalankan ulang.` | Confirmed |
+  | C2 tampil Stale, bukan Current | disclaimer `bukan hasil yang berlaku untuk snapshot aktif` pada 4 banner; chip stepper 3/4/9 `Perlu diperbarui` (bukan `Selesai`); artefak lama tetap terlihat (`sales`, `Hasil dari snapshot sebelumnya.`, `Distribusi sales`) | Confirmed |
+  | C3 refresh hanya setelah persetujuan | navigasi pergi-balik: banner tetap, tanpa toast sukses baru; klik CTA persetujuan → `Profiling selesai` | Confirmed |
+  | C4 CTA menyebut dependency | `Dependency yang berubah: dataset seed_sales.csv aktif` pada 4 banner | Confirmed |
+  | fresh-negative: cocok → bukan Stale | nol banner stale di 6 permukaan; chip 3/4/9 `Selesai` | Confirmed |
+  | regresi tetangga | `d-f7 + d-f7-followup + seeded + d-f1 + vertical` **31/31 hijau** | Confirmed |
+
+  Keputusan yang dicatat: tidak ada defect produk (seluruh matriks cocok dengan kontrak; run pertama C3 gagal hanya pada asersi ekstra reviewer — banner tetap muncul setelah klik CTA karena mock seeded mengembalikan FP_OLD pada setiap run; artefak mock, bukan produk — baris persetujuan hanya mengklaim toast sukses, banner-segar dibuktikan fresh-negative). `src/` tak tersentuh. Overlap persetujuan dengan `d-f7.spec.ts`/`d-f7-followup.spec.ts` disengaja sebagai bukti independen B3. Drift tercatat: tidak ada.
 
 - G6-B2 done 2026-11-09 — bukti tabel sinyal × status stepper 5 tahap (QA-SHELL-001:86; kontrak pengunci D-F1 `FLOW-SHELL-001:73`; derivasi `frontend/src/shared/ui/stepperState.ts:9-15`, `resolveStepperState` `:81-91`; seeded, 900px + 1440px; `frontend/tests/g6-b2.spec.ts`):
 

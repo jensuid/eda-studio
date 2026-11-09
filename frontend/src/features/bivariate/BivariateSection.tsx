@@ -9,6 +9,8 @@ import { useMutation } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { BivariateRecord, DatasetRecord, ProfileRecord } from "../../shared/ipc/generated";
 import { BIVARIAT_COPY, COMMON_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
+import { DiagnosticDetail } from "../../shared/ui/DiagnosticDetail";
 import { BivariateChart } from "./BivariateChart";
 
 interface Props {
@@ -49,6 +51,15 @@ export function BivariateSection({ projectId, dataset, savedProfile }: Props) {
 
   const stale = !!record && record.fingerprint !== dataset.fingerprint;
 
+  // D-F7 (UIUX-06): headline cabang error.code; pesan mentah di detail diagnostik.
+  const runError = runBivariate.isError
+    ? describeFeatureError(
+        runBivariate.error,
+        BIVARIAT_COPY.bivariateFail.byCode,
+        BIVARIAT_COPY.bivariateFail.generic,
+      )
+    : null;
+
   return (
     <section>
       <h2>{BIVARIAT_COPY.heading}</h2>
@@ -80,7 +91,12 @@ export function BivariateSection({ projectId, dataset, savedProfile }: Props) {
             {BIVARIAT_COPY.run}
           </button>
           {runBivariate.isPending && <p role="status">{BIVARIAT_COPY.running}</p>}
-          {runBivariate.isError && <p role="alert">{BIVARIAT_COPY.toastFail(runBivariate.error.message)}</p>}
+          {runError && (
+            <>
+              <p role="alert">{runError.headline}</p>
+              <DiagnosticDetail detail={runError.detail} />
+            </>
+          )}
           {record && stale && <p>{BIVARIAT_COPY.stale}</p>}
           {record && record.constant_columns && record.constant_columns.length > 0 && (
             <p>{BIVARIAT_COPY.constantColumn}</p>

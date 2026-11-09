@@ -9,6 +9,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
 import { COMMON_COPY, QUALITY_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
 import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 
 export function QualityPage() {
@@ -22,7 +23,11 @@ export function QualityPage() {
       setQualityRecord(r);
       toast.success(QUALITY_COPY.toastDone);
     },
-    onError: (e) => toast.error(QUALITY_COPY.toastFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, QUALITY_COPY.qualityFail.byCode, QUALITY_COPY.qualityFail.generic)
+          .headline,
+      ),
   });
 
   if (!projectId || !dataset) {

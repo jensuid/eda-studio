@@ -507,6 +507,8 @@ export interface MockBridgeOptions {
   recoveryAvailable?: boolean;
   /** D-F6: project.recovery.restore gagal (NOT_FOUND) */
   recoveryRestoreFail?: boolean;
+  /** UIUX-06: project.recovery.restore sukses (RestoreRecord) */
+  recoveryRestoreOk?: boolean;
   /** D-F6: get_events throw → Job Center load-failed */
   eventsFail?: boolean;
   /** D-F6: project.list_recent shape rusak → crash render di Setup */
@@ -549,7 +551,7 @@ export async function mockBridge(
   page: Page,
   opts: MockBridgeOptions = {},
 ): Promise<void> {
-  const { seeded = false, events = [], stale = false, stalePreview = false, resumeFail = false, protocolMismatch = false, updateFail = false, recoveryAvailable = false, recoveryRestoreFail = false, eventsFail = false, crashRecent = false, artifactOpenFail = false } = opts;
+  const { seeded = false, events = [], stale = false, stalePreview = false, resumeFail = false, protocolMismatch = false, updateFail = false, recoveryAvailable = false, recoveryRestoreFail = false, recoveryRestoreOk = false, eventsFail = false, crashRecent = false, artifactOpenFail = false } = opts;
   const cfg = {
     seeded,
     events,
@@ -559,6 +561,7 @@ export async function mockBridge(
     updateFail,
     recoveryAvailable,
     recoveryRestoreFail,
+    recoveryRestoreOk,
     eventsFail,
     crashRecent,
     artifactOpenFail,
@@ -577,6 +580,7 @@ export async function mockBridge(
       updateFail: boolean;
       recoveryAvailable: boolean;
       recoveryRestoreFail: boolean;
+      recoveryRestoreOk: boolean;
       eventsFail: boolean;
       crashRecent: boolean;
       artifactOpenFail: boolean;
@@ -612,6 +616,21 @@ export async function mockBridge(
             error: { code: "NOT_FOUND", message: "autosave hilang di backend" },
             protocol_version: 1,
             correlation_id: "corr-recovery-1",
+          };
+        }
+        if (c.recoveryRestoreOk && command === "project.recovery.restore") {
+          return {
+            ok: true,
+            data: {
+              project_id: "proj_seed",
+              dest_root: "/tmp/restored_seed",
+              file_path: "/tmp/autosave.zip",
+              project_db_sha256: "sha256_seed_0123456789abcdef",
+              version: "1",
+            },
+            error: null,
+            protocol_version: 1,
+            correlation_id: null,
           };
         }
         if (c.crashRecent && command === "project.list_recent") {

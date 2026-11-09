@@ -9,6 +9,8 @@ import { useMutation } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { DatasetRecord, ProfileRecord, ReportRecord, ReportScope } from "../../shared/ipc/generated";
 import { COMMON_COPY, REPORT_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
+import { DiagnosticDetail } from "../../shared/ui/DiagnosticDetail";
 
 interface Props {
   projectId: string;
@@ -48,6 +50,22 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
 
   const hasStale = !!record && record.sections.some((s) => s.stale);
 
+  // D-F7 (UIUX-06): headline cabang error.code; pesan mentah di detail diagnostik.
+  const runError = runReport.isError
+    ? describeFeatureError(
+        runReport.error,
+        REPORT_COPY.reportCreateFail.byCode,
+        REPORT_COPY.reportCreateFail.generic,
+      )
+    : null;
+  const openError = openArtifact.isError
+    ? describeFeatureError(
+        openArtifact.error,
+        REPORT_COPY.reportOpenFail.byCode,
+        REPORT_COPY.reportOpenFail.generic,
+      )
+    : null;
+
   return (
     <section>
       <h2>{REPORT_COPY.heading}</h2>
@@ -83,7 +101,12 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
             {REPORT_COPY.create}
           </button>
           {runReport.isPending && <p role="status">{REPORT_COPY.creating}</p>}
-          {runReport.isError && <p role="alert">{REPORT_COPY.toastFail(runReport.error.message)}</p>}
+          {runError && (
+            <>
+              <p role="alert">{runError.headline}</p>
+              <DiagnosticDetail detail={runError.detail} />
+            </>
+          )}
           {record && (
             <>
               <p aria-live="polite">
@@ -103,10 +126,11 @@ export function ReportSection({ projectId, dataset, savedProfile }: Props) {
               {openArtifact.isSuccess && (
                 <p role="status">{REPORT_COPY.opened}</p>
               )}
-              {openArtifact.isError && (
-                <p role="alert">
-                  {REPORT_COPY.openError(openArtifact.error.message)}
-                </p>
+              {openError && (
+                <>
+                  <p role="alert">{openError.headline}</p>
+                  <DiagnosticDetail detail={openError.detail} />
+                </>
               )}
               <p>{record.validation_summary}</p>
               <p>{record.is_final ? REPORT_COPY.final : REPORT_COPY.draft}</p>

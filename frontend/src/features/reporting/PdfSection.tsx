@@ -10,6 +10,8 @@ import { useMutation } from "@tanstack/react-query";
 import { ipcClient } from "../../shared/ipc/ipcClient";
 import type { DatasetRecord, PdfRecord, ProfileRecord } from "../../shared/ipc/generated";
 import { PDF_COPY, REPORT_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
+import { DiagnosticDetail } from "../../shared/ui/DiagnosticDetail";
 
 interface Props {
   projectId: string;
@@ -42,6 +44,22 @@ export function PdfSection({ projectId, dataset, savedProfile }: Props) {
 
   const hasStale = !!record && record.sections.some((s) => s.stale);
 
+  // D-F7 (UIUX-06): headline cabang error.code; pesan mentah di detail diagnostik.
+  const runError = runPdf.isError
+    ? describeFeatureError(
+        runPdf.error,
+        PDF_COPY.pdfCreateFail.byCode,
+        PDF_COPY.pdfCreateFail.generic,
+      )
+    : null;
+  const openError = openArtifact.isError
+    ? describeFeatureError(
+        openArtifact.error,
+        PDF_COPY.pdfOpenFail.byCode,
+        PDF_COPY.pdfOpenFail.generic,
+      )
+    : null;
+
   return (
     <section>
       <h2>{PDF_COPY.title}</h2>
@@ -58,7 +76,12 @@ export function PdfSection({ projectId, dataset, savedProfile }: Props) {
             {PDF_COPY.primer}
           </button>
           {runPdf.isPending && <p role="status">{PDF_COPY.loading}</p>}
-          {runPdf.isError && <p role="alert">{PDF_COPY.error} — {runPdf.error.message}</p>}
+          {runError && (
+            <>
+              <p role="alert">{runError.headline}</p>
+              <DiagnosticDetail detail={runError.detail} />
+            </>
+          )}
           {record && (
             <>
               <p aria-live="polite">
@@ -83,8 +106,11 @@ export function PdfSection({ projectId, dataset, savedProfile }: Props) {
                 {openArtifact.isPending ? PDF_COPY.opening : PDF_COPY.unduh}
               </button>
               {openArtifact.isSuccess && <p role="status">{PDF_COPY.opened}</p>}
-              {openArtifact.isError && (
-                <p role="alert">{PDF_COPY.openError(openArtifact.error.message)}</p>
+              {openError && (
+                <>
+                  <p role="alert">{openError.headline}</p>
+                  <DiagnosticDetail detail={openError.detail} />
+                </>
               )}
             </>
           )}

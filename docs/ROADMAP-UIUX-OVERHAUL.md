@@ -138,7 +138,7 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ## Fase 4 — Copy & a11y (Bahasa Indonesia, kontras)
 
-### UIUX-06 — Copy tunggal + error branch [todo, after UIUX-05]
+### UIUX-06 — Copy tunggal + error branch [done 2026-11-09]
 
 - **Kontrak:** `D-S2` (Bahasa Indonesia tunggal), `D-F7`.
 - **File disentuh:** `frontend/src/shared/copy/shellCopy.ts`,
@@ -146,6 +146,17 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
   (single `protocolError` → per-concern).
 - **Acceptance:** tanpa ID dokumen internal / `error.message` mentah di
   headline; branching `error.code`; copy fitur menang atas shell.
+- **Jawaban (done):** `describeFeatureError(e, byCode, fallback)` baru di
+  `errorCopy.ts:86-101` (headline dari `error.code` via map copy fitur;
+  mentah hanya di `detail`); `featureCopy.ts` semua entry gagal kini
+  `{byCode, generic}`; 29 call-site dialihkan — toast Profiling 9, Setup 7,
+  Dataset Explorer 5, Quality 1, Readiness 1; alert + `DiagnosticDetail` di
+  Bivariate 1, Report 2, PDF 2, query recent ProjectSetup 1.
+  `shellCopy.ts` `recoveryDoneBody` path-only tanpa `project_id`
+  (`App.tsx:381`). Audit: kanal per-concern `App.tsx:70-72` sudah benar
+  sejak D-F6 (pointer `App.tsx:59` basi). Gate: pytest 287, ruff, tsc,
+  token lint, suite Playwright penuh 105 passed (incl. `error-branch.spec.ts`
+  baru 2/2, visual 16/16 baseline tak diregen); `tokens.css` tak tersentuh.
 
 ### UIUX-07 — Audit a11y & kontras 5 level [todo, after UIUX-06]
 

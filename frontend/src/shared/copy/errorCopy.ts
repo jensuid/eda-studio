@@ -75,3 +75,27 @@ export function describeConcernError(
     fingerprint: [concern, code, correlationId ?? ""].join(":"),
   };
 }
+
+/**
+ * D-S2/D-F7 (UIUX-06): cabang copy error untuk kanal fitur. Headline diambil
+ * dari `error.code` via `byCode` milik copy fitur (copy fitur menang atas
+ * shell); `fallback` dipakai untuk code apa pun yang tidak terpetakan.
+ * Pesan mentah tidak pernah masuk headline — hanya di `detail` (detail
+ * diagnostik yang dapat disalin via DiagnosticDetail).
+ */
+export function describeFeatureError(
+  e: unknown,
+  byCode: Readonly<Record<string, string>>,
+  fallback: string,
+): ConcernError {
+  const code = e instanceof IpcError ? e.code : "UNKNOWN";
+  const correlationId = correlationOf(e);
+  const headline = byCode[code] ?? fallback;
+  return {
+    headline,
+    detail: detailOf(e, code),
+    code,
+    correlationId,
+    fingerprint: ["feature", code, correlationId ?? ""].join(":"),
+  };
+}

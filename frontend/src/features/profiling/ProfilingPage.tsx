@@ -16,6 +16,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
 import { COMMON_COPY, PROFILING_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
 import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 
 const FINDING_NEXT: Record<FindingStatus, FindingStatus> = {
@@ -62,12 +63,20 @@ export function ProfilingPage() {
         queryKey: ["profiles", projectId, dataset?.dataset_id],
       });
     },
-    onError: (e) => toast.error(PROFILING_COPY.toastProfileFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, PROFILING_COPY.profileFail.byCode, PROFILING_COPY.profileFail.generic)
+          .headline,
+      ),
   });
   const openSaved = useMutation({
     mutationFn: (profileId: string) => ipcClient.getProfileById(projectId!, profileId),
     onSuccess: (r) => setSavedProfile(r),
-    onError: (e) => toast.error(PROFILING_COPY.toastOpenFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, PROFILING_COPY.openProfileFail.byCode, PROFILING_COPY.openProfileFail.generic)
+          .headline,
+      ),
   });
   const profiles = useQuery({
     queryKey: ["profiles", projectId, dataset?.dataset_id],
@@ -113,7 +122,11 @@ export function ProfilingPage() {
       toast.success(PROFILING_COPY.toastFindingAdded);
       invalidateInsights();
     },
-    onError: (e) => toast.error(PROFILING_COPY.toastFindingFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, PROFILING_COPY.findingFail.byCode, PROFILING_COPY.findingFail.generic)
+          .headline,
+      ),
   });
   const transitionFindingMut = useMutation({
     mutationFn: (v: { id: string; status: FindingStatus }) =>
@@ -122,7 +135,14 @@ export function ProfilingPage() {
       toast.success(PROFILING_COPY.toastFindingStatus);
       invalidateInsights();
     },
-    onError: (e) => toast.error(PROFILING_COPY.toastFindingStatusFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          PROFILING_COPY.findingStatusFail.byCode,
+          PROFILING_COPY.findingStatusFail.generic,
+        ).headline,
+      ),
   });
   const createHypothesis = useMutation({
     mutationFn: () =>
@@ -132,7 +152,14 @@ export function ProfilingPage() {
       toast.success(PROFILING_COPY.toastHypothesisAdded);
       invalidateInsights();
     },
-    onError: (e) => toast.error(PROFILING_COPY.toastHypothesisFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          PROFILING_COPY.hypothesisFail.byCode,
+          PROFILING_COPY.hypothesisFail.generic,
+        ).headline,
+      ),
   });
   const transitionHypothesisMut = useMutation({
     mutationFn: (v: { id: string; status: HypothesisStatus }) =>
@@ -141,7 +168,14 @@ export function ProfilingPage() {
       toast.success(PROFILING_COPY.toastHypothesisStatus);
       invalidateInsights();
     },
-    onError: (e) => toast.error(PROFILING_COPY.toastHypothesisStatusFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          PROFILING_COPY.hypothesisStatusFail.byCode,
+          PROFILING_COPY.hypothesisStatusFail.generic,
+        ).headline,
+      ),
   });
 
   const activateSnapshot = useMutation({
@@ -151,7 +185,11 @@ export function ProfilingPage() {
       toast.success(PROFILING_COPY.toastSnapshotActivated);
       void queryClient.invalidateQueries();
     },
-    onError: (e) => toast.error(PROFILING_COPY.toastSnapshotFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, PROFILING_COPY.snapshotFail.byCode, PROFILING_COPY.snapshotFail.generic)
+          .headline,
+      ),
   });
 
   if (!projectId || !dataset) {

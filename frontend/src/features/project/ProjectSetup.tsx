@@ -19,6 +19,8 @@ import { FilePathInput } from "./FilePathInput";
 import { DatasetCard } from "./DatasetCard";
 import { DestructiveConfirmDialog } from "./DestructiveConfirmDialog";
 import { SETUP_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
+import { DiagnosticDetail } from "../../shared/ui/DiagnosticDetail";
 
 type ConfirmKind = "backup" | "restore" | "diagnostic" | null;
 
@@ -41,7 +43,11 @@ export function ProjectSetup() {
       setProjectId(p.project_id);
       toast.success(SETUP_COPY.toastProjectCreated(p.name));
     },
-    onError: (e) => toast.error(SETUP_COPY.toastProjectFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, SETUP_COPY.projectCreateFail.byCode, SETUP_COPY.projectCreateFail.generic)
+          .headline,
+      ),
   });
   // D-F4 (Beta): read-only recent list + open with D-F3 revalidation.
   // Single active project: opening a recent project replaces the context.
@@ -65,7 +71,11 @@ export function ProjectSetup() {
       }
       toast.success(SETUP_COPY.toastProjectOpened(rec.name));
     },
-    onError: (e) => toast.error(SETUP_COPY.toastOpenFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, SETUP_COPY.projectOpenFail.byCode, SETUP_COPY.projectOpenFail.generic)
+          .headline,
+      ),
   });
   const doImport = useMutation({
     mutationFn: (v: ProjectForm) =>
@@ -74,7 +84,14 @@ export function ProjectSetup() {
       setDataset(d);
       toast.success(SETUP_COPY.toastDatasetImported(d.name));
     },
-    onError: (e) => toast.error(SETUP_COPY.toastImportFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          SETUP_COPY.datasetImportFail.byCode,
+          SETUP_COPY.datasetImportFail.generic,
+        ).headline,
+      ),
   });
 
   // M3 P0 backup/restore (Doc04 §12): path text inputs; restored project
@@ -90,7 +107,11 @@ export function ProjectSetup() {
       setBackupRecord(r);
       toast.success(SETUP_COPY.toastBackupCreated);
     },
-    onError: (e) => toast.error(SETUP_COPY.toastBackupFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, SETUP_COPY.backupFail.byCode, SETUP_COPY.backupFail.generic)
+          .headline,
+      ),
   });
   const restoreProject = useMutation({
     mutationFn: (v: { archive: string; root: string }) =>
@@ -99,7 +120,11 @@ export function ProjectSetup() {
       setRestoreRecord(r);
       toast.success(SETUP_COPY.toastRestoreDone);
     },
-    onError: (e) => toast.error(SETUP_COPY.toastRestoreFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, SETUP_COPY.restoreFail.byCode, SETUP_COPY.restoreFail.generic)
+          .headline,
+      ),
   });
 
   // G6-2 portable export: backup-shaped ZIP with kind="portable_export".
@@ -112,7 +137,11 @@ export function ProjectSetup() {
       setPortableRecord(r);
       toast.success(SETUP_COPY.toastPortableDone);
     },
-    onError: (e) => toast.error(SETUP_COPY.toastPortableFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, SETUP_COPY.portableFail.byCode, SETUP_COPY.portableFail.generic)
+          .headline,
+      ),
   });
 
   // M3 P2 diagnostic bundle (Doc15 §10): Basic level, redacted.
@@ -124,8 +153,25 @@ export function ProjectSetup() {
       setDiagnosticRecord(r);
       toast.success(SETUP_COPY.toastDiagnosticCreated);
     },
-    onError: (e) => toast.error(SETUP_COPY.toastDiagnosticFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          SETUP_COPY.diagnosticFail.byCode,
+          SETUP_COPY.diagnosticFail.generic,
+        ).headline,
+      ),
   });
+
+  // D-F7 (UIUX-06): headline cabang error.code untuk error query recent;
+  // pesan mentah di detail diagnostik.
+  const recentError = recent.isError
+    ? describeFeatureError(
+        recent.error,
+        SETUP_COPY.projectOpenFail.byCode,
+        SETUP_COPY.projectOpenFail.generic,
+      )
+    : null;
 
   return (
     <>
@@ -153,8 +199,11 @@ export function ProjectSetup() {
       <section>
         <h2>{SETUP_COPY.recentTitle}</h2>
         {recent.isPending && <p aria-busy="true">…</p>}
-        {recent.isError && (
-          <p role="alert">{SETUP_COPY.toastOpenFail((recent.error as Error).message)}</p>
+        {recentError && (
+          <>
+            <p role="alert">{recentError.headline}</p>
+            <DiagnosticDetail detail={recentError.detail} />
+          </>
         )}
         {recent.data && recent.data.projects.length === 0 && (
           <p>{SETUP_COPY.recentEmpty}</p>

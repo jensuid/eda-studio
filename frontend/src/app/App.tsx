@@ -378,7 +378,7 @@ function Shell() {
         {restored && (
           <section className="recovery-banner" role="status">
             <h2>{SHELL_COPY.recoveryDone}</h2>
-            <p>{SHELL_COPY.recoveryDoneBody(restored.project_id, restored.dest_root)}</p>
+            <p>{SHELL_COPY.recoveryDoneBody(restored.dest_root)}</p>
             <button type="button" onClick={() => setRestored(null)}>
               {SHELL_COPY.ok}
             </button>

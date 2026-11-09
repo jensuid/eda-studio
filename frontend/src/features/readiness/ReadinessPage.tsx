@@ -10,6 +10,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState } from "../../shared/ui/LoadingSkeleton";
 import { COMMON_COPY, READINESS_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
 import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 
 export function ReadinessPage() {
@@ -23,7 +24,14 @@ export function ReadinessPage() {
       setReadinessRecord(r);
       toast.success(READINESS_COPY.toastDone);
     },
-    onError: (e) => toast.error(READINESS_COPY.toastFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          READINESS_COPY.readinessFail.byCode,
+          READINESS_COPY.readinessFail.generic,
+        ).headline,
+      ),
   });
 
   if (!projectId || !dataset) {

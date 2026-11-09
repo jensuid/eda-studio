@@ -54,8 +54,10 @@ export const SHELL_COPY = {
   restoreAction: "Pulihkan autosave",
   restoring: "Memulihkan…",
   recoveryDone: "Recovery selesai",
-  recoveryDoneBody: (projectId: string, destRoot: string) =>
-    `Project ${projectId} dipulihkan ke ${destRoot}.`,
+  // D-F7 (UIUX-06): body sukses TIDAK memuat ID dokumen internal
+  // (project_id) — hanya path tujuan yang ramah pengguna.
+  recoveryDoneBody: (destRoot: string) =>
+    `Autosave dipulihkan ke ${destRoot}.`,
   ok: "OK",
   versionPanelLabel: "Informasi versi dan update",
   versionLabel: "Versi",

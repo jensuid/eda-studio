@@ -19,6 +19,7 @@ import { useRouter } from "../../app/router";
 import { useToast } from "../../shared/ui/Toaster";
 import { EmptyState, LoadingSkeleton } from "../../shared/ui/LoadingSkeleton";
 import { CHART_COPY, COMMON_COPY, DATASET_COPY } from "../../shared/copy/featureCopy";
+import { describeFeatureError } from "../../shared/copy/errorCopy";
 import { StaleRefreshBanner } from "../../shared/ui/StaleRefreshBanner";
 import { HistogramChart } from "../histogram/HistogramChart";
 import { FilePathInput } from "./FilePathInput";
@@ -80,7 +81,14 @@ export function DatasetExplorer() {
       setExportRecord(r);
       toast.success(DATASET_COPY.toastExportDone);
     },
-    onError: (e) => toast.error(DATASET_COPY.toastExportFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          DATASET_COPY.datasetExportFail.byCode,
+          DATASET_COPY.datasetExportFail.generic,
+        ).headline,
+      ),
   });
 
   const [histColumn, setHistColumn] = useState("");
@@ -92,7 +100,11 @@ export function DatasetExplorer() {
       setHistRecord(r);
       toast.success(DATASET_COPY.toastHistogramDone);
     },
-    onError: (e) => toast.error(DATASET_COPY.toastHistogramFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, DATASET_COPY.histogramFail.byCode, DATASET_COPY.histogramFail.generic)
+          .headline,
+      ),
   });
 
   // NXT-2 (gap G2): Analysis Plan — susun langkah, setujui, eksekusi sekuensial.
@@ -134,7 +146,14 @@ export function DatasetExplorer() {
       toast.success(DATASET_COPY.toastPlanApproved);
       void queryClient.invalidateQueries({ queryKey: ["plans", projectId, dataset?.dataset_id] });
     },
-    onError: (e) => toast.error(DATASET_COPY.toastPlanApproveFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          DATASET_COPY.planApproveFail.byCode,
+          DATASET_COPY.planApproveFail.generic,
+        ).headline,
+      ),
   });
   const executePlan = useMutation({
     mutationFn: (planId: string) => ipcClient.executePlan(projectId!, planId),
@@ -142,7 +161,14 @@ export function DatasetExplorer() {
       toast.success(DATASET_COPY.toastPlanExecuted);
       void queryClient.invalidateQueries({ queryKey: ["plans", projectId, dataset?.dataset_id] });
     },
-    onError: (e) => toast.error(DATASET_COPY.toastPlanExecuteFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(
+          e,
+          DATASET_COPY.planExecuteFail.byCode,
+          DATASET_COPY.planExecuteFail.generic,
+        ).headline,
+      ),
   });
   const createPlan = useMutation({
     mutationFn: () => ipcClient.createPlan(projectId!, dataset!.dataset_id, planDraft),
@@ -151,7 +177,11 @@ export function DatasetExplorer() {
       setPlanDraft([{ kind: "profile", params: {} }]);
       void queryClient.invalidateQueries({ queryKey: ["plans", projectId, dataset?.dataset_id] });
     },
-    onError: (e) => toast.error(DATASET_COPY.toastPlanCreateFail(e.message)),
+    onError: (e) =>
+      toast.error(
+        describeFeatureError(e, DATASET_COPY.planCreateFail.byCode, DATASET_COPY.planCreateFail.generic)
+          .headline,
+      ),
   });
 
   if (!projectId || !dataset) {

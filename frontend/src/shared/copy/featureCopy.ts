@@ -25,6 +25,20 @@ export const COMMON_COPY = {
   goToProfiling: "Ke Profiling",
 } as const;
 
+/**
+ * D-F7 (UIUX-06): headline gagal per `error.code` untuk kanal fitur —
+ * dipakai bersama `describeFeatureError` (`errorCopy.ts`). `generic` adalah
+ * fallback untuk code tanpa peta. Pesan mentah TIDAK PERNAH masuk copy
+ * ini; ia hanya hidup di `detail` diagnostik (DiagnosticDetail).
+ */
+const failByCode = (op: string): Record<string, string> => ({
+  NOT_FOUND: `${op} — tidak ditemukan.`,
+  CONFLICT: `${op} — bentrok dengan proses lain.`,
+  VALIDATION_ERROR: `${op} — permintaan tidak valid.`,
+  PERMISSION_DENIED: `${op} — akses ditolak.`,
+  UNSUPPORTED_FORMAT: `${op} — format tidak didukung.`,
+});
+
 export const PROFILING_COPY = {
   emptyTitle: "Profiling",
   headingRun: "Profiling (run terpadu)",
@@ -56,18 +70,39 @@ export const PROFILING_COPY = {
   addHypothesis: "Tambah Hipotesis",
   investigate: "Investigasi",
   toastProfileDone: "Profiling selesai.",
-  toastProfileFail: (message: string) => `Profiling gagal: ${message}`,
-  toastOpenFail: (message: string) => `Gagal membuka profil: ${message}`,
+  profileFail: {
+    byCode: failByCode("Profiling gagal"),
+    generic: "Profiling gagal. Silakan coba lagi.",
+  },
+  openProfileFail: {
+    byCode: failByCode("Gagal membuka profil"),
+    generic: "Gagal membuka profil. Silakan coba lagi.",
+  },
   toastFindingAdded: "Finding ditambahkan.",
-  toastFindingFail: (message: string) => `Finding gagal: ${message}`,
+  findingFail: {
+    byCode: failByCode("Finding gagal"),
+    generic: "Finding gagal. Silakan coba lagi.",
+  },
   toastFindingStatus: "Status finding diperbarui.",
-  toastFindingStatusFail: (message: string) => `Ubah status finding gagal: ${message}`,
+  findingStatusFail: {
+    byCode: failByCode("Ubah status finding gagal"),
+    generic: "Ubah status finding gagal. Silakan coba lagi.",
+  },
   toastHypothesisAdded: "Hipotesis ditambahkan.",
-  toastHypothesisFail: (message: string) => `Hipotesis gagal: ${message}`,
+  hypothesisFail: {
+    byCode: failByCode("Hipotesis gagal"),
+    generic: "Hipotesis gagal. Silakan coba lagi.",
+  },
   toastHypothesisStatus: "Status hipotesis diperbarui.",
-  toastHypothesisStatusFail: (message: string) => `Ubah status hipotesis gagal: ${message}`,
+  hypothesisStatusFail: {
+    byCode: failByCode("Ubah status hipotesis gagal"),
+    generic: "Ubah status hipotesis gagal. Silakan coba lagi.",
+  },
   toastSnapshotActivated: "Snapshot diaktifkan.",
-  toastSnapshotFail: (message: string) => `Aktivasi snapshot gagal: ${message}`,
+  snapshotFail: {
+    byCode: failByCode("Aktivasi snapshot gagal"),
+    generic: "Aktivasi snapshot gagal. Silakan coba lagi.",
+  },
   staleTitle: "Hasil profiling mungkin usang",
   staleReason: "Dataset aktif telah berubah sejak profiling ini dijalankan.",
   staleDependency: (datasetName: string) =>
@@ -92,7 +127,10 @@ export const QUALITY_COPY = {
   thFinding: "Temuan",
   thEvidence: "Bukti",
   toastDone: "Quality check selesai.",
-  toastFail: (message: string) => `Quality check gagal: ${message}`,
+  qualityFail: {
+    byCode: failByCode("Quality check gagal"),
+    generic: "Quality check gagal. Silakan coba lagi.",
+  },
   summary: (summary: string, ok: number, checks: number, problems: number) =>
     `${summary} (${ok}/${checks} lolos, ${problems} bermasalah)`,
   staleTitle: "Hasil quality check mungkin usang",
@@ -123,7 +161,10 @@ export const BIVARIAT_COPY = {
   unsupportedPair: "Pasangan tipe ini tidak didukung untuk analisis bivariat.",
   run: "Jalankan Analisis Bivariat",
   running: "Menghitung bivariat…",
-  toastFail: (message: string) => `Analisis bivariat gagal. Silakan coba lagi. — ${message}`,
+  bivariateFail: {
+    byCode: failByCode("Analisis bivariat gagal"),
+    generic: "Analisis bivariat gagal. Silakan coba lagi.",
+  },
   stale: "Hasil mungkin usang — jalankan ulang.",
   constantColumn: "Kolom ini konstan.",
   undefinedCorrelation: "Korelasi tidak terdefinisi untuk kolom konstan.",
@@ -225,7 +266,10 @@ export const READINESS_COPY = {
   ) =>
     `${summary} (${ok}/${checks} lolos, ${problems} bermasalah) — ${rows} baris, ${columns} kolom (${numeric} numerik, ${categorical} kategorikal)`,
   toastDone: "Readiness assessment selesai.",
-  toastFail: (message: string) => `Readiness assessment gagal: ${message}`,
+  readinessFail: {
+    byCode: failByCode("Readiness assessment gagal"),
+    generic: "Readiness assessment gagal. Silakan coba lagi.",
+  },
   staleTitle: "Hasil readiness assessment mungkin usang",
   staleReason: "Dataset aktif telah berubah sejak readiness assessment ini dijalankan.",
   staleDependency: (datasetName: string) =>
@@ -253,14 +297,19 @@ export const REPORT_COPY = {
   staleSource: "Usang — Jalankan ulang.",
   staleList: "Ada hasil usang — lihat daftar sebelum mengunduh.",
   creating: "Membuat report…",
-  toastFail: (message: string) => `Report gagal dibuat. Silakan coba lagi. — ${message}`,
+  reportCreateFail: {
+    byCode: failByCode("Report gagal dibuat"),
+    generic: "Report gagal dibuat. Silakan coba lagi.",
+  },
   ready: (sections: number, fingerprintPrefix: string, bytes: number) =>
     `Report siap dibuka. ${sections} section · fingerprint ${fingerprintPrefix}… · ${bytes} bytes`,
   open: "Unduh/Buka",
   opening: "Membuka…",
   opened: "Artefak dibuka di aplikasi bawaan.",
-  openError: (message: string) =>
-    `Artefak gagal dibuka. Silakan coba lagi. — ${message}`,
+  reportOpenFail: {
+    byCode: failByCode("Artefak gagal dibuka"),
+    generic: "Artefak gagal dibuka. Silakan coba lagi.",
+  },
   final: "Final.",
   draft: "Draft — bukan final export.",
 };
@@ -271,10 +320,15 @@ export const PDF_COPY = {
   unduh: "Unduh/Buka",
   opening: "Membuka…",
   opened: "Artefak dibuka di aplikasi bawaan.",
-  openError: (message: string) =>
-    `Artefak gagal dibuka. Silakan coba lagi. — ${message}`,
+  pdfOpenFail: {
+    byCode: failByCode("Artefak gagal dibuka"),
+    generic: "Artefak gagal dibuka. Silakan coba lagi.",
+  },
   loading: "Membuat PDF…",
-  error: "PDF gagal dibuat. Silakan coba lagi.",
+  pdfCreateFail: {
+    byCode: failByCode("PDF gagal dibuat"),
+    generic: "PDF gagal dibuat. Silakan coba lagi.",
+  },
   emptyFirst: "Buat Report HTML terlebih dahulu.",
   partial: "Ada hasil usang — lihat daftar sebelum mengunduh.",
   done: "PDF siap diunduh.",
@@ -411,15 +465,30 @@ export const DATASET_COPY = {
   confirmExportDesc: (formatUpper: string, destPath: string) =>
     `Dataset akan di-export sebagai ${formatUpper} ke ${destPath}. File tujuan yang sudah ada akan ditimpa.`,
   toastExportDone: "Export selesai.",
-  toastExportFail: (message: string) => `Export gagal: ${message}`,
+  datasetExportFail: {
+    byCode: failByCode("Export gagal"),
+    generic: "Export gagal. Silakan coba lagi.",
+  },
   toastHistogramDone: "Histogram selesai.",
-  toastHistogramFail: (message: string) => `Histogram gagal: ${message}`,
+  histogramFail: {
+    byCode: failByCode("Histogram gagal"),
+    generic: "Histogram gagal. Silakan coba lagi.",
+  },
   toastPlanApproved: "Plan disetujui.",
-  toastPlanApproveFail: (message: string) => `Menyetujui plan gagal: ${message}`,
+  planApproveFail: {
+    byCode: failByCode("Menyetujui plan gagal"),
+    generic: "Menyetujui plan gagal. Silakan coba lagi.",
+  },
   toastPlanExecuted: "Analysis plan dieksekusi.",
-  toastPlanExecuteFail: (message: string) => `Eksekusi analysis plan gagal: ${message}`,
+  planExecuteFail: {
+    byCode: failByCode("Eksekusi analysis plan gagal"),
+    generic: "Eksekusi analysis plan gagal. Silakan coba lagi.",
+  },
   toastPlanCreated: "Analysis plan dibuat.",
-  toastPlanCreateFail: (message: string) => `Membuat analysis plan gagal: ${message}`,
+  planCreateFail: {
+    byCode: failByCode("Membuat analysis plan gagal"),
+    generic: "Membuat analysis plan gagal. Silakan coba lagi.",
+  },
 };
 
 export const SETUP_COPY = {
@@ -442,7 +511,10 @@ export const SETUP_COPY = {
   recentDatasetCount: (n: number) => `${n} dataset`,
   recentOpenAction: (name: string) => `Buka ${name}`,
   toastProjectOpened: (name: string) => `Project dibuka: ${name}`,
-  toastOpenFail: (msg: string) => `Gagal membuka project: ${msg}`,
+  projectOpenFail: {
+    byCode: failByCode("Gagal membuka project"),
+    generic: "Gagal membuka project. Silakan coba lagi.",
+  },
   snapshotInfo: (snapshotId: string, rowCount: number, fingerprintPrefix: string) =>
     `Snapshot ${snapshotId} · ${rowCount} rows · sha256 ${fingerprintPrefix}…`,
   // DatasetCard (UIUX-05): nama + rows/cols + fingerprint 12 char + aksi cepat
@@ -502,15 +574,33 @@ export const SETUP_COPY = {
   confirmDiagnosticDesc: (dest: string) =>
     `Bundle diagnostic ter-redaksi akan ditulis ke ${dest}. Tanpa data mentah atau isi database.`,
   toastProjectCreated: (name: string) => `Project dibuat: ${name}`,
-  toastProjectFail: (message: string) => `Gagal membuat project: ${message}`,
+  projectCreateFail: {
+    byCode: failByCode("Gagal membuat project"),
+    generic: "Gagal membuat project. Silakan coba lagi.",
+  },
   toastDatasetImported: (name: string) => `Dataset diimport: ${name}`,
-  toastImportFail: (message: string) => `Gagal import: ${message}`,
+  datasetImportFail: {
+    byCode: failByCode("Gagal import"),
+    generic: "Gagal import. Silakan coba lagi.",
+  },
   toastBackupCreated: "Backup dibuat.",
-  toastBackupFail: (message: string) => `Backup gagal: ${message}`,
+  backupFail: {
+    byCode: failByCode("Backup gagal"),
+    generic: "Backup gagal. Silakan coba lagi.",
+  },
   toastRestoreDone: "Restore selesai.",
-  toastRestoreFail: (message: string) => `Restore gagal: ${message}`,
+  restoreFail: {
+    byCode: failByCode("Restore gagal"),
+    generic: "Restore gagal. Silakan coba lagi.",
+  },
   toastPortableDone: "Export portabel selesai.",
-  toastPortableFail: (message: string) => `Export portabel gagal: ${message}`,
+  portableFail: {
+    byCode: failByCode("Export portabel gagal"),
+    generic: "Export portabel gagal. Silakan coba lagi.",
+  },
   toastDiagnosticCreated: "Diagnostic bundle dibuat.",
-  toastDiagnosticFail: (message: string) => `Diagnostic gagal: ${message}`,
+  diagnosticFail: {
+    byCode: failByCode("Diagnostic gagal"),
+    generic: "Diagnostic gagal. Silakan coba lagi.",
+  },
 };

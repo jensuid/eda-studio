@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `c2bb3a1` · **Kartu aktif:** `G6-B1` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `f934beb` (pra-commit B2) · **Kartu aktif:** `G6-B2` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,24 +9,24 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `G6-B1` (Walkthrough Doc01 §11.1 keyboard-only, 900px + 1440px, seeded fixtures) — done 2026-11-09, commit produk `ee93c09`, gate §4, per-task evidence §Bukti. Sebelumnya: `UIUX-09` commit `28f5d37`.
-- **Kartu berikutnya:** `G6-B2` — bukti G6 berikutnya (`QA-SHELL-001:86`); bukan kartu UIUX. Urutan G6 tetap: B1 done → B2. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B1` `done` (sesi ini).
+- **Kartu terakhir selesai:** `G6-B2` (Tabel sinyal × status stepper 5 tahap D-F1, seeded fixtures, 900px + 1440px) — done 2026-11-09, commit produk menyusul, gate §4. Sebelumnya: `G6-B1` commit produk `ee93c09`.
+- **Kartu berikutnya:** `G6-B3` (`QA-SHELL-001:87`); bukan kartu UIUX. Urutan G6 tetap: B1, B2 done → B3. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
+- **Sesi aktif:** `G6-B2` `done` (sesi ini, fresh session 2026-11-09).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `G6-B1` `done`** — walkthrough Doc01 §11.1 keyboard-only 900px + 1440px (T1–T8, seeded fixtures) hijau 2/2 di `frontend/tests/g6-b1.spec.ts`; bukti §Bukti. Commit produk `ee93c09`.
-2. **Next:** `G6-B2` (`QA-SHELL-001:86`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `G6-B2` `done`** — tabel sinyal × status stepper 5 tahap (`QA-SHELL-001:86`, kontrak pengunci `D-F1`) terverifikasi 23/23 di `frontend/tests/g6-b2.spec.ts`: truth-table Node (14 sel + kunci + vocabulary + kemurnian) + render matrix UI seeded @900/1440px (fresh/stale/boot). `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
+2. **Berikutnya setelah B2:** `G6-B3` (`QA-SHELL-001:87`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: G6-B1 (ROADMAP bagian Gerbang G6) — Walkthrough Doc01 §11.1 keyboard-only 900px + 1440px, seeded fixtures (QA-SHELL-001:85, JOB-SHELL-001 §1)
-Scope file produk: frontend/tests/g6-b1.spec.ts (baru; satu test per viewport; T1–T8 = Import→Report per Doc01 §11.1; tab-focus helper tanpa pointer).
+Kartu diambil: G6-B2 (ROADMAP bagian Gerbang G6) — Tabel sinyal × status stepper 5 tahap (QA-SHELL-001:86, kontrak pengunci D-F1; FLOW-SHELL-001 §2.2:55-65).
+Scope file produk: frontend/tests/g6-b2.spec.ts (baru; truth-table Node atas resolveStepperState + render matrix UI seeded di 900px & 1440px).
 TIDAK sentuh (tanpa amandemen PO): backend/, generated.ts, docs/shell-contracts/, docs/ux-contracts/shell/QA-SHELL-001.md, .workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: bukti B1 threshold G5-07: ≥5 tugas, keyboard-only, 2 viewport, dicatat per tugas; celah kini: seeded.spec.ts keyboard-only baru T1 (create project) dan jalan di viewport default 1280x720.
-Status akhir: done 2026-11-09 — spec hijau 2/2, gate hijau, `src/` tak tersentuh.
+Tujuan sesi: bukti B2: tiap sel matriks sinyal×status stepper 5 tahap terverifikasi (incl. sel tak terjangkau via UI: record tanpa dataset); render cocok di 2 viewport; tahap 6/7/10 non-klik, tahap 8 absen, tahap 5 bukan stage.
+Status akhir: done 2026-11-09 — spec hijau 23/23, gate hijau, `src/` tak tersentuh.
 ```
 
 ## 4. Gate terakhir
@@ -48,7 +48,25 @@ Status akhir: done 2026-11-09 — spec hijau 2/2, gate hijau, `src/` tak tersent
 
 - Gate G6-B1 (2026-11-09, sesi ini): `pytest` **287 passed** (32.21s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b1.spec.ts` **2/2 hijau** (T1–T8 keyboard-only @900px + @1440px, log per tugas; 1 flake transien pada run pertama @900px, hijau pada rerun penuh) · regresi terkait: `seeded+vertical+a11y` **42 passed** (6.2m) · `git diff --stat`: docs + spec baru `g6-b1.spec.ts` (untracked). Bukti acceptance di §Bukti.
 
+- Gate G6-B2 (2026-11-09, sesi ini, HEAD `f934beb` pra-commit): `pytest` **287 passed** (58.22s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b2.spec.ts` **23/23 hijau** (1.9m) run pertama tanpa flake — 17 tests truth-table Node + 6 render-matrix UI seeded @900px/@1440px · regresi `frontend/tests/d-f1.spec.ts` **10/10 hijau** (3.5m) · `git diff --stat`: `docs/SESSION-STATE.md` + spec baru `g6-b2.spec.ts` (untracked). Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
+
+- G6-B2 done 2026-11-09 — bukti tabel sinyal × status stepper 5 tahap (QA-SHELL-001:86; kontrak pengunci D-F1 `FLOW-SHELL-001:73`; derivasi `frontend/src/shared/ui/stepperState.ts:9-15`, `resolveStepperState` `:81-91`; seeded, 900px + 1440px; `frontend/tests/g6-b2.spec.ts`):
+
+  | Sel matriks (sinyal → status) | Bukti | Status |
+  |---|---|---|
+  | boot null → 5 tahap Belum (1/2/3/4/9 pending) | truth-table A semua-null (`g6-b2.spec.ts` kasus 1) + render boot @900/@1440 | Confirmed |
+  | projectId → 1 Selesai, lainnya Belum | truth-table A kasus 2; render fresh via setupWalkthrough | Confirmed |
+  | dataset → 2 Selesai, 1 tetap Belum (independen) | truth-table A kasus 3 | Confirmed |
+  | record tanpa dataset → tetap pending (tak ada done/stale karangan) | truth-table A kasus 5 — sel tak terjangkau via UI | Confirmed |
+  | fingerprint cocok per-tahap → Selesai (3/4/9) | truth-table A kasus 6/8/10 + render fresh penuh: 5/5 Selesai @900/@1440 | Confirmed |
+  | fingerprint mismatch per-tahap → Perlu diperbarui (stale), bukan Selesai | truth-table A kasus 7/9/11 + render stale: aria-label "berubah sejak hasil ini dibuat" (3), 4/9 sama setelah run seeded @900/@1440 | Confirmed |
+  | campuran (3 done, 4 stale, 9 pending); dataset berubah → 3/4/9 stale | truth-table A kasus 12/14 | Confirmed |
+  | kunci tepat {1,2,3,4,9}; nilai ⊆ {done,pending,stale}; murni/deterministik | truth-table A 3 tests khusus | Confirmed |
+  | 6/7/10 "Belum tersedia" non-klik; tahap 8 absen; tahap 5 bukan stage; tanpa In Progress/% | render B @900/@1440: tepat 5 link stage, 3 aria-disabled tanpa href, klik force tak pindah route, `not.toContainText("8 ·"/"5 ·"/"In Progress"/% )` | Confirmed |
+
+  Keputusan yang dicatat: tidak ada defect produk (seluruh sel cocok dengan kontrak pada run pertama); `src/` tak tersentuh. Overlap render stale 4/9 dengan `d-f1.spec.ts:143-173` disengaja sebagai bukti independen B2. Drift tercatat: tidak ada.
 
 - G6-B1 done 2026-11-09 — bukti walkthrough (QA-SHELL-001:85, threshold G5-07 ≥5 tugas, keyboard-only, seeded, 900px + 1440px, per tugas):
 
@@ -112,6 +130,7 @@ Status akhir: done 2026-11-09 — spec hijau 2/2, gate hijau, `src/` tak tersent
 
 ## 6. Batasan terbuka (Bukan PASS)
 
+- `G6-B2` `done` (2026-11-09) — kartu bukti test-only; gate §4; evidence §Bukti. `src/` tak tersentuh; tidak ada defect produk. Status resmi G6 tetap FAIL by default sampai bukti B3–B12 terkumpul (QA-SHELL-001:110).
 - `G6-B1` `done` (2026-11-09) — kartu bukti test-only; gate §4; per-task evidence §Bukti. `src/` tak tersentuh; 2 observasi keyboard Likely tercatat (§Bukti). Status resmi G6 tetap FAIL by default sampai bukti B2–B12 terkumpul (QA-SHELL-001:110).
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.

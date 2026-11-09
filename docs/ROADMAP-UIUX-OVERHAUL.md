@@ -247,6 +247,20 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
   pemetaan per tugas + 2 observasi keyboard (Likely) di §Bukti · commit
   produk `ee93c09`.
 
+### G6-B2 — Tabel sinyal × status stepper 5 tahap [done 2026-11-09]
+
+- **Kontrak:** `QA-SHELL-001:86` (B2) + `QA-SHELL-001:52` (sinyal × status)
+  + pengunci `D-F1` (`FLOW-SHELL-001:73`) + tabel sinyal
+  `FLOW-SHELL-001:55-65`; derivasi `frontend/src/shared/ui/stepperState.ts:9-15`.
+- **Threshold:** tiap sel matriks terverifikasi — termasuk sel tak
+  terjangkau via UI (record tanpa dataset); render seeded @900px + 1440px;
+  6/7/10 non-klik, 8 absen, 5 bukan stage; tanpa `In Progress`/persentase.
+- **Acceptance:** `frontend/tests/g6-b2.spec.ts` hijau 23/23 (17 truth-table
+  Node + 6 render matrix UI); regresi `d-f1.spec.ts` 10/10; gate
+  HARNESS-5 hijau; `src/` tak tersentuh.
+- **Bukti:** tabel sel × bukti di §Bukti SESSION-STATE · gate §4 ·
+  commit produk menyusul (lihat SESSION-STATE §1).
+
 ---
 
 ## Urutan esensial & utang

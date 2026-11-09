@@ -24,23 +24,28 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ## Fase 1 — Token shell aditif (DS-SHELL-001 §2.4–§2.5)
 
-### UIUX-01 — Token `--shell-font-*` aditif-only [ready]
+### UIUX-01 — Token `--shell-font-*` aditif-only [done — 2026-11-09]
 
 - **Kontrak:** `docs/ux-contracts/shell/DS-SHELL-001.md:80-138` (`D-DS1=A`,
   `D-DS3=A`).
 - **File disentuh:** `frontend/src/shared/tokens.css` (hanya tambah baris),
-  `tools/token_ownership_lint.py` (verifikasi, bila perlu perluasan),
+  `tools/token_ownership_lint.py` (verifikasi — **tidak** diperluas, lihat
+  SESSION-STATE §Bukti),
   `frontend/src/shared/tokens.ts` (**tidak diubah** — mirror canvas ECharts).
 - **Tambahan:** `--shell-font-display:24px; --shell-font-title:18px;
   --shell-font-subtitle:15px; --shell-font-body:14px; --shell-font-caption:12px;`
-  + `--shell-font-weight-*` (display/title 600, lainnya 400) +
+  + `--shell-font-weight-*` (display **400**, title 600, lainnya 400 —
+  per kontrak §2.5 `DS-SHELL-001.md:120-124`; koreksi atas angka roadmap 600
+  untuk display) +
   `--shell-line-height-*` (display/title 1.4, subtitle/body/caption 1.5).
 - **Acceptance:** `git diff frontend/src/shared/tokens.css` hanya tambah
-  baris (nol baris lama diubah/dihapus); token lama `--font-size-sm:11px /
+  baris (18 tambah / 0 hapus); token lama `--font-size-sm:11px /
   -md:13px / -lg:15px` utuh (`frontend/src/shared/tokens.css:43-46`);
-  lint `token_ownership_lint.py` hijau (selektor fitur tanpa
-  `--shell-font-*`, selektor shell tanpa `--font-size-*`); gate §HARNESS-5 hijau.
-- **Blocked by:** harness commit (sesi ini).
+  lint `token_ownership_lint.py` hijau (token belum dikonsumsi — migrasi
+  ownership di UIUX-02); gate §HARNESS-5 hijau (pytest 287 passed, ruff,
+  tsc `-p frontend`, lint). Bukti: SESSION-STATE §Bukti/§Gate.
+- **Blocked by:** harness commit (sesi ini, `490fffa`). **Done:** tanpa
+  perubahan visual (token belum dipakai; UIUX-02 konsumennya).
 
 ### UIUX-02 — Ganti font shell ke `--shell-font-*` [todo, after UIUX-01]
 

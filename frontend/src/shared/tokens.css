@@ -47,6 +47,24 @@
 
   /* Durasi */
   --duration-fast: 150ms;
+
+  /* Shell typography (DS-SHELL-001 §2.4 D-DS1=A + §2.5 D-DS3=A, aditif-only;
+     hanya selector shell R1–R7; token lama di atas tidak diubah) */
+  --shell-font-display: 24px;
+  --shell-font-title: 18px;
+  --shell-font-subtitle: 15px;
+  --shell-font-body: 14px;
+  --shell-font-caption: 12px;
+  --shell-font-weight-display: 400;
+  --shell-font-weight-title: 600;
+  --shell-font-weight-subtitle: 400;
+  --shell-font-weight-body: 400;
+  --shell-font-weight-caption: 400;
+  --shell-line-height-display: 1.4;
+  --shell-line-height-title: 1.4;
+  --shell-line-height-subtitle: 1.5;
+  --shell-line-height-body: 1.5;
+  --shell-line-height-caption: 1.5;
 }
 
 @media (prefers-reduced-motion: reduce) {

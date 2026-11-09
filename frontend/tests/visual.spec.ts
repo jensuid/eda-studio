@@ -77,7 +77,7 @@ for (const route of ROUTES) {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await setupWalkthrough(page);
       if (route.label !== "Profiling") {
-        await page.getByRole("link", { name: route.label }).click();
+        await page.getByRole("link", { name: route.label, exact: true }).click();
       }
       await routeAction(page, route.label);
       const main = page.locator("#main-content");

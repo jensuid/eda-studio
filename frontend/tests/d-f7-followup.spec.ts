@@ -81,7 +81,7 @@ test("Histogram: stale → banner 4 elemen → artefak lama terlihat → CTA ref
   await dismissAllToasts(page);
 
   // Histogram berjalan dari route Dataset (DatasetExplorer).
-  await page.getByRole("link", { name: "Dataset" }).click();
+  await page.getByRole("link", { name: "Dataset", exact: true }).click();
   await page.getByLabel("Nama kolom numerik").fill("sales");
   await page.getByRole("button", { name: "Jalankan Histogram" }).click();
   await expect(page.getByText("Histogram selesai.")).toBeVisible();
@@ -104,7 +104,7 @@ test("Histogram: stale → banner 4 elemen → artefak lama terlihat → CTA ref
   // setelah navigasi pergi-balik recordnya hilang — yang penting tidak ada
   // refresh otomatis (tidak ada toast sukses baru, input kosong).
   await page.getByRole("link", { name: "Profiling" }).click();
-  await page.getByRole("link", { name: "Dataset" }).click();
+  await page.getByRole("link", { name: "Dataset", exact: true }).click();
   await expect(page.getByText("Histogram selesai.")).toHaveCount(0);
   await expect(page.locator(".cleaning-stale")).toHaveCount(0);
   await expect(page.getByLabel("Nama kolom numerik")).toHaveValue("");

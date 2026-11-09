@@ -76,4 +76,23 @@ export const SHELL_COPY = {
   diagnosticDetail: "Detail diagnostik",
   copyDiagnostic: "Salin detail",
   copiedDiagnostic: "Detail disalin",
+  // --- Stepper alur analisis (FLOW-SHELL-001 §2.2 D-F1) ---
+  // Status hanya dari sinyal sah (ProjectContext), bukan status karangan.
+  // Tahap 6/7/10 "Belum tersedia" dan tidak dapat diklik; tahap 8 tidak
+  // ditampilkan sebagai stage (gap tercatat di kode Stepper).
+  stepperTitle: "Alur analisis",
+  stepperStageListLabel: "Tahapan alur analisis",
+  stepperStageName: (n: number, name: string) => `${n} · ${name}`,
+  stepperStatusDone: "Selesai",
+  stepperStatusPending: "Belum",
+  stepperStatusStale: "Perlu diperbarui",
+  stepperStaleReason: (dependency: string) =>
+    `Perlu diperbarui: ${dependency} berubah sejak hasil ini dibuat.`,
+  stepperUnavailable: "Belum tersedia",
+  stepperUnavailableReason: "Status belum tersedia di shell ini.",
+  stepperUnavailableName: {
+    6: "Visualisasi",
+    7: "Hubungan",
+    10: "Laporan",
+  } as const,
 } as const;

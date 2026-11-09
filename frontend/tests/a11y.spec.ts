@@ -24,7 +24,7 @@ async function gotoAndNavigate(page: Page, label: string): Promise<void> {
   await page.goto("/");
   await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
   if (label !== "Setup") {
-    await page.getByRole("link", { name: label }).click();
+    await page.getByRole("link", { name: label, exact: true }).click();
   }
   await expect(page.locator("#main-content")).toBeVisible();
 }
@@ -80,7 +80,7 @@ test("B11: tidak ada ID dokumen (DocNN §) di headline visibel", async ({
   await page.setViewportSize({ width: 1440, height: 900 });
   await setupWalkthrough(page);
   for (const label of ROUTE_LABELS) {
-    await page.getByRole("link", { name: label }).click();
+    await page.getByRole("link", { name: label, exact: true }).click();
     const headlines = await page
       .locator("h1, h2")
       .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
@@ -174,6 +174,6 @@ test("viewport 900px: tombol rail tetap punya accessible name (0 critical)", asy
   const critical = results.violations.filter((v) => v.impact === "critical");
   expect(critical, JSON.stringify(critical, null, 2)).toEqual([]);
   await expect(
-    page.getByRole("link", { name: "Dataset" }),
+    page.getByRole("link", { name: "Dataset", exact: true }),
   ).toBeVisible();
 });

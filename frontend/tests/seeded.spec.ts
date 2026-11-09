@@ -157,7 +157,7 @@ test.describe("B6 — job berlanjut saat navigasi, progress indeterminate", () =
     await page.goto("/");
     await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
     await expect(page.getByText("Running")).toBeVisible();
-    await page.getByRole("link", { name: "Dataset" }).click();
+    await page.getByRole("link", { name: "Dataset", exact: true }).click();
     await expect(page.locator("#main-content")).toBeVisible();
     await expect(page.getByText("Running")).toBeVisible();
     await page.getByRole("link", { name: "Profiling" }).click();

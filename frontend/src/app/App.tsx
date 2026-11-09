@@ -9,6 +9,7 @@ import { ROUTES, RouterProvider, hashFor, useRouter } from "./router";
 import type { RouteId } from "./router";
 import { ToastProvider } from "../shared/ui/Toaster";
 import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
+import { Stepper } from "../shared/ui/Stepper";
 import { JobCenter } from "../shared/job/JobCenter";
 import { SHELL_COPY } from "../shared/copy/shellCopy";
 import { describeConcernError } from "../shared/copy/errorCopy";
@@ -291,6 +292,10 @@ function Shell() {
             </button>
           </section>
         )}
+        {/* D-F1 (FLOW-SHELL-001 §2.2): stepper R3 di dalam kolom main
+            (SCREEN §3.2), di atas konten route. Di dalam main supaya tidak
+            ikut tersembunyi oleh media query D-S3 ≤900px (.app-aside). */}
+        <Stepper />
         <RouteContent />
       </main>
       <aside

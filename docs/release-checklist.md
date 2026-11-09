@@ -24,19 +24,33 @@ Checklist berbasis evidence. Status diisi dari gate yang benar-benar dijalankan.
 - `tsc --noEmit`: clean
 - `vite build`: sukses 13,97 dtk (warning chunk-size non-blocking)
 
-## Sign-off rilis (P3-1, manual)
+## Sign-off rilis (digital — B+C, 2026-11-09)
 
-Packaging per-OS terdaftar: `desktop/eda-workbench.spec` (PyInstaller
-BUILD-016/017) + `tools/build_packaging.py` (`--sign` butuh host bertanda
-tangan; kredensial tidak di repo). Beta validation script:
-[beta-validation-script.md](beta-validation-script.md) (7 skenario).
-Dokumen ini **belum ditandatangani** — tanda tangan adalah langkah manual
-pemilik setelah build bertanda tangan + 7 skenario lolos.
+**B. Persetujuan digital** — Workflow `Release gate` (`.github/workflows/release-gate.yml`,
+manual dispatch: `version` + `tag`): job `verify` (pytest + ruff + verifikasi tanda
+tangan tag) → job `approve` menunggu persetujuan di GitHub **Environment `release`**
+(`required reviewers`, tercatat otomatis dengan akun + timestamp) → job `record`
+menulis ringkasan ke job summary. Setup satu kali oleh pemilik: *Settings →
+Environments → `release` → Required reviewers* (konfigurasi repo, bukan kode).
 
-| Peran | Nama | Tanggal | Tanda tangan |
-|---|---|---|---|
-| Release owner | | | |
-| Tester beta (≥2) | | | |
+**C. Signed tag** — `tools/sign_release_tag.sh vX.Y.Z` (fail-closed: working tree
+bersih, tag belum ada, HEAD sudah ter-push, `tag.gpgsign=true`): membuat annotated
+signed tag (SSH/GPG) di HEAD, push, lalu verifikasi. Kunci signer harus terdaftar
+di akun GitHub sebagai signing key. Tag membuktikan *siapa pembuat tag* — bukan
+persetujuan rilis (itu tugas B).
+
+**A. Code signing biner** — **ditunda ke Stable, non-blocking untuk Beta**
+(keputusan pemilik 2026-11-07; kredensial Apple/Azure ±US$99/th / ±US$120/th).
+Beta dirilis unsigned per [beta-unsigned-guidance.md](beta-unsigned-guidance.md);
+workflow rilis tidak memuat signing apa pun.
+
+| Peran | Mekanisme | Tercatat |
+|---|---|---|
+| Release owner | Approve Environment `release` di GitHub | akun + timestamp run otomatis |
+| Tester beta (≥2) | Beta validation script | hasil di GitHub Issues `beta-feedback` |
+
+Dokumen ini tidak lagi ditandatangani manual — persetujuan digital di GitHub
+ menggantikan tanda tangan konvensional.
 
 ## Non-MVP (tidak masuk RC — sesuai §4.2)
 

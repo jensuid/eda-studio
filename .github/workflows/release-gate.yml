@@ -1,0 +1,79 @@
+# Release gate — persetujuan rilis digital (langkah B, 2026-11-09).
+#
+# Alur: manual dispatch dengan versi + tag → job `verify` menjalankan gate
+# inti → job `approve` menunggu persetujuan di GitHub Environment `release`
+# (required reviewers dikonfigurasi sekali di Settings → Environments →
+# `release` oleh pemilik; tercatat otomatis dengan akun + timestamp) →
+# job `record` menulis ringkasan persetujuan sebagai job summary.
+#
+# Code signing biner (A) sengaja TIDAK ada di workflow ini: ditunda ke
+# Stable per keputusan pemilik 2026-11-07 dan bukan blocker Beta.
+name: Release gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versi rilis (mis. v0.1.0) — harus sama dengan tag bertanda tangan"
+        required: true
+        type: string
+      tag:
+        description: "Tag bertanda tangan untuk versi ini (dibuat via tools/sign_release_tag.sh)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: python -m pip install -e ".[dev]"
+      - name: Pytest
+        run: python -m pytest -q
+      - name: Ruff
+        run: python -m ruff check backend tests
+      - name: Verify signed tag
+        run: |
+          git fetch --tags
+          git tag -v "${{ inputs.tag }}" || {
+            echo "::error::Tag ${{ inputs.tag }} tidak terverifikasi — tanda tangan tidak valid atau kunci tidak terdaftar di GitHub."
+            exit 1
+          }
+          echo "Tag ${{ inputs.tag }} terverifikasi."
+
+  approve:
+    name: approve (Environment release)
+    needs: [verify]
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Print approval scope
+        run: |
+          echo "Menunggu persetujuan required reviewer di Environment 'release'."
+          echo "Versi: ${{ inputs.version }} | Tag: ${{ inputs.tag }} | SHA: ${{ github.sha }}"
+
+  record:
+    name: record approval
+    needs: [approve]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write summary
+        run: |
+          {
+            echo "## Rilis ${{ inputs.version }} disetujui"
+            echo "- Tag: \`${{ inputs.tag }}\` (bertanda tangan, terverifikasi)"
+            echo "- SHA: \`${{ github.sha }}\`"
+            echo "- Disetujui oleh: reviewer Environment \`release\` (lihat run ini)"
+            echo "- Code signing: ditunda ke Stable (non-blocking Beta)"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"

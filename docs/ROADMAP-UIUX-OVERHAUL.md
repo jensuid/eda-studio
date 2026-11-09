@@ -280,6 +280,31 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
 - **Bukti:** tabel klausa × bukti di §Bukti SESSION-STATE · gate §4 ·
   commit produk ditulis sesi ini.
 
+### G6-B4 — Uji reload / Back / revalidasi gagal (D-F2 + D-F3) [done 2026-11-09]
+
+- **Kontrak:** `QA-SHELL-001:88` (B4) + pengunci `D-F2`
+  (`FLOW-SHELL-001:95,193`: "Hash routing + history stack; Back/Forward
+  tidak membatalkan job") + `D-F3` (`FLOW-SHELL-001:97,194`: "Persist 3
+  field + revalidasi wajib + degraded beralasan saat gagal"; ditolak
+  menyimpan record analisis). Judul baris: "screenshot tidak cukup
+  untuk arsitektur" — bukti = assertion fungsional aplikasi nyata.
+- **Threshold:** matriks baris R1–R6 @900px + 1440px seeded — R1 reload
+  dari hash dan dari route tersimpan tanpa hash; R2 Back/Forward
+  mengembalikan route tanpa menghapus hasil dan tanpa command domain
+  baru (nol toast); R3 localStorage tepat 2 kunci
+  (`eda-resume:project-v1`, `eda-resume:route-v1`) dengan nilai project
+  hanya {projectId, datasetId}; R4 resume sukses: konteks valid
+  (chip Dataset Selesai + `fp_seed_0123`) tapi record analisis null
+  (tombol run + chip Profil Belum) — tanpa tulis-ulang; R5
+  revalidasi-gagal → banner `role="alert"` beralasan + "Mulai baru"
+  membersihkan simpanan; R6 hash tak dikenal → Setup + pesan.
+- **Acceptance:** `frontend/tests/g6-b4.spec.ts` hijau 10/10; regresi
+  `routing + d-f7 + d-f7-followup + seeded + vertical` 27/27; gate
+  HARNESS-5 hijau (pytest 287, ruff, tsc, token lint); `src/` tak
+  tersentuh.
+- **Bukti:** tabel baris × bukti di §Bukti SESSION-STATE · gate §4 ·
+  commit produk ditulis sesi ini.
+
 ---
 
 ## Urutan esensial & utang

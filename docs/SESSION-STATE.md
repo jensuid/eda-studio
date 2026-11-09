@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `16f73c9` · **Kartu aktif:** `G6-B3` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `8f66cd3` · **Kartu aktif:** `G6-B4` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,24 +9,24 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `G6-B3` (Uji fingerprint mismatch → artefak `Stale`, bukan `Current` D-F7, seeded fixtures, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B2` commit produk `7ed3bd4`, `G6-B1` commit produk `ee93c09`.
-- **Kartu berikutnya:** `G6-B4` (`QA-SHELL-001:88`); bukan kartu UIUX. Urutan G6 tetap: B1, B2, B3 done → B4. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B3` `done` (sesi ini, fresh session 2026-11-09).
+- **Kartu terakhir selesai:** `G6-B4` (Uji reload / Back / revalidasi gagal D-F2 + D-F3, QA-SHELL-001:88, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B3` commit produk `16f73c9`, `G6-B2` `7ed3bd4`, `G6-B1` `ee93c09`.
+- **Kartu berikutnya:** `G6-B5` (`QA-SHELL-001:89`); bukan kartu UIUX. Urutan G6 tetap: B1–B4 done → B5. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
+- **Sesi aktif:** `G6-B4` `done` (sesi ini, fresh session 2026-11-09).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `G6-B3` `done`** — uji fingerprint mismatch → artefak `Stale`, bukan `Current` (`QA-SHELL-001:87`, kontrak pengunci `D-F7`) terverifikasi 4/4 di `frontend/tests/g6-b3.spec.ts`: sapuan stale 6 permukaan @900/1440px (Profiling, Histogram, Quality, Readiness, Cleaning-quality, Bivariat) + fresh-negative + baris persetujuan kanonis. `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
-2. **Berikutnya setelah B3:** `G6-B4` (`QA-SHELL-001:88`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `G6-B4` `done`** — uji reload / Back / revalidasi gagal (`QA-SHELL-001:88`; kontrak pengunci `D-F2` + `D-F3`) terverifikasi 10/10 di `frontend/tests/g6-b4.spec.ts`: baris R1–R6 @900/1440px (reload dari hash + route tersimpan, Back/Forward tanpa hapus hasil & tanpa command domain baru, localStorage tepat 2 kunci, resume sukses tanpa tulis-ulang, degraded beralasan + Mulai baru, hash tak dikenal). `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
+2. **Berikutnya setelah B4:** `G6-B5` (`QA-SHELL-001:89`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: G6-B3 (ROADMAP bagian Gerbang G6) — Uji fingerprint mismatch → artefak `Stale`, bukan `Current` (QA-SHELL-001:87, kontrak pengunci D-F7; FLOW-SHELL-001:185; JOB-SHELL-001:105).
-Scope file produk: frontend/tests/g6-b3.spec.ts (baru; sapuan stale 6 permukaan @900 & 1440px + fresh-negative + baris persetujuan kanonis).
+Kartu diambil: G6-B4 (ROADMAP bagian Gerbang G6) — Uji reload / Back / revalidasi gagal (QA-SHELL-001:88; kontrak pengunci D-F2 + D-F3 ratified PO 2026-11-08; FLOW-SHELL-001 §2.9 + :95 + :97; traceability FLOW §2.9 → QA-SHELL-001:216 R1–R5).
+Scope file produk: frontend/tests/g6-b4.spec.ts (baru; matriks baris R1–R6 @900px & 1440px: reload-hash, reload-route-tersimpan, Back/Forward tanpa hapus hasil, bentuk localStorage 2 kunci, resume sukses tanpa tulis-ulang, degraded beralasan + Mulai baru).
 TIDAK sentuh (tanpa amandemen PO): backend/, generated.ts, docs/shell-contracts/, docs/ux-contracts/shell/QA-SHELL-001.md, .workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: bukti B3: semua artefak memeriksa fingerprint (C1), tampil Stale dengan disclaimer bukan-Current (C2), refresh hanya setelah persetujuan (C3), CTA menyebut dependency (C4).
-Status akhir: done 2026-11-09 — spec hijau 4/4, gate hijau, `src/` tak tersentuh.
+Tujuan sesi: bukti B4: screenshot tidak cukup — arsitektur diukur fungsional (hash+history D-F2; persist 3 field + revalidasi wajib + degraded beralasan D-F3; tanpa simpan record analisis; navigasi tidak memicu command domain).
+Status akhir: done 2026-11-09 — spec hijau 10/10, gate hijau (pytest 287, ruff, tsc, token lint), `src/` tak tersentuh; bukti §5.
 ```
 
 ## 4. Gate terakhir
@@ -52,9 +52,23 @@ Status akhir: done 2026-11-09 — spec hijau 4/4, gate hijau, `src/` tak tersent
 
 - Gate G6-B3 (2026-11-09, sesi ini, HEAD `75b2d99` pra-commit produk): `pytest` **287 passed** (53.70s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b3.spec.ts` **4/4 hijau** (1.9m) — sapuan stale 6 permukaan @900px + @1440px, fresh-negative, baris persetujuan kanonis · regresi `d-f7 + d-f7-followup + seeded + d-f1 + vertical` **31/31 hijau** (6.0m) · `git diff --stat`: `docs/SESSION-STATE.md` + spec baru `g6-b3.spec.ts` (untracked). Bukti acceptance di §Bukti.
 
+- Gate G6-B4 (2026-11-09, sesi ini, HEAD `8f66cd3` pra-commit produk): `pytest` **287 passed** (10.11s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b4.spec.ts` **10/10 hijau** (2.6m) — baris R1–R6 @900px + @1440px (reload hash + route-tersimpan, Back/Forward, localStorage 2 kunci, resume tanpa tulis-ulang, degraded + Mulai baru, hash tak dikenal) · regresi `routing + d-f7 + d-f7-followup + seeded + vertical` **27/27 hijau** (2.8m) · `git diff --stat`: hanya `docs/SESSION-STATE.md` (spec baru untracked). Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
 
-- G6-B3 done 2026-11-09 — bukti fingerprint mismatch → artefak `Stale`, bukan `Current` (QA-SHELL-001:87; kontrak pengunci D-F7 `FLOW-SHELL-001:185`; JOB-SHELL-001:105; derivasi `record.fingerprint !== dataset.fingerprint` di `ProfilingPage.tsx:207`, `DatasetExplorer.tsx:221`, `QualityPage.tsx:56`, `ReadinessPage.tsx:49`, `CleaningSection.tsx:41`, `BivariateSection.tsx:52`; copy stale `featureCopy.ts:106-116,136-146,177,273-283,415-425`; mock stale `helpers.ts` `STAT_PATCHED` FP_OLD vs dataset FP_SEED; seeded, 900px + 1440px; `frontend/tests/g6-b3.spec.ts`):
+- G6-B4 done 2026-11-09 — bukti reload / Back / revalidasi gagal (QA-SHELL-001:88; kontrak pengunci D-F2 `FLOW-SHELL-001:95,193` + D-F3 `:97,194`; §2.9 `:165-169`; implementasi `frontend/src/app/router.tsx:72-82,84-101,120-141`, `frontend/src/app/ProjectContext.tsx:27,48-58,99-138`, banner `frontend/src/app/App.tsx:337-344`, copy `frontend/src/shared/copy/shellCopy.ts:20-22`; assertion fungsional aplikasi nyata, bukan screenshot; seeded, 900px + 1440px; `frontend/tests/g6-b4.spec.ts`):
+
+  | Baris matriks (klausa) | Bukti | Status |
+  |---|---|---|
+  | R1 reload: hash membawa route; tanpa hash, route tersimpan memulihkan | create+import → `#/quality` → reload URL sama + gate Quality; `goto("/")` route `#/quality` tetap (readStoredRoute) | Confirmed |
+  | R2 Back/Forward: route kembali, hasil tidak terhapus, tanpa command domain baru | Profiling(run) → Kualitas → Kesiapan → goBack×2 → tabel Profiling tetap `sales`; nol toast run baru selama navigasi | Confirmed |
+  | R3 persist hanya 3 field: localStorage tepat 2 kunci | kunci = {`eda-resume:project-v1`, `eda-resume:route-v1`}; nilai project hanya {projectId, datasetId}; tak ada nilai/kunci record analisis | Confirmed |
+  | R4 resume sukses tanpa tulis-ulang | pasca-reload: chip "2 · Dataset Selesai" + `fp_seed_0123` (konteks valid), tombol "Jalankan Profiling" + chip "3 · Profil Belum" (record null), tanpa banner degraded, nol toast | Confirmed |
+  | R5 revalidasi gagal → degraded beralasan | banner `role="alert"` memuat `Tidak dapat memulihkan konteks tersimpan — project hilang di backend`; klik "Mulai baru" → banner lenyap, simpanan dibersihkan, Setup bersih | Confirmed |
+  | R6 hash tak dikenal → Setup + pesan | `#/tidak-ada` → "Rute tidak dikenal" + form Nama project | Confirmed |
+  | regresi tetangga | `routing + d-f7 + d-f7-followup + seeded + vertical` **27/27 hijau** | Confirmed |
+
+  Keputusan yang dicatat: tidak ada defect produk (seluruh baris cocok dengan kontrak D-F2/D-F3; `src/` tak tersentuh). Run pertama: 6/10 hijau — 4 gagal di asersi spec (gate Quality tak tampil karena walkthrough menjalankan Profiling; kartu dataset berada di route Setup, bukan Profiling), bukan produk; diperbaiki lalu 10/10. Overlap dengan `routing.spec.ts` (reload/Back/unknown/degraded @1280px) disengaja sebagai bukti independen B4 dengan cakupan 900/1440px + 3 lacuna baru (route-tersimpan-tanpa-hash, bentuk localStorage eksplisit, reset Mulai baru). Drift tercatat: tidak ada. — bukti fingerprint mismatch → artefak `Stale`, bukan `Current` (QA-SHELL-001:87; kontrak pengunci D-F7 `FLOW-SHELL-001:185`; JOB-SHELL-001:105; derivasi `record.fingerprint !== dataset.fingerprint` di `ProfilingPage.tsx:207`, `DatasetExplorer.tsx:221`, `QualityPage.tsx:56`, `ReadinessPage.tsx:49`, `CleaningSection.tsx:41`, `BivariateSection.tsx:52`; copy stale `featureCopy.ts:106-116,136-146,177,273-283,415-425`; mock stale `helpers.ts` `STAT_PATCHED` FP_OLD vs dataset FP_SEED; seeded, 900px + 1440px; `frontend/tests/g6-b3.spec.ts`):
 
   | Klausa D-F7 | Bukti | Status |
   |---|---|---|

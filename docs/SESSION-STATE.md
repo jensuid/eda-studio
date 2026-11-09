@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `57a7b4f` (UIUX-04 docs) · **Kartu aktif:** `UIUX-05` `done` → next `UIUX-06` `todo`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `416896e` (UIUX-05 produk) · **Kartu aktif:** `UIUX-05` `done` → next `UIUX-06` `todo`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -25,7 +25,7 @@ Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
 Kartu diambil: UIUX-05 (ROADMAP Fase 3) — JobCenter jujur + DatasetCard
 Scope file produk: frontend/src/shared/job/JobCenter.tsx (banner load-failed per-concern; honesty D-F5/D-F6 tidak diubah), frontend/src/shared/tokens.css (ADITIF di akhir: `.job-load-failed` banner danger, cermin `.recovery-banner`), frontend/src/features/project/DatasetCard.tsx (BARU: nama + baris×kolom + fingerprint 12 char + aksi cepat), frontend/src/features/project/ProjectSetup.tsx:216-220 (ganti `<p>` snapshotInfo teks dengan `<DatasetCard>`), frontend/src/shared/controls.css (ADITIF kelas `.dataset-card*` fitur; tanpa font-size literal — inherit body 14px, ownership selector fitur dilarang `--shell-font-*`), frontend/src/shared/copy/featureCopy.ts (SETUP_COPY: datasetCardRowsCols/datasetCardFingerprint/datasetCardOpenDataset/datasetCardRunProfile), frontend/tests/dataset-card.spec.ts (BARU: card + aksi cepat + banner class). Jujur sudah ada: JobCenter.tsx:85-125 (loadFailed tanpa "Belum ada job" palsu), JobProgressBar:32-83 (indeterminate berlabel bila progress null, determinate hanya bila nyata — D-F5), badge teks+warna `badgeClass:21-26` (DS-SHELL-001 §6 Job item R5b); toast dedup correlation-id sudah ada via errorCopy fingerprint (JobClient.ts:82-85). TIDAK sentuh: backend/, generated.ts, docs/shell-contracts/, prototypes/, .workbuddy-ai/, notes/evaluasi-workbuddy/, App.tsx, router.tsx, stepperState.ts, Stepper.tsx, Toaster.tsx, ErrorBoundary, DiagnosticDetail
 Tujuan sesi: Roadmap UIUX-05 acceptance vs kontrak DS-SHELL-001 §3 + §6 tabel Job item R5b (badge teks+warna, indeterminate berlabel, dilarang "Belum ada job." saat getEvents gagal) + DS-SHELL-001:156/195 (D-F5: angka progress hanya bila backend mengizinkan); DatasetCard: nama + rows/cols + fingerprint 12 char + aksi cepat (bukan tabel teks saja); gate hijau; bukti probe computed style + Playwright; commit atomik.
-Status akhir: DONE — UIUX-05 selesai, gate hijau, commit atomik (hash produk dicatat bawah); next card: UIUX-06 (Halaman fitur 5 layar, Fase 3).
+Status akhir: DONE — UIUX-05 selesai, gate hijau, commit atomik `416896e`; next card: UIUX-06 (Halaman fitur 5 layar, Fase 3).
 ```
 
 ## 4. Gate terakhir
@@ -75,7 +75,7 @@ Status akhir: DONE — UIUX-05 selesai, gate hijau, commit atomik (hash produk d
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-05` `done` (2026-11-09, commit dicatat §3). Kartu berikutnya: `UIUX-06` (Halaman fitur 5 layar, Fase 3).
+- `UIUX-05` `done`, commit `416896e` (2026-11-09). Kartu berikutnya: `UIUX-06` (Halaman fitur 5 layar, Fase 3).
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

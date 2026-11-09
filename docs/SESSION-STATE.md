@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `5821a84` (+ commit produk G6-B1 menyusul) · **Kartu aktif:** `G6-B1` `done` (menunggu hash-record)
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `ee93c09` · **Kartu aktif:** `G6-B1` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,13 +9,13 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `G6-B1` (Walkthrough Doc01 §11.1 keyboard-only, 900px + 1440px, seeded fixtures) — done 2026-11-09, gate §4, per-task evidence §Bukti. Sebelumnya: `UIUX-09` commit `28f5d37`.
+- **Kartu terakhir selesai:** `G6-B1` (Walkthrough Doc01 §11.1 keyboard-only, 900px + 1440px, seeded fixtures) — done 2026-11-09, commit produk `ee93c09`, gate §4, per-task evidence §Bukti. Sebelumnya: `UIUX-09` commit `28f5d37`.
 - **Kartu berikutnya:** `G6-B2` — bukti G6 berikutnya (`QA-SHELL-001:86`); bukan kartu UIUX. Urutan G6 tetap: B1 done → B2. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B1` `done` (sesi ini, menunggu commit produk).
+- **Sesi aktif:** `G6-B1` `done` (sesi ini).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `G6-B1` `done`** — walkthrough Doc01 §11.1 keyboard-only 900px + 1440px (T1–T8, seeded fixtures) hijau 2/2 di `frontend/tests/g6-b1.spec.ts`; bukti §Bukti. Commit produk + hash-record menyusul sesi ini.
+1. **Sesi ini `G6-B1` `done`** — walkthrough Doc01 §11.1 keyboard-only 900px + 1440px (T1–T8, seeded fixtures) hijau 2/2 di `frontend/tests/g6-b1.spec.ts`; bukti §Bukti. Commit produk `ee93c09`.
 2. **Next:** `G6-B2` (`QA-SHELL-001:86`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)

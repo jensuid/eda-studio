@@ -244,8 +244,8 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
   (→ defect tercatat, bukan diam-diam diperbaiki di kartu ini).
 - **Bukti:** `frontend/tests/g6-b1.spec.ts` 2/2 hijau (T1–T8 lolos di
   900px + 1440px, log per tugas di output) · gate §4 SESSION-STATE ·
-  pemetaan per tugas + 2 observasi keyboard (Likely) di §Bukti. Commit
-  produk tertera di SESSION-STATE §2/§5.
+  pemetaan per tugas + 2 observasi keyboard (Likely) di §Bukti · commit
+  produk `ee93c09`.
 
 ---
 

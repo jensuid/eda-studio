@@ -206,6 +206,19 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
   template `{snapshotDir}/{testFilePath}/{arg}` di `playwright.config` —
   dicatat untuk kartu berikutnya, tidak dihapus).
 
+### UIUX-09 — Hapus baseline legacy visual.spec.ts-snapshots/ [done 2026-11-09, after UIUX-08]
+
+- **Kontrak:** QA-SHELL-001:94 (B10) + temuan UIUX-08 (`SESSION-STATE.md` §Bukti).
+- **Acceptance:** 14 PNG legacy `frontend/tests/__screenshots__/visual.spec.ts-snapshots/`
+  dihapus (`git rm`); `visual.spec.ts` tetap 16/16 hijau 900/1440;
+  gate HARNESS-5 hijau; `src/` tak tersentuh.
+- **Jawaban (done):** 14 PNG legacy dihapus via `git rm` (staged `D`,
+  dir kosong dihapus); baseline aktif `visual.spec.ts/` 16 PNG utuh;
+  grep memastikan tak ada referensi ke `visual.spec.ts-snapshots` di
+  kode/test/config (hanya domain SNR `dataset.snapshots` yang tak terkait).
+- **Bukti:** gate HARNESS-5 hijau (§4 SESSION-STATE); visual 16/16 (2.4m)
+  tanpa satu pun menulis baseline (tak ada `*-actual.png` baru).
+
 ---
 
 ## Urutan esensial & utang

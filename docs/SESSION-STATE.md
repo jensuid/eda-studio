@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `HASH` · **Kartu aktif:** `UIUX-09` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `28f5d37` · **Kartu aktif:** `UIUX-09` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -15,7 +15,7 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `UIUX-09` `done`** — 14 PNG legacy `frontend/tests/__screenshots__/visual.spec.ts-snapshots/` dihapus via `git rm` (dir kosong dihapus); baseline aktif `visual.spec.ts/` 16 PNG utuh; `visual.spec.ts` tetap **16/16 hijau**; gate hijau (§4); `src/` tak tersentuh. Commit produk: `HASH`.
+1. **Sesi ini `UIUX-09` `done`** — 14 PNG legacy `frontend/tests/__screenshots__/visual.spec.ts-snapshots/` dihapus via `git rm` (dir kosong dihapus); baseline aktif `visual.spec.ts/` 16 PNG utuh; `visual.spec.ts` tetap **16/16 hijau**; gate hijau (§4); `src/` tak tersentuh. Commit produk: `28f5d37`.
 2. **Next:** tidak ada kartu actionable Fase 5 tersisa (Phase 1 visual selesai). Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
@@ -30,7 +30,7 @@ TIDAK sentuh: src/, backend/, generated.ts, docs/shell-contracts/,
 .workbuddy-ai/, notes/evaluasi-workbuddy/
 Tujuan sesi: rapikan sisa UIUX-08 tanpa mengubah bukti visual; visual.spec.ts
 tetap 16/16 hijau di 900/1440; gate HARNESS-5 hijau.
-Status akhir: done 2026-11-09 — 14 PNG legacy visual.spec.ts-snapshots/ dihapus (git rm); baseline aktif utuh; visual 16/16; gate hijau (§4); commit produk: `HASH`.
+Status akhir: done 2026-11-09 — 14 PNG legacy visual.spec.ts-snapshots/ dihapus (git rm); baseline aktif utuh; visual 16/16; gate hijau (§4); commit produk: `28f5d37`.
 ```
 
 ## 4. Gate terakhir
@@ -97,7 +97,7 @@ Status akhir: done 2026-11-09 — 14 PNG legacy visual.spec.ts-snapshots/ dihapu
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-09` `done`, commit `HASH` (2026-11-09). Phase 1 visual selesai — tidak ada kartu actionable tersisa di ROADMAP.
+- `UIUX-09` `done`, commit `28f5d37` (2026-11-09). Phase 1 visual selesai — tidak ada kartu actionable tersisa di ROADMAP.
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

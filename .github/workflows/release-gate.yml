@@ -21,6 +21,10 @@ on:
         description: "Tag bertanda tangan untuk versi ini (dibuat via tools/sign_release_tag.sh)"
         required: true
         type: string
+      ssh_pubkey:
+        description: "Public key SSH signer (satu baris ssh-ed25519/ssh-rsa, mis. dari id_ed25519.pub). Diperlukan untuk memverifikasi tanda tangan tag di runner."
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -43,13 +47,22 @@ jobs:
       - name: Ruff
         run: python -m ruff check backend tests
       - name: Verify signed tag
+        env:
+          TAG: ${{ inputs.tag }}
+          SSH_PUBKEY: ${{ inputs.ssh_pubkey }}
         run: |
           git fetch --tags
-          git tag -v "${{ inputs.tag }}" || {
-            echo "::error::Tag ${{ inputs.tag }} tidak terverifikasi — tanda tangan tidak valid atau kunci tidak terdaftar di GitHub."
+          # Runner CI tidak punya allowed signers — tulis dari input dispatch
+          # (public key bersifat publik, bukan rahasia).
+          mkdir -p "$HOME/.ssh"
+          TAGGER="$(git for-each-ref "refs/tags/$TAG" --format='%(taggername)')"
+          printf '%s %s\n' "${TAGGER:-release-signer}" "$SSH_PUBKEY" > "$HOME/.ssh/allowed_signers"
+          git config --global gpg.ssh.allowedSignersFile "$HOME/.ssh/allowed_signers"
+          git tag -v "$TAG" || {
+            echo "::error::Tag $TAG tidak terverifikasi — tanda tangan tidak valid, kunci salah, atau kunci belum terdaftar sebagai signing key di GitHub."
             exit 1
           }
-          echo "Tag ${{ inputs.tag }} terverifikasi."
+          echo "Tag $TAG terverifikasi."
 
   approve:
     name: approve (Environment release)

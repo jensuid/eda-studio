@@ -515,6 +515,13 @@ button {
   }
 }
 
+/* ---------- UIUX-07: target tombol tutup toast ≥36px (DS §1.5, B7) ---
+   Tombol × di Toaster.tsx terukur 34.7×39px — lebar di bawah target
+   kontraktual 36px. min-width aditif; token lama tidak diubah. */
+.toast button {
+  min-width: 36px;
+}
+
 /* ---------- Job Center load-failed banner (UIUX-05) --------------------
    Banner per-concern untuk kegagalan getEvents (D-F6): cermin visual
    .recovery-banner dengan border-left danger. Jujur: bukan "Belum ada

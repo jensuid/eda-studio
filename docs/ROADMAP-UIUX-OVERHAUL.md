@@ -158,11 +158,29 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
   token lint, suite Playwright penuh 105 passed (incl. `error-branch.spec.ts`
   baru 2/2, visual 16/16 baseline tak diregen); `tokens.css` tak tersentuh.
 
-### UIUX-07 — Audit a11y & kontras 5 level [todo, after UIUX-06]
+### UIUX-07 — Audit a11y & kontras 5 level [done 2026-11-09, after UIUX-06]
 
 - **Kontrak:** DS §3 8-state, §6 responsif; QA B5/B7.
 - **Acceptance:** axe 0 critical 8 route; target ≥36px; kontras ≥4.5:1
   termasuk caption 12px/muted; skip link + focus-visible tetap.
+- **Jawaban (done):** audit seeded (walkthrough) 8 route: axe `wcag2aa` 0
+  critical/serious/moderate; sweep kontras 0 elemen <4.5:1 (52–99 teks
+  terlihat/route; caption 12 muted 7.24–7.58:1); 2 pelanggaran target
+  diperbaiki aditif — tombol tutup toast 34.7→36px
+  (`frontend/src/shared/tokens.css:518-522` blok `.toast button {
+  min-width: 36px }`, tombol di `Toaster.tsx:64`) dan aksi DatasetCard
+  31→36px (`frontend/src/shared/controls.css:156-162` override
+  `.dataset-card-action` inline-flex + min-height 36px); radio
+  terbungkus label patuh (label 753×44.5, `ReportSection.tsx:83-92`);
+  skip link + `:focus-visible` tak berubah.
+- **Bukti:** `frontend/tests/a11y-audit.spec.ts` baru (5 test hijau:
+  axe seeded 8 route, target ≥36px 8 route + 900px 2 route, kontras
+  per tingkat tipografi 24/18/15/14/12, tombol toast ≥36px);
+  `tests/a11y.spec.ts` 25/25, `tests/visual.spec.ts` 16/16 (baseline
+  tak diregen), `tests/dataset-card.spec.ts` + `tests/error-branch.spec.ts`
+  hijau; display 24px terdaftar-tidak-dirender (nol konsumen
+  `--shell-font-display` di luar `tokens.css:54`; R4 domain kontrak
+  fitur, D-DS2) — sweep kontras mencakup semua teks apa pun ukurannya.
 
 ## Fase 5 — QA visual & serah terima
 

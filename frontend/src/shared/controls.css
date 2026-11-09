@@ -152,3 +152,12 @@ select[aria-invalid="true"] {
   border-radius: var(--radius-sm);
   padding: var(--space-1) var(--space-3);
 }
+
+/* ---------- UIUX-07: target aksi kartu ≥36px (DS §1.5, B7) -------------
+   Padding vertikal --space-1 (4px) membuat tinggi terukur 31px; inline-flex
+   + min-height menaikkan target ke kontraktual tanpa token warna baru. */
+.dataset-card-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}

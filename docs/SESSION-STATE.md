@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `cbcc5c3` (UIUX-06 produk) · **Kartu aktif:** `UIUX-06` `done` → next `UIUX-07` `todo`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `HASH` · **Kartu aktif:** `UIUX-07` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,23 +9,30 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `UIUX-06` (Copy tunggal + error branch) — done 2026-11-09, commit produk tercetak di §3 (gate di §4, pemetaan di §Bukti).
-- **Kartu berikutnya:** `UIUX-07` — Audit a11y & kontras 5 level (Fase 4).
-- **Sesi aktif:** `UIUX-06` `done` (sesi ini).
+- **Kartu terakhir selesai:** `UIUX-07` (Audit a11y & kontras 5 level) — done 2026-11-09, commit produk tercetak di §2/§6 (gate di §4, pemetaan di §Bukti).
+- **Kartu berikutnya:** `UIUX-08` — Tandai ulang baseline visual ≤5% + regression gate (Fase 5).
+- **Sesi aktif:** `UIUX-07` `done` (sesi ini).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `UIUX-06` `done`** — `describeFeatureError` baru (`errorCopy.ts:86-101`): headline di-branch dari `error.code` via map `byCode` milik copy fitur (copy fitur menang atas shell); 29 situs call-site fitur dialihkan dari interpolasi `error.message` mentah ke headline cabang-code (toast Profiling 9, Setup 7, Dataset Explorer 5, Quality 1, Readiness 1; alert + `DiagnosticDetail` di Bivariate 1, Report 2, PDF 2, query recent ProjectSetup 1); `shellCopy.ts` `recoveryDoneBody` kini path-only tanpa `project_id` (`App.tsx:381`); bukti `tests/error-branch.spec.ts` baru 2/2 + suite penuh 105 passed.
-2. **Next:** `UIUX-07` (Audit a11y & kontras 5 level, Fase 4). Jangan kerjakan di luar scope kartu. Radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — UIUX-04 TIDAK menyentuh `controls.css` (scope kartu = `Stepper.tsx`/`App.tsx`); pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `backend/`, `generated.ts`, `docs/shell-contracts/`, `prototypes/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `UIUX-07` `done`** — audit seeded (walkthrough penuh) 8 route: axe `wcag2aa` 0 critical/serious/moderate; sweep kontras 0 elemen <4.5:1 (52–99 teks terlihat/route; caption 12 muted 7.24–7.58:1); 2 pelanggaran target diperbaiki aditif: tombol tutup toast 34.7→36px (`frontend/src/shared/tokens.css:518-522`) dan aksi DatasetCard 31→36px (`frontend/src/shared/controls.css:156-162`); radio terbungkus label patuh (label 753×44.5 `ReportSection.tsx:83-92`); skip link + `:focus-visible` tak berubah (25/25 di `a11y.spec.ts`); bukti permanen `frontend/tests/a11y-audit.spec.ts` (5 test hijau). Commit produk: `HASH`.
+2. **Next:** `UIUX-08` (Baseline visual ≤5% + regression gate, Fase 5). Jangan kerjakan di luar scope kartu. Radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — UIUX-04 TIDAK menyentuh `controls.css` (scope kartu = `Stepper.tsx`/`App.tsx`); pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). **Temuan non-blocking UIUX-07**: `--shell-font-display` terdaftar di `tokens.css:54` tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `prototypes/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: UIUX-06 (ROADMAP Fase 4) — Copy tunggal + error branch
-Scope file produk: frontend/src/shared/copy/shellCopy.ts, frontend/src/shared/copy/errorCopy.ts, frontend/src/app/App.tsx:59 (single protocolError → per-concern). TAMBAHAN yang mungkin bila terbukti: frontend/src/shared/copy/featureCopy.ts (copy fitur menang atas shell). TIDAK sentuh: backend/, generated.ts, tokens.css, docs/shell-contracts/, prototypes/, .workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: Roadmap UIUX-06 acceptance vs kontrak D-S2 (Bahasa Indonesia tunggal) + D-F7 (error branch per-concern): tanpa ID dokumen internal / error.message mentah di headline; branching dari error.code via errorCopy.ts; copy fitur menang atas shell; gate hijau; commit atomik.
-Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `cbcc5c3` (hash-record menyusul).
+Kartu diambil: UIUX-07 (ROADMAP Fase 4) — Audit a11y & kontras 5 level
+Scope file produk: audit-first. Bukti spec baru frontend/tests/a11y-audit.spec.ts;
+perbaikan bila audit menemukan pelanggaran: frontend/src/shared/controls.css +
+frontend/src/shared/tokens.css (ADITIF saja) + baris selektor shell di file
+pemakai. TIDAK sentuh: backend/, generated.ts, docs/shell-contracts/,
+prototypes/, .workbuddy-ai/, notes/evaluasi-workbuddy/
+Tujuan sesi: Acceptance roadmap UIUX-07 vs kontrak DS-SHELL-001 §1.5/§2.1/§3/§6 +
+QA-SHELL-001 B5/B7: axe 0 critical 8 route; target kontrol ≥36px; kontras teks
+≥4.5:1 terukur pada 5 tingkat tipografi (24/18/15/14/12) di surface dan
+surface-raised termasuk caption 12px muted; skip link + :focus-visible tetap.
+Status akhir: done 2026-11-09 — audit baseline seeded 8 route (axe 0 critical/serious/moderate; 0 elemen <4.5:1; 2 pelanggaran target diperbaiki aditif); bukti `frontend/tests/a11y-audit.spec.ts` 5/5; gate hijau (§4); commit produk: `HASH`.
 ```
 
 ## 4. Gate terakhir
@@ -39,6 +46,8 @@ Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `cbc
 - Gate harness (2026-11-09, sesi sebelumnya): `pytest` **287 passed** (8.61s) · `ruff` All checks passed · `tsc --noEmit` exit 0 · `tools/token_ownership_lint.py` OK ("no hex/font-size/font-weight literals outside token files"). Working tree sebelum commit harness: `M AGENTS.md` + `docs/RUNBOOK.md`, `docs/SESSION-STATE.md`, `docs/ROADMAP-UIUX-OVERHAUL.md`, `docs/PROMPT-RESUME.md` (untracked files `prototypes/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tidak disentuh).
 - Gate produk terakhir (konteks, bukan gate sesi ini): G6 PASS Phase 0 2026-11-08 (`RATIF-SHELL-006`): Playwright 62/62, pytest 251, ruff/tsc OK — sumber: `docs/shell-contracts/RATIFICATION-RECORD-RATIF-SHELL-006-2026-11-08.md:10-15`.
 
+- Gate UIUX-07 (2026-11-09, sesi ini): `pytest` **287 passed** (55.08s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK ("no hex/font-size/font-weight literals outside token files") · `tokens.css` diff **aditif saja** (+7 baris: blok `.toast button { min-width: 36px }`, blok `:root`/token legacy utuh) · `controls.css` diff **aditif saja** (+9 baris: blok override `.dataset-card-action` inline-flex + min-height 36px, tanpa token warna baru) · Playwright: `tests/a11y-audit.spec.ts` baru **5/5 hijau** (axe wcag2aa 0 critical seeded 8 route; target ≥36px 8 route; kontras ≥4.5:1 per tingkat tipografi 24/18/15/14/12 — 18/15/14/12 hadir terukur, display tidak dirender; tombol tutup toast ≥36px; spot-check 900px 2 route) · `tests/a11y.spec.ts` **25/25 hijau** (skip link + focus-visible tak berubah) · `tests/visual.spec.ts` **16/16 hijau** (baseline tidak diregen; DatasetCard hanya muncul bila dataset ada — screenshot visual tak terpengaruh kenaikan 5px) · `tests/dataset-card.spec.ts` + `tests/error-branch.spec.ts` hijau. Probe temporer (6 spec audit, dihapus): baseline axe kontras/target per route + census font-size 8 route. Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
 
 - UIUX-06 done 2026-11-09 — D-S2/D-F7 vs `frontend/src/shared/copy/shellCopy.ts:7-9` (larangan ID internal / `error.message` mentah / hash-byte di headline; D-S2 Indonesia tunggal) + acceptance kartu:
@@ -47,6 +56,8 @@ Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `cbc
   - Shell: `recoveryDoneBody(destRoot)` di `shellCopy.ts:57-58` kini path-only ("Autosave dipulihkan ke …"); `project_id` di-drop di pemanggil `App.tsx:381`. Audit juga membuktikan kanal per-concern `App.tsx:70-72` (`protocolError`/`recoveryError`/`updateError`) sudah benar sejak D-F6 — pointer roadmap `App.tsx:59` basi.
   - Sisa interpolasi mentah terverifikasi compliant: hanya diagnostik `ErrorBoundary.tsx:63` dan signature API toast `Toaster.tsx:19-20` (grep `error.message` di `frontend/src`). `JobCenter.tsx:118` `job.message` tidak disentuh (backend `_transition()` tak pernah mengisi `message` — de facto kosong).
 - Test baru `frontend/tests/error-branch.spec.ts` 2/2: banner sukses recovery tanpa `proj_seed` (mock `recoveryRestoreOk` baru di `frontend/tests/helpers.ts`, karena tak ada handler sukses `project.recovery.restore` sebelumnya); headline fitur = cabang `NOT_FOUND` + mentah hanya di `<pre>` diagnostik. Test existing tetap hijau tanpa edit copy-nya: `artifact-open.spec.ts:68` regex "Artefak gagal dibuka" cocok dengan headline cabang baru; `d-f6.spec.ts:23/31/41` perilaku shell-branching tak berubah.
+- UIUX-07 done 2026-11-09 — Audit a11y seeded (walkthrough penuh) 8 route vs kontrak `DS-SHELL-001.md` §1 prinsip 5 (target ≥36px), §3 8-state, §6 responsif + `QA-SHELL-001.md` B5/B7: baseline probe (hapus) mengukur axe `wcag2aa` 0 critical/serious/moderate di 8 route; sweep kontras (luminansi relatif/rasio WCAG vs background efektif) 0 elemen teks <4.5:1 dari 52–99 elemen/route — caption 12px muted terukur 7.24–7.58:1; census font-size: body 14 banyak, subtitle 15 ×1, title 18 ×1, caption 12 ×9, display 24 ×0 (terdaftar `tokens.css:54` tanpa konsumen shell — R4 domain kontrak fitur D-DS2, dicatat §2, tidak diubah).
+- Temuan target (diperbaiki aditif): tombol tutup toast `Toaster.tsx:64` 34.7×39 → `tokens.css:518-522` `.toast button { min-width: 36px }`; anchor aksi DatasetCard (`DatasetCard.tsx` pakai `<a href="#/explorer|#/profiling">`) 110×31 → `controls.css:156-162` override `.dataset-card-action { display: inline-flex; align-items: center; min-height: 36px }` (tanpa token warna baru, §3 8-state tetap ter-wujud); radio Laporan 13×36 terbungkus label 753×44.5 (`ReportSection.tsx:83-92`) = target efektif ≥36px, bukan pelanggaran. Skip link + `:focus-visible` 2px/offset tidak disentuh (`tokens.css:90-115`).
 - UIUX-05 done 2026-11-09 — JobCenter jujur vs `docs/ux-contracts/shell/DS-SHELL-001.md:180` (Job item R5b: badge teks+warna, indeterminate berlabel, dilarang "Belum ada job." saat `getEvents` gagal) + `:156/:195` (D-F5: angka progress hanya bila backend mengizinkan): visual banner disamakan dengan inventory — `.job-load-failed` di `frontend/src/shared/tokens.css` (akhir file, cermin `.recovery-banner` dengan border-left `--color-status-danger`) dipasang di div alert `loadFailed` `frontend/src/shared/job/JobCenter.tsx:93`; probe computed style 3px `rgb(185,28,28)` / bg `rgb(248,250,252)` ✓. Jujur sudah ada tidak diubah: indeterminate tanpa `aria-valuenow` saat `progress` null (`JobCenter.tsx:73-82`), numeric hanya dari `JobEvent.progress`, dedup error fingerprint `concern:code:correlation_id` (`frontend/src/shared/copy/errorCopy.ts:49-75`, `JobClient.ts:82-85`); Retry/Cancel pada item TIDAK ditambah (DS-SHELL-001:180).
 - DatasetCard baru `frontend/src/features/project/DatasetCard.tsx` mengganti `<p>` teks snapshot di `frontend/src/features/project/ProjectSetup.tsx:216`: nama `<h3>` + `datasetCardRowsCols(row_count, columns.length)` → "5000 baris × 3 kolom" + `sha256 {fingerprint.slice(0,12)}…` (copy Bahasa Indonesia `frontend/src/shared/copy/featureCopy.ts` `SETUP_COPY.datasetCard*`) + aksi cepat `<a href="#/explorer">` "Buka dataset" & `<a href="#/profiling">` "Profil dataset" (link hash nyata, sinkron via `router.tsx:121-128`). Gaya fitur di `frontend/src/shared/controls.css` `.dataset-card*` (48+/0-, tanpa `--shell-font-*`, tanpa font-size literal — inherit body 14px; warna hanya token existing: `text`, `text-muted`, `border-subtle`, `surface-raised`, `chart-scatter-point` untuk link).
 - Test baru `frontend/tests/dataset-card.spec.ts` 3/3: kartu (nama, "5000 baris × 3 kolom", "sha256 fp_seed_0123…" — fingerprint 12 char `FP_SEED` `helpers.ts:14-27`), "Profil dataset" → hash `#/profiling`, "Buka dataset" → `#/explorer`, dan `eventsFail` → `.job-load-failed` terlihat + teks "Daftar job tidak dapat dimuat." + `.app-aside` TIDAK mengandung "Belum ada job" + tombol "Coba lagi".
@@ -81,7 +92,7 @@ Status akhir: DONE 2026-11-09 — implementasi + gate hijau + commit produk `cbc
 
 ## 6. Batasan terbuka (Bukan PASS)
 
-- `UIUX-06` `done`, commit `cbcc5c3` (2026-11-09). Kartu berikutnya: `UIUX-07` (Audit a11y & kontras 5 level, Fase 4).
+- `UIUX-07` `done`, commit `HASH` (2026-11-09). Kartu berikutnya: `UIUX-08` (Baseline visual ≤5% + regression gate, Fase 5).
 - Playwright `tests/d-f6.spec.ts:41` (recovery restore gagal → 2 `alert` di main: banner recovery + `Gagal membuka project: listRecent failed` dari `ProjectSetup.tsx:156`) gagal deterministik di HEAD `2a5bef3`, `e633579`, maupun `9e97d9c` — pre-existing, bukan regresi kartu UIUX; perlu fix terpisah (atau PO decision). `d-f6:13` dan `vertical:27` flake/order-dependent (hijau isolasi).
 - Job progress tetap indeterminate sampai backend D-F5 (`JobEvent.progress`) — jangan karang numeric di frontend.
 - Cmd+K Phase 2 (sudah ada `CommandPalette.tsx`, belum PASS).

@@ -17,6 +17,9 @@
 #   git config --global user.signingkey ~/.ssh/id_ed25519.pub   # SSH
 #   (untuk GPG: user.signingkey <key-id>; kunci SSH harus ditambahkan
 #    ke akun GitHub sebagai signing key agar verifikasi berfungsi)
+# Verifikasi lokal (sekali saja):
+#   printf '%s %s\n' "<principal>" "$(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers
+#   git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
 set -euo pipefail
 
 VERSION="${1:?pakai: tools/sign_release_tag.sh vX.Y.Z [--message ...]}"

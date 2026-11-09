@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `2437f54` · **Kartu aktif:** `G6-B5` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `6674ef6` · **Kartu aktif:** `G6-B6` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,24 +9,24 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `G6-B4` (Uji reload / Back / revalidasi gagal D-F2 + D-F3, QA-SHELL-001:88, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B3` commit produk `16f73c9`, `G6-B2` `7ed3bd4`, `G6-B1` `ee93c09`.
-- **Kartu berikutnya:** `G6-B5` (`QA-SHELL-001:89` — uji aksesibilitas 900px: rail berlabel, drawer, focus return, Esc, skip link; axe 0 critical 8 route; pengunci `D-S3`/`D-S6`); bukan kartu UIUX. Urutan G6 tetap: B1–B4 done → B5. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B5` `done` (sesi ini, fresh session 2026-11-09).
+- **Kartu terakhir selesai:** `G6-B6` (Job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus D-F2/D-F5/D-S8, QA-SHELL-001:90, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B5` commit produk `2437f54`, `G6-B4` `f37017c`, `G6-B3` `16f73c9`, `G6-B2` `7ed3bd4`, `G6-B1` `ee93c09`.
+- **Kartu berikutnya:** `G6-B7` (`QA-SHELL-001:91` — 8 state × 3 kontrol × 2 viewport + pengukuran kontras nyata untuk 5 tingkat; pengunci `D-S4`/`D-DS3`; menunggu G4 exit); bukan kartu UIUX. Urutan G6 tetap: B1–B6 done → B7. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
+- **Sesi aktif:** `G6-B6` `done` (sesi ini, fresh session 2026-11-09).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `G6-B5` `done`** — uji aksesibilitas 900px (`QA-SHELL-001:89`; pengunci `D-S3`/`D-S6`) terverifikasi 12/12 di `frontend/tests/g6-b5.spec.ts`: baris R1–R5 @900px (rail berlabel 8 link + lebar terukur ~176px, drawer + complementary + focus return, Esc dialog @900 + focus return pemicu, skip link, axe 0 critical 8 route). `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
-2. **Berikutnya setelah B5:** `G6-B6` (`QA-SHELL-001:90` — job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus; pengunci `D-F2`/`D-F5`/`D-S8`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `G6-B6` `done`** — bukti job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus (`QA-SHELL-001:90`; pengunci `D-F2`/`D-F5`/`D-S8`) terverifikasi 6/6 di `frontend/tests/g6-b6.spec.ts`: job Running injeksi persisten & identitas stabil lintas navigasi + Back/Forward @900px/1440px, progress null indeterminate tanpa `aria-valuenow`, determinate hanya dari angka nyata (0.4→40, terminal→100), scan sumber nol `jobProgress`. `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
+2. **Berikutnya setelah B6:** `G6-B7` (`QA-SHELL-001:91` — 8 state × 3 kontrol × 2 viewport + pengukuran kontras nyata untuk 5 tingkat; pengunci `D-S4`/`D-DS3`; menunggu G4 exit) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: G6-B5 (ROADMAP bagian Gerbang G6) — Uji aksesibilitas 900px: rail berlabel, drawer, focus return, Esc, skip link; axe 0 critical 8 route (QA-SHELL-001:89; pengunci D-S3 → DS-SHELL-001 §6; D-S6 Esc/Cmd+K; keyboard DS-SHELL-001:266; focus-return drawer/dialog :216).
-Scope file produk: frontend/tests/g6-b5.spec.ts (baru; baris R1–R5 @900px: rail berlabel 8 link + lebar ~176px, drawer Job Center + focus return, Esc dialog cleaning @900 + focus return dialog, skip link first-tab, axe 0 critical 8 route).
+Kartu diambil: G6-B6 (ROADMAP bagian Gerbang G6) — Job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus (QA-SHELL-001:90; pengunci D-F2 + D-F5 + D-S8; FLOW-SHELL-001 :95 + :183; JOB-SHELL-001 §5).
+Scope file produk: frontend/tests/g6-b6.spec.ts (baru; baris R1–R4: job tetap berjalan lintas navigasi 900px+1440px, tidak dibatalkan oleh Back/Forward, progress indeterminate tanpa angka, `jobProgress()` absen di src/).
 TIDAK sentuh (tanpa amandemen PO): backend/, generated.ts, docs/shell-contracts/, docs/ux-contracts/shell/QA-SHELL-001.md, .workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: bukti B5: cakupan warisan a11y.spec.ts/a11y-audit.spec.ts diverifikasi independen dengan sel baru: label teks rail @900 untuk 8 route, focus return pasca-dialog (DS-SHELL-001:216), Esc dialog @900px.
-Status akhir: done 2026-11-09 — spec hijau 12/12, gate hijau (pytest 287, ruff, tsc, token lint), `src/` tak tersentuh; bukti §5.
+Tujuan sesi: bukti B6: job backend-authoritative (SYS-015) tidak terbatalkan navigasi; progress hanya indeterminate berlabel; tidak ada angka/persentase karangan (D-F5/D-S8); `jobProgress()` sudah dihapus di src/.
+Status akhir: done 2026-11-09 — spec hijau 6/6, gate hijau (pytest 287, ruff, tsc, token lint), `src/` tak tersentuh; bukti §5.
 ```
 
 ## 4. Gate terakhir
@@ -56,7 +56,20 @@ Status akhir: done 2026-11-09 — spec hijau 12/12, gate hijau (pytest 287, ruff
 
 - Gate G6-B5 (2026-11-09, sesi ini, HEAD `f6b2c20` pra-commit produk): `pytest` **287 passed** (7.61s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b5.spec.ts` **12/12 hijau** (3.3m) — baris R1–R5 @900px (rail berlabel 8 link + lebar terukur ~176px, drawer + complementary + focus return, Esc dialog @900 + focus return pemicu, skip link, axe 0 critical 8 route) · regresi `a11y + a11y-audit` **30/30 hijau** (3.4m) · `git diff --stat`: hanya `docs/SESSION-STATE.md` (spec baru untracked). Bukti acceptance di §Bukti.
 
+- Gate G6-B6 (2026-11-09, sesi ini, HEAD `6674ef6` pra-commit produk): `pytest` **287 passed** (43.82s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b6.spec.ts` **6/6 hijau** (1.7m) — baris R1–R4 @900px + @1440px (job Running tetap berjalan & identitas stabil lintas navigasi, Back/Forward tak membatalkan, progress null indeterminate tanpa `aria-valuenow`, determinate hanya dari angka nyata 0.4/terminal 100, `jobProgress()` absen di `src/`) · `git diff --stat`: hanya `docs/SESSION-STATE.md` (spec baru untracked). Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
+
+- G6-B6 done 2026-11-09 — bukti job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus (QA-SHELL-001:90; pengunci `D-F2` `FLOW-SHELL-001:95` + `D-F5` `:183` + `D-S8` `DS-SHELL-001:248`; kontrak `JOB-SHELL-001:51` + baris B6 `:122` + ambang `:134`; `FLOW-SHELL-001:78`; §2.3 langkah 6 `monitor` `:91`; assertion fungsional aplikasi nyata + scan sumber; seeded `events` via `helpers.ts:728-730`, 900px + 1440px; `frontend/tests/g6-b6.spec.ts`):
+
+  | Baris matriks (klausa) | Bukti | Status |
+  |---|---|---|
+  | R1 job tetap berjalan saat navigasi @900px + @1440px (`FLOW §2.3 langkah 6:91`) | job Running injeksi (progress null) tetap di Job Center dengan id sama (`job-runn`) & state Running lintas Profil→Kualitas→Dataset; drawer narrow tetap `data-open=true`; wide aside inline selalu terlihat; total item tetap 3 | Confirmed |
+  | R2 Back/Forward tidak membatalkan job @900px (`D-F2` `FLOW:95`) | goBack/goForward: item Running utuh, job Completed tetap visible (hasil tidak dihapus navigasi) | Confirmed |
+  | R3 progress null = indeterminate; determinate hanya dari angka nyata @900px + @1440px (`D-F5` `:183`; HARNESS-4) | progressbar Running-null: `aria-valuetext="Sedang berjalan: Running"`, `aria-valuenow` = null (atribut absen), tanpa `%` teks; progress nyata 0.4 → `aria-valuenow=40`; terminal-null → `100`; total determinate tepat 2 | Confirmed |
+  | R4 `jobProgress()` dihapus dari `src/` (`JOB-SHELL-001:51`; `FLOW:78`) | scan rekursif `frontend/src` nol hit `jobProgress` + nol pola `Running→70`; proyeksi jujur tetap ada (`JobClient.ts:104` `typeof e.progress === "number"`, `JobCenter.tsx:29-30` "tidak mengarang persentase") | Confirmed |
+
+  `src/` tak tersentuh — defect produk: tidak ada. Bukti gate §4 (pytest 287 43.82s, ruff, tsc, token lint). Regresi tetangga `seeded + d-f6` 19 passed / 1 failed — `d-f6.spec.ts:41` adalah **pre-existing** (terbukti gagal di HEAD bersih `2a5bef3`, tercatat §Gate UIUX-04; pola flake order/timing), tidak terkait kartu ini dan tidak diperbaiki (di luar scope). Catatan mock: `get_events` mengembalikan daftar `events` tetap tiap poll (`helpers.ts:728-730`); poller dedup by `job_id` (`JobClient.ts:94`) sehingga implementasi persis perilaku backend-authoritative (frontend tidak mengarang transisi, HARNESS-4). `JobEvent` di `generated.ts` kini membawa `command` + `progress?` opsional (D-F5 Pydantic-dulu, generated — bukan rekayasa frontend).
 
 - G6-B5 done 2026-11-09 — bukti aksesibilitas 900px (QA-SHELL-001:89; pengunci `D-S3` `DS-SHELL-001 §6` `:199-207` + `D-S6` Esc/Cmd+K `RATIF-SHELL-004`; keyboard `DS-SHELL-001:266`; focus-return `DS-SHELL-001:216`; traceability `DS-SHELL-001:292`; seeded @900px; assertion fungsional aplikasi nyata + axe, bukan screenshot; `frontend/tests/g6-b5.spec.ts`):
 

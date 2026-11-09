@@ -326,6 +326,31 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
 - **Bukti:** tabel baris × bukti di §Bukti SESSION-STATE · gate §4 ·
   commit produk ditulis sesi ini.
 
+### G6-B6 — Job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus (D-F2/D-F5/D-S8) [done 2026-11-09]
+
+- **Kontrak:** `QA-SHELL-001:90` (B6) + pengunci `D-F2`
+  (`FLOW-SHELL-001:95` — Back/Forward tanpa membatalkan job) + `D-F5`
+  (`:183` — frontend tidak mengarang; numeric hanya dari angka
+  backend, progress nyata 0..1) + `D-S8` (`DS-SHELL-001:248` — tanpa
+  "In Progress"/persentase karangan); kontrak pendamping
+  `JOB-SHELL-001:51` (+ baris B6 `:122`, ambang `:134`) dan
+  `FLOW-SHELL-001:78` (indeterminate sampai backend mengekspos
+  angka); §2.3 langkah 6 `monitor` (`FLOW:91` — navigasi TIDAK
+  membatalkan job, identitas job stabil); HARNESS-4 (lifecycle
+  backend-authoritative; `JobEvent.progress?` kini di `generated.ts`
+  sebagai field BARU backend/Pydantic, bukan rekayasa frontend).
+- **Threshold:** matriks baris R1–R4 @900px + @1440px seeded `events`
+  — R1 job Running persisten & identitas stabil lintas navigasi
+  (drawer narrow tetap terbuka, wide aside inline); R2 Back/Forward
+  tanpa pembatalan; R3 progress null indeterminate (tanpa
+  `aria-valuenow`, tanpa `%`), determinate hanya dari angka nyata
+  (0.4→40, terminal→100); R4 scan sumber nol `jobProgress`.
+- **Acceptance:** `frontend/tests/g6-b6.spec.ts` hijau 6/6; gate
+  HARNESS-5 hijau (pytest 287, ruff, tsc, token lint); `src/` tak
+  tersentuh.
+- **Bukti:** tabel baris × bukti di §Bukti SESSION-STATE · gate §4 ·
+  commit produk ditulis sesi ini.
+
 ---
 
 ## Urutan esensial & utang

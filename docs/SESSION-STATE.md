@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `f37017c` · **Kartu aktif:** `G6-B4` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `f6b2c20` · **Kartu aktif:** `G6-B5` `in_progress`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -10,23 +10,23 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
 - **Kartu terakhir selesai:** `G6-B4` (Uji reload / Back / revalidasi gagal D-F2 + D-F3, QA-SHELL-001:88, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B3` commit produk `16f73c9`, `G6-B2` `7ed3bd4`, `G6-B1` `ee93c09`.
-- **Kartu berikutnya:** `G6-B5` (`QA-SHELL-001:89`); bukan kartu UIUX. Urutan G6 tetap: B1–B4 done → B5. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B4` `done` (sesi ini, fresh session 2026-11-09).
+- **Kartu berikutnya:** `G6-B5` (`QA-SHELL-001:89` — uji aksesibilitas 900px: rail berlabel, drawer, focus return, Esc, skip link; axe 0 critical 8 route; pengunci `D-S3`/`D-S6`); bukan kartu UIUX. Urutan G6 tetap: B1–B4 done → B5. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
+- **Sesi aktif:** `G6-B5` `in_progress` (sesi ini, fresh session 2026-11-09).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 
-1. **Sesi ini `G6-B4` `done`** — uji reload / Back / revalidasi gagal (`QA-SHELL-001:88`; kontrak pengunci `D-F2` + `D-F3`) terverifikasi 10/10 di `frontend/tests/g6-b4.spec.ts`: baris R1–R6 @900/1440px (reload dari hash + route tersimpan, Back/Forward tanpa hapus hasil & tanpa command domain baru, localStorage tepat 2 kunci, resume sukses tanpa tulis-ulang, degraded beralasan + Mulai baru, hash tak dikenal). `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
-2. **Berikutnya setelah B4:** `G6-B5` (`QA-SHELL-001:89`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
+1. **Sesi ini `G6-B5` `done`** — uji aksesibilitas 900px (`QA-SHELL-001:89`; pengunci `D-S3`/`D-S6`) terverifikasi 12/12 di `frontend/tests/g6-b5.spec.ts`: baris R1–R5 @900px (rail berlabel 8 link + lebar terukur ~176px, drawer + complementary + focus return, Esc dialog @900 + focus return pemicu, skip link, axe 0 critical 8 route). `src/` tak tersentuh — tidak ada defect produk. Bukti penuh §Bukti.
+2. **Berikutnya setelah B5:** `G6-B6` (`QA-SHELL-001:90` — job tetap berjalan saat navigasi; progress indeterminate; `jobProgress()` dihapus; pengunci `D-F2`/`D-F5`/`D-S8`) — bukan kartu UIUX. Urutan G6 tetap; Fase 5 UI/UX selesai. Sisa utang: radius 4px vs 6px tetap utang — jangan diubah. **Residu**: `.field-error` di `frontend/src/shared/controls.css:70` tetap legacy `--font-size-sm` — pemetaan caption 12 butuh ruling ownership (fitur tak boleh `--shell-font-*`), lanjut menunggu D-DS5. `.status-danger` (`tokens.css:138`) masih legacy `--font-size-lg` (menunggu D-DS5). `--shell-font-display` (`tokens.css:54`) tanpa konsumen shell (R4 domain kontrak fitur, D-DS2) — dicatat, tidak diubah. `backend/`, `generated.ts`, `docs/shell-contracts/`, `.workbuddy-ai/`, `notes/evaluasi-workbuddy/` tetap larangan sentuh.
 
 ## 3. Sesi aktif (isi sebelum mulai edit produk)
 
 ```
 Harness/model: DeepSeek Harness (DSH) / Crouton Alpha
-Kartu diambil: G6-B4 (ROADMAP bagian Gerbang G6) — Uji reload / Back / revalidasi gagal (QA-SHELL-001:88; kontrak pengunci D-F2 + D-F3 ratified PO 2026-11-08; FLOW-SHELL-001 §2.9 + :95 + :97; traceability FLOW §2.9 → QA-SHELL-001:216 R1–R5).
-Scope file produk: frontend/tests/g6-b4.spec.ts (baru; matriks baris R1–R6 @900px & 1440px: reload-hash, reload-route-tersimpan, Back/Forward tanpa hapus hasil, bentuk localStorage 2 kunci, resume sukses tanpa tulis-ulang, degraded beralasan + Mulai baru).
+Kartu diambil: G6-B5 (ROADMAP bagian Gerbang G6) — Uji aksesibilitas 900px: rail berlabel, drawer, focus return, Esc, skip link; axe 0 critical 8 route (QA-SHELL-001:89; pengunci D-S3 → DS-SHELL-001 §6; D-S6 Esc/Cmd+K; keyboard DS-SHELL-001:266; focus-return drawer/dialog :216).
+Scope file produk: frontend/tests/g6-b5.spec.ts (baru; baris R1–R5 @900px: rail berlabel 8 link + lebar ~176px, drawer Job Center + focus return, Esc dialog cleaning @900 + focus return dialog, skip link first-tab, axe 0 critical 8 route).
 TIDAK sentuh (tanpa amandemen PO): backend/, generated.ts, docs/shell-contracts/, docs/ux-contracts/shell/QA-SHELL-001.md, .workbuddy-ai/, notes/evaluasi-workbuddy/
-Tujuan sesi: bukti B4: screenshot tidak cukup — arsitektur diukur fungsional (hash+history D-F2; persist 3 field + revalidasi wajib + degraded beralasan D-F3; tanpa simpan record analisis; navigasi tidak memicu command domain).
-Status akhir: done 2026-11-09 — spec hijau 10/10, gate hijau (pytest 287, ruff, tsc, token lint), `src/` tak tersentuh; bukti §5.
+Tujuan sesi: bukti B5: cakupan warisan a11y.spec.ts/a11y-audit.spec.ts diverifikasi independen dengan sel baru: label teks rail @900 untuk 8 route, focus return pasca-dialog (DS-SHELL-001:216), Esc dialog @900px.
+Status akhir: done 2026-11-09 — spec hijau 12/12, gate hijau (pytest 287, ruff, tsc, token lint), `src/` tak tersentuh; bukti §5.
 ```
 
 ## 4. Gate terakhir
@@ -54,7 +54,21 @@ Status akhir: done 2026-11-09 — spec hijau 10/10, gate hijau (pytest 287, ruff
 
 - Gate G6-B4 (2026-11-09, sesi ini, HEAD `8f66cd3` pra-commit produk): `pytest` **287 passed** (10.11s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b4.spec.ts` **10/10 hijau** (2.6m) — baris R1–R6 @900px + @1440px (reload hash + route-tersimpan, Back/Forward, localStorage 2 kunci, resume tanpa tulis-ulang, degraded + Mulai baru, hash tak dikenal) · regresi `routing + d-f7 + d-f7-followup + seeded + vertical` **27/27 hijau** (2.8m) · `git diff --stat`: hanya `docs/SESSION-STATE.md` (spec baru untracked). Bukti acceptance di §Bukti.
 
+- Gate G6-B5 (2026-11-09, sesi ini, HEAD `f6b2c20` pra-commit produk): `pytest` **287 passed** (7.61s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b5.spec.ts` **12/12 hijau** (3.3m) — baris R1–R5 @900px (rail berlabel 8 link + lebar terukur ~176px, drawer + complementary + focus return, Esc dialog @900 + focus return pemicu, skip link, axe 0 critical 8 route) · regresi `a11y + a11y-audit` **30/30 hijau** (3.4m) · `git diff --stat`: hanya `docs/SESSION-STATE.md` (spec baru untracked). Bukti acceptance di §Bukti.
+
 ## 5. Bukti (`file:line` wajib)
+
+- G6-B5 done 2026-11-09 — bukti aksesibilitas 900px (QA-SHELL-001:89; pengunci `D-S3` `DS-SHELL-001 §6` `:199-207` + `D-S6` Esc/Cmd+K `RATIF-SHELL-004`; keyboard `DS-SHELL-001:266`; focus-return `DS-SHELL-001:216`; traceability `DS-SHELL-001:292`; seeded @900px; assertion fungsional aplikasi nyata + axe, bukan screenshot; `frontend/tests/g6-b5.spec.ts`):
+
+  | Baris matriks (klausa) | Bukti | Status |
+  |---|---|---|
+  | R1 rail berlabel @900px (`D-S3` §6 :203 "rail berlabel ~176px"; `DS-SHELL-001:176` "label utuh di 900px") | nav "Navigasi utama" visible; lebar terukur ∈ (140,220)px; tiap 8 link route visible, `display` ≠ `none`, lebar > 0, teks label utuh; `scrollWidth ≤ innerWidth` | Confirmed |
+  | R2 drawer @900px (`DS-SHELL-001:183` + §6 :203 "R5/R7 ke drawer") | toggle Enter keyboard → `aria-expanded=true`, `#job-center-aside data-open=true`, complementary "Panel samping" visible berisi konten; Esc → tertutup + toggle terfokus (focus return) | Confirmed |
+  | R3 dialog @900px (`DS-SHELL-001:216` focus return dialog; `:221`) | p=1+q=1 aktif → `alertdialog` tampil; Esc → count 0 + tombol pemicu "Terapkan cleaning" terfokus lagi (sel baru vs a11y.spec @1440px tanpa focus-return) | Confirmed |
+  | R4 skip link @900px (`DS-SHELL-001:218`) | Tab pertama = `.skip-link` (href `#main-content`), Enter → `#main-content` terfokus | Confirmed |
+  | R5 axe 0 critical @900px (`D-S6`/§10 :266) | 8 route (Proyek…Laporan incl. Readiness) wcag2aa 0 critical + tidak ada scroll horizontal | Confirmed |
+
+  `src/` tak tersentuh — defect produk: tidak ada. Bukti gate §4 (pytest 287, ruff, tsc, token lint, regresi a11y 30/30). Celah ditutup vs `a11y.spec.ts`/`a11y-audit.spec.ts` dicatat di header `frontend/tests/g6-b5.spec.ts:38-49`; overlap R2/R5 disengaja sebagai bukti independen B5.
 
 - G6-B4 done 2026-11-09 — bukti reload / Back / revalidasi gagal (QA-SHELL-001:88; kontrak pengunci D-F2 `FLOW-SHELL-001:95,193` + D-F3 `:97,194`; §2.9 `:165-169`; implementasi `frontend/src/app/router.tsx:72-82,84-101,120-141`, `frontend/src/app/ProjectContext.tsx:27,48-58,99-138`, banner `frontend/src/app/App.tsx:337-344`, copy `frontend/src/shared/copy/shellCopy.ts:20-22`; assertion fungsional aplikasi nyata, bukan screenshot; seeded, 900px + 1440px; `frontend/tests/g6-b4.spec.ts`):
 

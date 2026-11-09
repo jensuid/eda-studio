@@ -305,6 +305,27 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
 - **Bukti:** tabel baris × bukti di §Bukti SESSION-STATE · gate §4 ·
   commit produk ditulis sesi ini.
 
+### G6-B5 — Uji aksesibilitas 900px (D-S3/D-S6) [done 2026-11-09]
+
+- **Kontrak:** `QA-SHELL-001:89` (B5: rail berlabel, drawer, focus return,
+  `Esc`, skip link; axe 0 critical 8 route) + pengunci `D-S3`
+  (`DS-SHELL-001 §6` `:199-207` — 900px minimum, rail berlabel ~176px,
+  larangan display:none/icon-only/scroll horizontal) + `D-S6` (Esc/Cmd+K,
+  `RATIF-SHELL-004`); keyboard `DS-SHELL-001:266`; focus return
+  drawer/dialog `DS-SHELL-001:216`; traceability `DS-SHELL-001:292`.
+- **Threshold:** matriks baris R1–R5 @900px seeded — R1 rail berlabel
+  (8 link rute, teks label utuh, lebar terukur ~176px, tanpa scroll
+  horizontal); R2 drawer Job Center (toggle keyboard, complementary
+  "Panel samping" visible berisi konten, Esc + focus return); R3 dialog
+  cleaning (Esc @900px + fokus kembali ke tombol pemicu — sel baru vs
+  `a11y.spec.ts` @1440px tanpa focus-return); R4 skip link Tab-pertama
+  → `#main-content` @900px; R5 axe wcag2aa 0 critical 8 route.
+- **Acceptance:** `frontend/tests/g6-b5.spec.ts` hijau 12/12; regresi
+  `a11y + a11y-audit` 30/30; gate HARNESS-5 hijau (pytest 287, ruff,
+  tsc, token lint); `src/` tak tersentuh.
+- **Bukti:** tabel baris × bukti di §Bukti SESSION-STATE · gate §4 ·
+  commit produk ditulis sesi ini.
+
 ---
 
 ## Urutan esensial & utang

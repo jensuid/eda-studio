@@ -51,6 +51,21 @@ test.describe("D-F1 — 5 tahap bersinyal sah", () => {
     await expect(current).toContainText("1 · Proyek");
   });
 
+  test("CTA primer tunggal 'Buat proyek' (no-project); chip ≥36px", async ({
+    page,
+  }) => {
+    await mockBridge(page, { seeded: true });
+    await page.goto("/");
+    const s = stepper(page);
+    // FLOW §2.4 no-project: CTA tunggal "Buat proyek" → Setup.
+    const cta = s.getByRole("button", { name: "Buat proyek", exact: true });
+    await expect(cta).toBeVisible();
+    await expect(s.getByRole("button")).toHaveCount(1);
+    // Target sentuh chip Stepper ≥36px (UIUX-04, token --space-7: 40px).
+    const box = await stageLink(page, 1, "Proyek").boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(36);
+  });
+
   test("'Belum tersedia' (6/7/10) non-klik; stage 8 tidak ada", async ({
     page,
   }) => {

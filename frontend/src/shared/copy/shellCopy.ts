@@ -136,4 +136,9 @@ export const SHELL_COPY = {
     7: "Hubungan",
     10: "Laporan",
   } as const,
+  // CTA primer R3 — satu aksi primer per layar (DS-SHELL-001:178), selalu
+  // punya tujuan (FLOW §2.2 steps orient/advance, cabang no-project/no-dataset).
+  stepperNextCta: (name: string) => `Lanjut: ${name}`,
+  stepperNextCreateProject: "Buat proyek",
+  stepperNextImportDataset: "Impor dataset",
 } as const;

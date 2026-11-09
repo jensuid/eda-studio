@@ -89,7 +89,23 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ## Fase 3 — Komponen R3/R5/R4 (Stepper, CTA, JobCenter, DatasetCard)
 
-### UIUX-04 — Stepper 14px/36px + CTA primer "Lanjut: …" [todo, after UIUX-03]
+### UIUX-04 — Stepper 14px/36px + CTA primer "Lanjut: …" [done 2026-11-09, commit 870bb66; after UIUX-03]
+
+- **Apa yang dikerjakan:** chip Stepper `minHeight` token `--space-7: 40px`
+  (`Stepper.tsx`, `tokens.css:38` aditif 1 baris); CTA primer `<button>`
+  tunggal di dalam `<nav>` R3 di luar `<ol>` (`resolveNextCta`: tahap sah
+  paling awal belum `done` → "Lanjut: {tahap}"; no-project "Buat proyek";
+  no-dataset "Impor dataset"; semua `done` → tahap terakhir 9 Kesiapan
+  sebagai tinjau — keputusan gap kontrak tercatat); disabled 6/7/10
+  `cursor not-allowed` + `borderStyle dashed` (DS-SHELL-001:155); Stage 8
+  tetap tanpa stage.
+- **Acceptance:** chip Stepper ≥36px ✓ (probe: boundingBox 40px,
+  `fontSize 14px`); CTA primer satu per layar ✓ (button count 1, `ol > li` 8);
+  copy "Lanjut: …" ✓ (+ "Buat proyek"/"Impor dataset" cabang FLOW §2.4);
+  Stage 6/7/10 "Belum tersedia" tidak bisa diklik ✓ (span `aria-disabled`
+  tanpa `href`); Stage 8 tanpa stage ✓; gate hijau (pytest 287, ruff, tsc,
+  token lint, d-f1/visual 16/a11y 25 hijau; `d-f6:41` pre-existing di
+  HEAD bersih — utang §6 SESSION-STATE).
 
 - **Kontrak:** FLOW §2.2 + DS §3 (CTA primer satu per layar).
 - **File disentuh:** `frontend/src/shared/ui/Stepper.tsx:66-86,88-156`,

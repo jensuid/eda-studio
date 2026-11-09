@@ -18,6 +18,8 @@
  *   empat-elemen tetap tinggal di halaman fitur (D-F7).
  * - Visible di 900px (tidak disembunyikan) dan 1440px; `aria-current`
  *   pada stage route aktif; keyboard navigable (link `<a href>` biasa).
+ * - CTA primer tunggal "Lanjut: …" selalu punya tujuan (FLOW §2.2
+ *   orient/advance; DS-SHELL-001 §3; cabang no-project/no-dataset).
  *
  * tokens.css beku (D-F1 tidak menyentuh): tata letak di sini inline-style
  * seperti preseden `AppRail`, mengeksploitasi `status-*` class yang sudah
@@ -26,12 +28,17 @@
 import type { CSSProperties } from "react";
 import { useProject } from "../../app/ProjectContext";
 import { hashFor, useRouter } from "../../app/router";
+import type { RouteId } from "../../app/router";
 import { SHELL_COPY } from "../copy/shellCopy";
 import {
   STEPPER_STAGES,
   resolveStepperState,
 } from "./stepperState";
-import type { StepperStageStatus } from "./stepperState";
+import type {
+  StepperStageDef,
+  StepperStageId,
+  StepperStageStatus,
+} from "./stepperState";
 
 const statusLabel: Record<StepperStageStatus, string> = {
   done: SHELL_COPY.stepperStatusDone,
@@ -67,7 +74,8 @@ const chipStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: "var(--space-2)",
-  minHeight: "var(--space-8, 32px)",
+  // Target sentuh ≥36px (roadmap UIUX-04): token --space-7: 40px.
+  minHeight: "var(--space-7)",
   padding: "var(--space-2) var(--space-3)",
   border: "1px solid var(--color-border-subtle)",
   borderRadius: "var(--radius-md)",
@@ -82,8 +90,47 @@ const chipActiveStyle: CSSProperties = {
 };
 
 const chipDisabledStyle: CSSProperties = {
+  // DS-SHELL-001:155 — visual jelas berbeda + kursor not-allowed, bukan
+  // sekadar opacity: bingkai putus-putus menandai non-klik.
+  borderStyle: "dashed",
   opacity: 0.6,
+  cursor: "not-allowed",
 };
+
+// CTA primer R3 (UIUX-04): satu tombol primer selalu terlihat di dalam
+// <nav> Stepper, di luar <ol> agar hitungan stage tidak berubah.
+const ctaStyle: CSSProperties = {
+  marginTop: "var(--space-3)",
+};
+
+// Target CTA: tahap sah paling awal yang belum `done` (pending = Ready,
+// stale = Blocked — FLOW §2.2 orient). Tanpa proyek / tanpa dataset ikut
+// cabang FLOW §2.4. Semua `done` (keputusan gap kontrak): tahap sah
+// terakhir (Kesiapan) sebagai target tinjau agar CTA selalu punya tujuan.
+function resolveNextCta(
+  stages: readonly StepperStageDef[],
+  state: Record<StepperStageId, StepperStageStatus>,
+  signals: { projectId: string | null; dataset: object | null },
+): { label: string; route: RouteId } {
+  const next = stages.find((st) => state[st.id] !== "done");
+  if (!next) {
+    const last = stages[stages.length - 1] as StepperStageDef;
+    return {
+      label: SHELL_COPY.stepperNextCta(SHELL_COPY.stepperStageName(last.n, last.name)),
+      route: last.route,
+    };
+  }
+  if (next.id === 1 && signals.projectId == null) {
+    return { label: SHELL_COPY.stepperNextCreateProject, route: next.route };
+  }
+  if (next.id === 2 && signals.dataset == null) {
+    return { label: SHELL_COPY.stepperNextImportDataset, route: next.route };
+  }
+  return {
+    label: SHELL_COPY.stepperNextCta(SHELL_COPY.stepperStageName(next.n, next.name)),
+    route: next.route,
+  };
+}
 
 export function Stepper() {
   const { projectId, dataset, savedProfile, qualityRecord, readinessRecord } =
@@ -95,8 +142,9 @@ export function Stepper() {
     qualityRecord,
     readinessRecord,
   });
-  const { route } = useRouter();
+  const { route, navigate } = useRouter();
   const datasetName = dataset?.name ?? "";
+  const nextCta = resolveNextCta(STEPPER_STAGES, state, { projectId, dataset });
 
   return (
     <nav aria-label={SHELL_COPY.stepperTitle} style={navStyle}>
@@ -151,6 +199,13 @@ export function Stepper() {
           </li>
         ))}
       </ol>
+      {/* CTA primer "Lanjut: …" (FLOW §2.2 orient/advance): <button> agar
+          tidak mengotori hitungan link stage dan regex nama stage;
+          klik → navigate(route), fokus ke #main-content via efek P2-5
+          di App.tsx. Selalu satu, selalu punya tujuan. */}
+      <button type="button" style={ctaStyle} onClick={() => navigate(nextCta.route)}>
+        {nextCta.label}
+      </button>
     </nav>
   );
 }

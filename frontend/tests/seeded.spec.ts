@@ -75,14 +75,15 @@ test.describe("B1 — seeded walkthrough cold-start → orient → run-stage", (
     await page.goto("/");
     await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
     // Tab berurutan sampai input Nama project menerima fokus.
-    for (let i = 0; i < 15; i++) {
+    // (Cap 25: urutan Tab mencakup tombol palet perintah global di app-bar.)
+    for (let i = 0; i < 25; i++) {
       await page.keyboard.press("Tab");
       const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
       if (focused === "Nama project") break;
     }
     await page.keyboard.type("Proyek Seed");
     // Tab ke tombol Buat lalu Enter.
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) {
       await page.keyboard.press("Tab");
       const focused = await page.evaluate(() => document.activeElement?.textContent?.trim());
       if (focused === "Buat") break;

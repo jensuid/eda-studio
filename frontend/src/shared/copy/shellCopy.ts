@@ -76,6 +76,20 @@ export const SHELL_COPY = {
   diagnosticDetail: "Detail diagnostik",
   copyDiagnostic: "Salin detail",
   copiedDiagnostic: "Detail disalin",
+  // --- Command palette global (Phase 2, FLOW-SHELL-001 §2.8 D-S6) ---
+  paletteOpen: "Perintah",
+  paletteOpenLabel: "Buka palet perintah (Control+K)",
+  paletteTitle: "Palet perintah",
+  paletteSearchLabel: "Cari perintah",
+  paletteSearchPlaceholder: "Ketik untuk mencari perintah…",
+  paletteCategoryNavigate: "Navigasi",
+  paletteCategoryCommand: "Perintah",
+  paletteEmpty: "Tidak ada perintah yang cocok.",
+  paletteNeedsDataset: "Butuh dataset aktif — buka Setup dulu.",
+  paletteNeedsProfile: "Jalankan Profiling dulu.",
+  paletteRunning: "Menjalankan…",
+  paletteFailed: (label: string) => `Perintah "${label}" gagal.`,
+  paletteShortcutHint: "⌘K",
   // --- Stepper alur analisis (FLOW-SHELL-001 §2.2 D-F1) ---
   // Status hanya dari sinyal sah (ProjectContext), bukan status karangan.
   // Tahap 6/7/10 "Belum tersedia" dan tidak dapat diklik; tahap 8 tidak

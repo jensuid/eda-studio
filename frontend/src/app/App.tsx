@@ -22,6 +22,8 @@ import type {
   RestoreRecord,
   UpdateCheckRecord,
 } from "../shared/ipc/generated";
+import { CommandPalette } from "./CommandPalette";
+import type { PaletteContext } from "./commandRegistry";
 import { ProjectSetup } from "../features/project/ProjectSetup";
 import { DatasetExplorer } from "../features/project/DatasetExplorer";
 import { ProfilingPage } from "../features/profiling/ProfilingPage";
@@ -62,8 +64,8 @@ function RouteContent() {
 }
 
 function Shell() {
-  const { route, unknownHash } = useRouter();
-  const { resumeError, resetResume } = useProject();
+  const { route, unknownHash, navigate } = useRouter();
+  const { resumeError, resetResume, projectId, dataset, savedProfile, setSavedProfile, setQualityRecord, setReadinessRecord } = useProject();
   // D-F6 (FLOW §2.5): satu kanal per concern — tidak ada lagi satu
   // `protocolError` untuk handshake + recovery + update sekaligus.
   const [protocolError, setProtocolError] = useState<ConcernError | null>(null);
@@ -80,6 +82,54 @@ function Shell() {
   const prevRoute = useRef(route);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerToggleRef = useRef<HTMLButtonElement>(null);
+  // Phase 2 (FLOW §2.8, D-S6): palet perintah global Cmd+K / Ctrl+K.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const paletteTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const paletteCtx: PaletteContext = {
+    projectId,
+    dataset,
+    savedProfile,
+    navigate,
+    setSavedProfile,
+    setQualityRecord,
+    setReadinessRecord,
+  };
+
+  const closePalette = (navigated: boolean) => {
+    setPaletteOpen(false);
+    // Focus return: bila perintah sukses berpindah route, fokus diserahkan
+    // ke main oleh efek route (R3/R4); bila hanya ditutup (Esc/klik di
+    // luar), fokus kembali ke pemicu tombol "Perintah".
+    if (!navigated) paletteTriggerRef.current?.focus();
+  };
+
+  // Trigger global: Cmd/Ctrl+K membuka palet. Guard pengetikan: bila fokus
+  // di field editable (input/textarea/select/contentEditable) chord ini
+  // DILEWATKAN tanpa preventDefault — palet tidak pernah membajak chord
+  // saat pengguna sedang mengetik, dan tombol app-bar tetap tersedia.
+  // Saat palet terbuka, input palet sendiri menangani keydown-nya.
+  useEffect(() => {
+    const isEditable = (t: EventTarget | null): boolean => {
+      if (!(t instanceof HTMLElement)) return false;
+      return (
+        t.tagName === "INPUT" ||
+        t.tagName === "TEXTAREA" ||
+        t.tagName === "SELECT" ||
+        t.isContentEditable
+      );
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (paletteOpen) return;
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key.toLowerCase() !== "k") return;
+      if (isEditable(e.target)) return;
+      e.preventDefault();
+      setPaletteOpen(true);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [paletteOpen]);
 
   // B5 [D-S6]: Esc menutup drawer + focus return ke toggle.
   useEffect(() => {
@@ -212,6 +262,17 @@ function Shell() {
         >
           {SHELL_COPY.jobCenterToggle}
         </button>
+        <button
+          type="button"
+          className="palette-trigger"
+          ref={paletteTriggerRef}
+          aria-keyshortcuts="Meta+K Control+K"
+          aria-label={SHELL_COPY.paletteOpenLabel}
+          onClick={() => setPaletteOpen(true)}
+        >
+          <span>{SHELL_COPY.paletteOpen}</span>{" "}
+          <kbd>{SHELL_COPY.paletteShortcutHint}</kbd>
+        </button>
         {protocolChecked && protocolError && (
           <div className="protocol-banner" role="alert">
             <p>{protocolError.headline}</p>
@@ -298,6 +359,9 @@ function Shell() {
         <Stepper />
         <RouteContent />
       </main>
+      {paletteOpen && (
+        <CommandPalette ctx={paletteCtx} onClose={closePalette} />
+      )}
       <aside
         className="app-aside"
         id="job-center-aside"

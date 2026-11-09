@@ -184,13 +184,27 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ## Fase 5 — QA visual & serah terima
 
-### UIUX-08 — Tandai ulang baseline visual ≤5% + regression gate [todo, after UIUX-07]
+### UIUX-08 — Tandai ulang baseline visual ≤5% + regression gate [done 2026-11-09, after UIUX-07]
 
 - **Kontrak:** `docs/ux-contracts/shell/QA-SHELL-001.md:45-114` (B1–B12,
   visual ≤5% setelah baseline `D-S7=A`).
 - **Acceptance:** baseline visual diregen (B10) di 900px + 1440px,
   8 route termasuk Readiness, mouse/keyboard/AT; `pytest` + `ruff` +
   `tsc --noEmit` hijau; setelah ini → arsip/hapus `prototypes/shell-v0/`.
+- **Jawaban (done):** 16 baseline B10 diregen dari nol (`--update-snapshots`
+  setelah hapus 16 lama — fixture seeded per route, state terisi):
+  `frontend/tests/__screenshots__/visual.spec.ts/` (8 route × 900/1440,
+  termasuk `readiness-*.png`); verifikasi tanpa flag **16/16 hijau** di
+  `maxDiffPixelRatio: 0.05` (`frontend/tests/visual.spec.ts:93-97`);
+  baseline aktif ter-commit ter-track (clone baru dapat gate visual nyata);
+  keyboard/AT tidak diubah kartu ini (a11y 25/25 + a11y-audit 5/5 UIUX-07
+  tetap hijau di gate). `prototypes/shell-v0/` (README+index.html,
+  untracked, DISPOSABLE) **dihapus lokal** per README:84 — HARNESS-4.6.
+- **Bukti:** gate HARNESS-5 hijau (§4 SESSION-STATE); 16 PNG baru
+  Nov 9 17:23, ukuran 37–115KB (lebih besar dari 14 legacy empty-state
+  12–28KB di `visual.spec.ts-snapshots/` yang tidak lagi dibaca —
+  template `{snapshotDir}/{testFilePath}/{arg}` di `playwright.config` —
+  dicatat untuk kartu berikutnya, tidak dihapus).
 
 ---
 

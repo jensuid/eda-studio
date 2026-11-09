@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `f6b2c20` · **Kartu aktif:** `G6-B5` `in_progress`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `2437f54` · **Kartu aktif:** `G6-B5` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -11,7 +11,7 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
 - **Kartu terakhir selesai:** `G6-B4` (Uji reload / Back / revalidasi gagal D-F2 + D-F3, QA-SHELL-001:88, 900px + 1440px) — done 2026-11-09, commit produk ditulis sesi ini, gate §4. Sebelumnya: `G6-B3` commit produk `16f73c9`, `G6-B2` `7ed3bd4`, `G6-B1` `ee93c09`.
 - **Kartu berikutnya:** `G6-B5` (`QA-SHELL-001:89` — uji aksesibilitas 900px: rail berlabel, drawer, focus return, Esc, skip link; axe 0 critical 8 route; pengunci `D-S3`/`D-S6`); bukan kartu UIUX. Urutan G6 tetap: B1–B4 done → B5. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
-- **Sesi aktif:** `G6-B5` `in_progress` (sesi ini, fresh session 2026-11-09).
+- **Sesi aktif:** `G6-B5` `done` (sesi ini, fresh session 2026-11-09).
 
 ## 2. Next action (untuk sesi berikut, tanpa membaca chat)
 

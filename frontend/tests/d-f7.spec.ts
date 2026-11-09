@@ -22,7 +22,7 @@ async function setupWalkthrough(page: Page): Promise<void> {
   await page.getByLabel("Nama dataset").fill("seed_sales.csv");
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await expect(page.getByText("Dataset diimport")).toBeVisible();
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Profiling" }).click();
   await expect(page.getByText("Profiling selesai")).toBeVisible();
 }
@@ -46,7 +46,7 @@ async function expectStaleBanner(page: Page, texts: string[]): Promise<void> {
 
 test("D-F7 Quality: stale → banner 4 elemen → artefak lama terlihat → CTA refresh hanya setelah klik", async ({ page }) => {
   await setupWalkthrough(page);
-  await page.getByRole("link", { name: "Quality" }).click();
+  await page.getByRole("link", { name: "Kualitas", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
   await expect(page.getByText("Quality check selesai.")).toBeVisible();
   await dismissAllToasts(page);
@@ -64,8 +64,8 @@ test("D-F7 Quality: stale → banner 4 elemen → artefak lama terlihat → CTA 
 
   // Navigasi lintas-route tidak me-refresh otomatis: banner muncul lagi
   // tanpa toast sukses baru.
-  await page.getByRole("link", { name: "Profiling" }).click();
-  await page.getByRole("link", { name: "Quality" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
+  await page.getByRole("link", { name: "Kualitas", exact: true }).click();
   await expectStaleBanner(page, ["Hasil quality check mungkin usang"]);
   await expect(page.getByText("Quality check selesai.")).toHaveCount(0);
 
@@ -76,7 +76,7 @@ test("D-F7 Quality: stale → banner 4 elemen → artefak lama terlihat → CTA 
 
 test("D-F7 Readiness: stale → banner 4 elemen → artefak lama terlihat → CTA refresh hanya setelah klik", async ({ page }) => {
   await setupWalkthrough(page);
-  await page.getByRole("link", { name: "Readiness" }).click();
+  await page.getByRole("link", { name: "Kesiapan", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Readiness Assessment" }).click();
   await expect(page.getByText("Readiness assessment selesai.")).toBeVisible();
   await dismissAllToasts(page);
@@ -91,8 +91,8 @@ test("D-F7 Readiness: stale → banner 4 elemen → artefak lama terlihat → CT
   ]);
   await expect(page.locator("#main-content")).toContainText("Hasil dari snapshot sebelumnya.");
 
-  await page.getByRole("link", { name: "Profiling" }).click();
-  await page.getByRole("link", { name: "Readiness" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
+  await page.getByRole("link", { name: "Kesiapan", exact: true }).click();
   await expectStaleBanner(page, ["Hasil readiness assessment mungkin usang"]);
   await expect(page.getByText("Readiness assessment selesai.")).toHaveCount(0);
 

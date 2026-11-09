@@ -65,7 +65,7 @@ for (const vp of VIEWPORTS) {
   test(`B7: state kontrol + kontras @ ${vp.name}px`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await setupWalkthrough(page);
-    await page.getByRole("link", { name: "Setup" }).click();
+    await page.getByRole("link", { name: "Proyek", exact: true }).click();
 
     // --- state 1 default: border 1px token + min-height 36px ---
     const btn = page.getByRole("button", { name: "Buat", exact: true });
@@ -102,7 +102,7 @@ for (const vp of VIEWPORTS) {
     await page.mouse.up();
 
     // --- state 5 selected: nav aktif aria-current + font-weight 600 ---
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     const navWeight = await styleOfEl(page, ".nav-item-active", "font-weight");
     expect(navWeight).toBe("600");
     const ariaCurrent = await page
@@ -138,7 +138,7 @@ for (const vp of VIEWPORTS) {
     }
 
     // --- state 8 error: input aria-invalid + pesan inline berteks ---
-    await page.getByRole("link", { name: "Setup" }).click();
+    await page.getByRole("link", { name: "Proyek", exact: true }).click();
     await page.getByRole("button", { name: "Buat", exact: true }).click();
     const nameInput = page.getByLabel("Nama project");
     await expect(nameInput).toHaveAttribute("aria-invalid", "true");
@@ -147,7 +147,7 @@ for (const vp of VIEWPORTS) {
     );
 
     // --- select: default border + selected terbaca sebagai teks ---
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     const selA = page.locator("#bivar-a");
     await selA.selectOption("sales");
     await selA.selectOption("qty");

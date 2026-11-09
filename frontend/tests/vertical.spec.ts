@@ -47,7 +47,7 @@ for (const vp of [
     );
 
     // Profiling: nav via link (Tab ke rail) + run via keyboard.
-    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("link", { name: "Profil", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Profiling" }).focus();
     await page.keyboard.press("Enter");
     await page.waitForFunction(
@@ -56,7 +56,7 @@ for (const vp of [
 
     // Bivariat: pilih kolom + run (edge prasyarat: tombol disabled sampai
     // pasangan valid dipilih).
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     await page.locator("#bivar-a").focus();
     await page.keyboard.press("s");
     await page.locator("#bivar-b").focus();
@@ -86,18 +86,18 @@ test("B12 edge state: fingerprint usang menampilkan banner Stale", async ({
   await page.waitForFunction(
     () => document.body.textContent?.includes("Dataset diimport") ?? false,
   );
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Profiling" }).click();
   await page.waitForFunction(
     () => document.body.textContent?.includes("Profiling selesai") ?? false,
   );
-  await page.getByRole("link", { name: "Cleaning" }).click();
+  await page.getByRole("link", { name: "Pembersihan", exact: true }).click();
   await expect(page.locator("#main-content")).toContainText(/Jalankan Quality Check terlebih dahulu/);
-  await page.getByRole("link", { name: "Quality" }).click();
+  await page.getByRole("link", { name: "Kualitas", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
   await page.waitForFunction(
     () => document.body.textContent?.includes("Quality check selesai") ?? false,
   );
-  await page.getByRole("link", { name: "Cleaning" }).click();
+  await page.getByRole("link", { name: "Pembersihan", exact: true }).click();
   await expect(page.locator("#main-content")).toContainText(/usang/);
 });

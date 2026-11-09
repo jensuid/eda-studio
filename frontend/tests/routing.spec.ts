@@ -21,7 +21,7 @@ test.describe("B4 — hash routing (D-F2)", () => {
     await page.getByLabel("Nama dataset").fill("seed_sales.csv");
     await page.getByRole("button", { name: "Import", exact: true }).click();
     await expect(page.getByText("Dataset diimport")).toBeVisible();
-    await page.getByRole("link", { name: "Quality" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await expect(page).toHaveURL(/#\/quality$/);
     await expect(page.getByText("Jalankan profiling terlebih dahulu.")).toBeVisible();
 
@@ -39,7 +39,7 @@ test.describe("B4 — hash routing (D-F2)", () => {
     page,
   }) => {
     await setupWalkthrough(page);
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     await expect(page).toHaveURL(/#\/bivariate$/);
     await expect(page.getByLabel("Kolom A")).toBeVisible();
 
@@ -48,10 +48,10 @@ test.describe("B4 — hash routing (D-F2)", () => {
     await expect(page).toHaveURL(/#\/bivariate$/);
     // Profil sengaja TIDAK dipersist (D-F3) → jalankan ulang setelah resume;
     // kolom dropdown berasal dari dataset.columns hasil rehidrasi dataset.get.
-    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("link", { name: "Profil", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Profiling" }).click();
     await expect(page.getByText("Profiling selesai")).toBeVisible();
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     const colA = page.getByLabel("Kolom A");
     await expect(colA).toBeVisible();
     const options = await colA.locator("option").allTextContents();
@@ -70,8 +70,8 @@ test.describe("B4 — hash routing (D-F2)", () => {
     await page.getByLabel("Nama dataset").fill("seed_sales.csv");
     await page.getByRole("button", { name: "Import", exact: true }).click();
     await expect(page.getByText("Dataset diimport")).toBeVisible();
-    await page.getByRole("link", { name: "Quality" }).click();
-    await page.getByRole("link", { name: "Readiness" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
+    await page.getByRole("link", { name: "Kesiapan", exact: true }).click();
     await expect(page).toHaveURL(/#\/readiness$/);
     await page.goBack();
     await expect(page).toHaveURL(/#\/quality$/);
@@ -112,10 +112,10 @@ test.describe("D-F4 — project.open + recent read-only (Beta)", () => {
     // Kolom dataset hasil rehidrasi tersedia (dropdown Bivariat).
     // Profil tidak dipersist lintas konteks (D-F3): jalankan dulu
     // sebelum dropdown Bivariat dirender (pola routing.spec.ts D-F3).
-    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("link", { name: "Profil", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Profiling" }).click();
     await expect(page.getByText("Profiling selesai")).toBeVisible();
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     await expect(page).toHaveURL(/#\/bivariate$/);
     const colA = page.getByLabel("Kolom A");
     await expect(colA).toBeVisible();

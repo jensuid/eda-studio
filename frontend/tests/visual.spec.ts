@@ -13,14 +13,14 @@ import type { Page } from "@playwright/test";
 import { setupWalkthrough } from "./helpers";
 
 const ROUTES = [
-  { label: "Setup", file: "setup" },
+  { label: "Proyek", file: "setup" },
   { label: "Dataset", file: "dataset" },
-  { label: "Profiling", file: "profiling" },
-  { label: "Quality", file: "quality" },
-  { label: "Bivariat", file: "bivariat" },
-  { label: "Cleaning", file: "cleaning" },
-  { label: "Readiness", file: "readiness" },
-  { label: "Report", file: "report" },
+  { label: "Profil", file: "profiling" },
+  { label: "Kualitas", file: "quality" },
+  { label: "Pembersihan", file: "cleaning" },
+  { label: "Hubungan", file: "bivariat" },
+  { label: "Kesiapan", file: "readiness" },
+  { label: "Laporan", file: "report" },
 ] as const;
 
 const VIEWPORTS = [
@@ -30,12 +30,12 @@ const VIEWPORTS = [
 
 /** Aksi khas route agar baseline menangkap state terisi (D-S7). */
 async function routeAction(page: Page, label: string): Promise<void> {
-  if (label === "Quality") {
+  if (label === "Kualitas") {
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     await page.waitForFunction(
       () => document.body.textContent?.includes("Quality check selesai") ?? false,
     );
-  } else if (label === "Readiness") {
+  } else if (label === "Kesiapan") {
     await page
       .getByRole("button", { name: "Jalankan Readiness Assessment" })
       .click();
@@ -44,7 +44,7 @@ async function routeAction(page: Page, label: string): Promise<void> {
         document.body.textContent?.includes("Readiness assessment selesai") ??
         false,
     );
-  } else if (label === "Bivariat") {
+  } else if (label === "Hubungan") {
     await page.locator("#bivar-a").selectOption("sales");
     await page.locator("#bivar-b").selectOption("qty");
     await page
@@ -53,13 +53,13 @@ async function routeAction(page: Page, label: string): Promise<void> {
     await page.waitForFunction(
       () => document.body.textContent?.includes("0.87") ?? false,
     );
-  } else if (label === "Cleaning") {
-    await page.getByRole("link", { name: "Quality" }).click();
+  } else if (label === "Pembersihan") {
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     await page.waitForFunction(
       () => document.body.textContent?.includes("Quality check selesai") ?? false,
     );
-    await page.getByRole("link", { name: "Cleaning" }).click();
+    await page.getByRole("link", { name: "Pembersihan", exact: true }).click();
     await page.getByRole("button", { name: "Hitung dampak" }).click();
     await page.waitForFunction(
       () =>
@@ -76,7 +76,7 @@ for (const route of ROUTES) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await setupWalkthrough(page);
-      if (route.label !== "Profiling") {
+      if (route.label !== "Profil") {
         await page.getByRole("link", { name: route.label, exact: true }).click();
       }
       await routeAction(page, route.label);

@@ -29,7 +29,7 @@ async function setupWalkthrough(
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await expect(page.getByText("Dataset diimport")).toBeVisible();
   // Gate lintas-route: Quality/Readiness/Bivariat butuh savedProfile.
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Profiling" }).click();
   await expect(page.getByText("Profiling selesai")).toBeVisible();
 }
@@ -45,7 +45,7 @@ test.describe("B1 — seeded walkthrough cold-start → orient → run-stage", (
 
   test("route Quality menampilkan finding seeded (1 peringatan)", async ({ page }) => {
     await setupWalkthrough(page);
-    await page.getByRole("link", { name: "Quality" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     await expect(page.getByText("Quality check selesai")).toBeVisible();
     await expect(page.locator("#main-content")).toContainText("18 baris tanpa region");
@@ -53,7 +53,7 @@ test.describe("B1 — seeded walkthrough cold-start → orient → run-stage", (
 
   test("route Readiness menampilkan ringkasan seeded + skor", async ({ page }) => {
     await setupWalkthrough(page);
-    await page.getByRole("link", { name: "Readiness" }).click();
+    await page.getByRole("link", { name: "Kesiapan", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Readiness Assessment" }).click();
     await expect(page.getByText("Readiness assessment selesai")).toBeVisible();
     await expect(page.locator("#main-content")).toContainText(
@@ -63,7 +63,7 @@ test.describe("B1 — seeded walkthrough cold-start → orient → run-stage", (
 
   test("route Bivariat menampilkan r = 0.87 (mode num-num)", async ({ page }) => {
     await setupWalkthrough(page);
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     await page.selectOption("#bivar-a", "sales");
     await page.selectOption("#bivar-b", "qty");
     await page.getByRole("button", { name: "Jalankan Analisis Bivariat" }).click();
@@ -100,10 +100,10 @@ test.describe("B3 — fingerprint mismatch → state Stale (bukan skor rendah)",
 
   test("Cleaning: quality usang vs dataset aktif ditandai", async ({ page }) => {
     await setupStaleWalkthrough(page);
-    await page.getByRole("link", { name: "Quality" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     await expect(page.getByText("Quality check selesai")).toBeVisible();
-    await page.getByRole("link", { name: "Cleaning" }).click();
+    await page.getByRole("link", { name: "Pembersihan", exact: true }).click();
     // quality fingerprint usang → banner di CleaningSection (state Stale,
     // bukan skor rendah — hasil tetap ditampilkan dengan penanda).
     await expect(page.locator("#main-content")).toContainText("usang");
@@ -111,7 +111,7 @@ test.describe("B3 — fingerprint mismatch → state Stale (bukan skor rendah)",
 
   test("Bivariat dengan fingerprint usang menampilkan banner usang", async ({ page }) => {
     await setupStaleWalkthrough(page);
-    await page.getByRole("link", { name: "Bivariat" }).click();
+    await page.getByRole("link", { name: "Hubungan", exact: true }).click();
     await page.selectOption("#bivar-a", "sales");
     await page.selectOption("#bivar-b", "qty");
     await page.getByRole("button", { name: "Jalankan Analisis Bivariat" }).click();
@@ -120,10 +120,10 @@ test.describe("B3 — fingerprint mismatch → state Stale (bukan skor rendah)",
 
   test("Cleaning preview usang: 'Snapshot telah berubah. Hitung ulang dampak.'", async ({ page }) => {
     await setupWalkthrough(page, { stalePreview: true });
-    await page.getByRole("link", { name: "Quality" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     await expect(page.getByText("Quality check selesai")).toBeVisible();
-    await page.getByRole("link", { name: "Cleaning" }).click();
+    await page.getByRole("link", { name: "Pembersihan", exact: true }).click();
     await page.getByRole("button", { name: "Hitung dampak" }).click();
     await expect(page.locator("#main-content")).toContainText(
       "Snapshot telah berubah. Hitung ulang dampak.",
@@ -161,7 +161,7 @@ test.describe("B6 — job berlanjut saat navigasi, progress indeterminate", () =
     await page.getByRole("link", { name: "Dataset", exact: true }).click();
     await expect(page.locator("#main-content")).toBeVisible();
     await expect(page.getByText("Running")).toBeVisible();
-    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("link", { name: "Profil", exact: true }).click();
     await expect(page.getByText("Running")).toBeVisible();
   });
 

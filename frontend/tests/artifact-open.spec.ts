@@ -21,10 +21,10 @@ async function setupWalkthrough(page: Page): Promise<void> {
   await page.getByLabel("Nama dataset").fill("seed_sales.csv");
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await expect(page.getByText("Dataset diimport")).toBeVisible();
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Profiling" }).click();
   await expect(page.getByText("Profiling selesai")).toBeVisible();
-  await page.getByRole("link", { name: "Report" }).click();
+  await page.getByRole("link", { name: "Laporan", exact: true }).click();
 }
 
 test.describe("FLOW §2.7 — Unduh/Buka via artifact.open", () => {
@@ -58,10 +58,10 @@ test.describe("FLOW §2.7 — Unduh/Buka via artifact.open", () => {
     await page.getByLabel("Nama dataset").fill("seed_sales.csv");
     await page.getByRole("button", { name: "Import", exact: true }).click();
     await expect(page.getByText("Dataset diimport")).toBeVisible();
-    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("link", { name: "Profil", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Profiling" }).click();
     await expect(page.getByText("Profiling selesai")).toBeVisible();
-    await page.getByRole("link", { name: "Report" }).click();
+    await page.getByRole("link", { name: "Laporan", exact: true }).click();
     await page.getByRole("button", { name: "Buat PDF" }).click();
     await expect(page.getByText("PDF siap diunduh.")).toBeVisible({ timeout: 10000 });
     await page.getByRole("button", { name: "Unduh/Buka" }).first().click();

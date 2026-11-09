@@ -70,7 +70,7 @@ perubahan": Fase 1 di bawah belum dikerjakan. Bukti: `frontend/src/app/router.ts
 
 ## Fase 2 — Nav 7 grup/9 item + 900px berlabel (SCREEN D-S1/D-S3)
 
-### UIUX-03 — Nav 7 grup / 9 item + rail ~176px di 900px [todo, after UIUX-02]
+### UIUX-03 — Nav 7 grup / 9 item + rail ~176px di 900px [done 2026-11-09, after UIUX-02]
 
 - **Kontrak:** `docs/ux-contracts/shell/SCREEN-SHELL-001.md:111-132`
   (7 grup/9 item, Pembersihan sebelum Hubungan, utilities ke Tools);

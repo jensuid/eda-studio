@@ -13,6 +13,7 @@
  * `shared/copy/errorCopy.ts` — pesan backend mentah hanya boleh muncul
  * di detail diagnostik yang dapat disalin, tidak pernah di headline.
  */
+import type { RouteId } from "../../app/router";
 export const SHELL_COPY = {
   appTitle: "EDA Workbench",
   skipToMain: "Lewati ke konten utama",
@@ -90,6 +91,32 @@ export const SHELL_COPY = {
   paletteRunning: "Menjalankan…",
   paletteFailed: (label: string) => `Perintah "${label}" gagal.`,
   paletteShortcutHint: "⌘K",
+  // --- Navigasi primer (SCREEN-SHELL-001 §3.4, UIUX-03) ---
+  // 7 grup / 9 item, urutan final ratified (Pembersihan sebelum
+  // Hubungan, Kesiapan sesudah Hubungan). Label Indonesia D-S2.
+  navGroupLabels: {
+    workspace: "Workspace",
+    data: "Data",
+    preparation: "Preparation",
+    analysis: "Analysis",
+    discovery: "Discovery",
+    output: "Output",
+    tools: "Tools",
+  },
+  navLabels: {
+    setup: "Proyek",
+    explorer: "Dataset",
+    profiling: "Profil",
+    quality: "Kualitas",
+    cleaning: "Pembersihan",
+    bivariate: "Hubungan",
+    readiness: "Kesiapan",
+    report: "Laporan",
+  } satisfies Record<RouteId, string>,
+  // Tools: sub-bagian setup (Backup/Restore/Export portabel/Diagnostic).
+  // Pemisahan section ProjectSetup di luar UIUX-03; tautan keluar ke
+  // route setup sampai pemisahan itu mendarat.
+  navToolItems: ["Backup", "Restore", "Export portabel", "Diagnostic"],
   // --- Stepper alur analisis (FLOW-SHELL-001 §2.2 D-F1) ---
   // Status hanya dari sinyal sah (ProjectContext), bukan status karangan.
   // Tahap 6/7/10 "Belum tersedia" dan tidak dapat diklik; tahap 8 tidak

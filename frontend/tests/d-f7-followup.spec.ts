@@ -27,7 +27,7 @@ async function setupWalkthrough(page: Page): Promise<void> {
   await page.getByLabel("Nama dataset").fill("seed_sales.csv");
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await expect(page.getByText("Dataset diimport")).toBeVisible();
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Profiling" }).click();
   await expect(page.getByText("Profiling selesai")).toBeVisible();
 }
@@ -66,8 +66,8 @@ test("Profiling: stale → banner 4 elemen → artefak lama terlihat → CTA ref
 
   // Navigasi lintas-route tidak me-refresh otomatis: banner muncul lagi
   // tanpa toast sukses baru.
-  await page.getByRole("link", { name: "Quality" }).click();
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Kualitas", exact: true }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await expectStaleBanner(page, ["Hasil profiling mungkin usang"]);
   await expect(page.getByText("Profiling selesai")).toHaveCount(0);
 
@@ -103,7 +103,7 @@ test("Histogram: stale → banner 4 elemen → artefak lama terlihat → CTA ref
   // DatasetExplorer (ephemeral, tidak dipersist ke project context), jadi
   // setelah navigasi pergi-balik recordnya hilang — yang penting tidak ada
   // refresh otomatis (tidak ada toast sukses baru, input kosong).
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("link", { name: "Dataset", exact: true }).click();
   await expect(page.getByText("Histogram selesai.")).toHaveCount(0);
   await expect(page.locator(".cleaning-stale")).toHaveCount(0);

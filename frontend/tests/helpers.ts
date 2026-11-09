@@ -536,7 +536,7 @@ export async function setupWalkthrough(
     () =>
       document.body.textContent?.includes("Dataset diimport") ?? false,
   );
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Profiling" }).click();
   await page.waitForFunction(
     () =>

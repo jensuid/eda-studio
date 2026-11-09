@@ -8,31 +8,62 @@
  */
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { SHELL_COPY } from "../shared/copy/shellCopy";
 
 export type RouteId =
   | "setup"
   | "explorer"
   | "profiling"
   | "quality"
-  | "readiness"
-  | "bivariate"
   | "cleaning"
+  | "bivariate"
+  | "readiness"
   | "report";
+
+/** Grup navigasi primer (SCREEN-SHELL-001 §3.4: 7 grup / 9 item). */
+export type NavGroupId =
+  | "workspace"
+  | "data"
+  | "preparation"
+  | "analysis"
+  | "discovery"
+  | "output"
+  | "tools";
 
 export interface RouteDef {
   id: RouteId;
   label: string;
+  group: NavGroupId;
 }
 
 export const ROUTES: RouteDef[] = [
-  { id: "setup", label: "Setup" },
-  { id: "explorer", label: "Dataset" },
-  { id: "profiling", label: "Profiling" },
-  { id: "quality", label: "Quality" },
-  { id: "readiness", label: "Readiness" },
-  { id: "bivariate", label: "Bivariat" },
-  { id: "cleaning", label: "Cleaning" },
-  { id: "report", label: "Report" },
+  { id: "setup", label: SHELL_COPY.navLabels.setup, group: "workspace" },
+  { id: "explorer", label: SHELL_COPY.navLabels.explorer, group: "data" },
+  { id: "profiling", label: SHELL_COPY.navLabels.profiling, group: "preparation" },
+  { id: "quality", label: SHELL_COPY.navLabels.quality, group: "preparation" },
+  { id: "cleaning", label: SHELL_COPY.navLabels.cleaning, group: "preparation" },
+  { id: "bivariate", label: SHELL_COPY.navLabels.bivariate, group: "analysis" },
+  { id: "readiness", label: SHELL_COPY.navLabels.readiness, group: "discovery" },
+  { id: "report", label: SHELL_COPY.navLabels.report, group: "output" },
+];
+
+export interface NavGroup {
+  id: NavGroupId;
+  label: string;
+  items: RouteDef[];
+}
+
+/** Struktur grup untuk rail R2 (SCREEN-SHELL-001 §3.4). Grup Tools berisi
+ *  item non-route yang merender tautan khusus di `App.tsx`
+ *  (`SHELL_COPY.navToolItems` → sub-bagian setup). */
+export const NAV_GROUPS: NavGroup[] = [
+  { id: "workspace", label: SHELL_COPY.navGroupLabels.workspace, items: ROUTES.filter((r) => r.group === "workspace") },
+  { id: "data", label: SHELL_COPY.navGroupLabels.data, items: ROUTES.filter((r) => r.group === "data") },
+  { id: "preparation", label: SHELL_COPY.navGroupLabels.preparation, items: ROUTES.filter((r) => r.group === "preparation") },
+  { id: "analysis", label: SHELL_COPY.navGroupLabels.analysis, items: ROUTES.filter((r) => r.group === "analysis") },
+  { id: "discovery", label: SHELL_COPY.navGroupLabels.discovery, items: ROUTES.filter((r) => r.group === "discovery") },
+  { id: "output", label: SHELL_COPY.navGroupLabels.output, items: ROUTES.filter((r) => r.group === "output") },
+  { id: "tools", label: SHELL_COPY.navGroupLabels.tools, items: [] },
 ];
 
 const ROUTE_IDS = new Set<RouteId>(ROUTES.map((r) => r.id));

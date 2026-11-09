@@ -345,6 +345,23 @@ button {
   font-weight: 600;
 }
 
+/* R2 grup navigasi (UIUX-03): heading grup §2.1 caption 12/1.5;
+   bobot 600 mengikuti konvensi nav aktif. */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.nav-group-heading {
+  font-size: var(--shell-font-caption);
+  font-weight: 600;
+  line-height: var(--shell-line-height-caption);
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 var(--space-1);
+  padding-left: var(--space-3);
+}
+
 .protocol-banner {
   color: var(--color-status-danger);
   font-size: var(--shell-font-body);
@@ -456,26 +473,43 @@ button {
   color: var(--color-text-muted);
 }
 
-/* ---------- Responsif shell P2-2/P2-4 (≤900px: rail 64, panel
-   kanan disembunyikan, kolom utama tunggal 1fr; tanpa scroll
-   horizontal pada 900px) ------------------------------------------ */
-@media (max-width: 900px) {
+/* ---------- Responsif shell (SCREEN-SHELL-001 §3.2, UIUX-03) --------
+   Narrow 900–1199px: rail berlabel ~176px (D-S3) + aside R5/R7 jadi
+   drawer yang dikontrol toggle (aria-expanded di header), bukan
+   display:none. Label nav tidak pernah disembunyikan. Drawer tertutup
+   memakai visibility:hidden supaya kontennya tidak ikut tab-order;
+   terbuka via [data-open="true"] (App.tsx drawerOpen). Wide ≥1200px
+   tidak terpengaruh (intentional). ---------------------------------- */
+@media (max-width: 1199px) {
   .app-shell {
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: 176px minmax(0, 1fr);
     grid-template-areas:
       "header header"
       "rail main";
-  }
-
-  .app-aside {
-    display: none;
   }
 
   .app-main {
     padding: var(--space-3);
   }
 
-  .nav-label {
-    display: none;
+  .app-aside {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 90vw);
+    background: var(--color-surface-raised);
+    border-left: 1px solid var(--color-border-subtle);
+    z-index: 40;
+    transform: translateX(105%);
+    visibility: hidden;
+    transition:
+      transform var(--duration-fast) ease,
+      visibility var(--duration-fast) ease;
+  }
+
+  .app-aside[data-open="true"] {
+    transform: none;
+    visibility: visible;
   }
 }

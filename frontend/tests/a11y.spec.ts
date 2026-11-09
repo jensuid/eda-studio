@@ -9,21 +9,21 @@ import type { Page } from "@playwright/test";
 import { mockBridge, setupWalkthrough } from "./helpers";
 
 const ROUTE_LABELS = [
-  "Setup",
+  "Proyek",
   "Dataset",
-  "Profiling",
-  "Quality",
-  "Bivariat",
-  "Cleaning",
-  "Readiness",
-  "Report",
+  "Profil",
+  "Kualitas",
+  "Hubungan",
+  "Pembersihan",
+  "Kesiapan",
+  "Laporan",
 ] as const;
 
 async function gotoAndNavigate(page: Page, label: string): Promise<void> {
   await mockBridge(page);
   await page.goto("/");
   await page.getByRole("navigation", { name: "Navigasi utama" }).waitFor();
-  if (label !== "Setup") {
+  if (label !== "Proyek") {
     await page.getByRole("link", { name: label, exact: true }).click();
   }
   await expect(page.locator("#main-content")).toBeVisible();
@@ -97,12 +97,12 @@ test("B5: Esc menutup dialog konfirmasi cleaning (D-S6)", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await setupWalkthrough(page);
-  await page.getByRole("link", { name: "Quality" }).click();
+  await page.getByRole("link", { name: "Kualitas", exact: true }).click();
   await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
   await page.waitForFunction(
     () => document.body.textContent?.includes("Quality check selesai") ?? false,
   );
-  await page.getByRole("link", { name: "Cleaning" }).click();
+  await page.getByRole("link", { name: "Pembersihan", exact: true }).click();
   await page.getByRole("button", { name: "Hitung dampak" }).click();
   await page.getByRole("button", { name: "Terapkan cleaning" }).click();
   const dlg = page.locator('[role="alertdialog"]');
@@ -115,7 +115,7 @@ test("B5: Esc menutup dialog konfirmasi cleaning (D-S6)", async ({
 test("skip link adalah Tab pertama dan menuju #main-content", async ({
   page,
 }) => {
-  await gotoAndNavigate(page, "Setup");
+  await gotoAndNavigate(page, "Proyek");
   await page.keyboard.press("Tab");
   const skip = page.locator(".skip-link");
   await expect(skip).toBeFocused();
@@ -127,7 +127,7 @@ test("skip link adalah Tab pertama dan menuju #main-content", async ({
 test("landmark: banner, nav berlabel, main, complementary berlabel", async ({
   page,
 }) => {
-  await gotoAndNavigate(page, "Setup");
+  await gotoAndNavigate(page, "Proyek");
   await expect(page.locator("header.app-header")).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Navigasi utama" }),
@@ -141,21 +141,21 @@ test("landmark: banner, nav berlabel, main, complementary berlabel", async ({
 });
 
 test("heading: tepat satu h1 (shell)", async ({ page }) => {
-  await gotoAndNavigate(page, "Setup");
+  await gotoAndNavigate(page, "Proyek");
   await expect(page.locator("h1")).toHaveCount(1);
   await expect(page.locator("h1")).toHaveText("EDA Workbench");
 });
 
 test("fokus dipindah ke main setelah navigasi route", async ({ page }) => {
-  await gotoAndNavigate(page, "Setup");
-  await page.getByRole("link", { name: "Profiling" }).click();
+  await gotoAndNavigate(page, "Proyek");
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
   await expect(page.locator("#main-content")).toBeFocused();
 });
 
 test("fokus terlihat (focus-visible): outline tidak none", async ({
   page,
 }) => {
-  await gotoAndNavigate(page, "Setup");
+  await gotoAndNavigate(page, "Proyek");
   await page.keyboard.press("Tab");
   const outline = await page.locator(".skip-link").evaluate((el) => {
     const s = getComputedStyle(el);

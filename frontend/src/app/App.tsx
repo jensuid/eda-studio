@@ -1,11 +1,12 @@
 /**
  * App.tsx — P2-2 application shell: komposisi grid mockup
- * (rail 210 | main | panel kanan 240; ≤900px rail 64, panel tersembunyi),
+ * (rail 210 | main | panel kanan 240; narrow 900–1199px rail berlabel
+ * ~176 + aside R5/R7 jadi drawer, SCREEN-SHELL-001 §3.2),
  * handshake protokol saat startup, ErrorBoundary per-route, Job Center.
  */
 import { useEffect, useRef, useState } from "react";
 import { ProjectProvider, useProject } from "./ProjectContext";
-import { ROUTES, RouterProvider, hashFor, useRouter } from "./router";
+import { NAV_GROUPS, ROUTES, RouterProvider, hashFor, useRouter } from "./router";
 import type { RouteId } from "./router";
 import { ToastProvider } from "../shared/ui/Toaster";
 import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
@@ -82,6 +83,7 @@ function Shell() {
   const prevRoute = useRef(route);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerToggleRef = useRef<HTMLButtonElement>(null);
+  const drawerAsideRef = useRef<HTMLElement>(null);
   // Phase 2 (FLOW §2.8, D-S6): palet perintah global Cmd+K / Ctrl+K.
   const [paletteOpen, setPaletteOpen] = useState(false);
   const paletteTriggerRef = useRef<HTMLButtonElement>(null);
@@ -142,6 +144,17 @@ function Shell() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
+  // UIUX-03 (D-S3): drawer R5/R7 terbuka → fokus masuk ke drawer
+  // (SCREEN §3.8). Hanya di narrow 900–1199px — di wide, aside
+  // sudah terlihat sebagai kolom inline, fokus tidak dipindah.
+  // Esc menutup + fokus kembali ke toggle (effect di atas).
+  useEffect(() => {
+    if (!drawerOpen) return;
+    if (window.matchMedia("(max-width: 1199px)").matches) {
+      drawerAsideRef.current?.focus({ preventScroll: true });
+    }
   }, [drawerOpen]);
 
   // P2-5: fokus dipindah ke konten utama setelah navigasi route (dynamic
@@ -280,22 +293,40 @@ function Shell() {
           </div>
         )}
       </header>
+      {/* R2 rail — 7 grup / 9 item (SCREEN-SHELL-001 §3.4, UIUX-03).
+          Satu-satunya jalan keluar rail: <a href="#…"> (D-F2 hash
+          routing) + aria-current="page" (SCREEN §3.3). Label selalu
+          tampil (D-S3: tidak ada display:none pada .nav-label di
+          900px). Item Tools menaut ke sub-bagian setup. */}
       <nav className="app-rail" aria-label="Navigasi utama">
-        {ROUTES.map((r) => (
-          <a
-            key={r.id}
-            href={hashFor(r.id)}
-            className={r.id === route ? "nav-item nav-item-active" : "nav-item"}
-            aria-current={r.id === route ? "page" : undefined}
-            // P2-5: aria-label wajib — .nav-label disembunyikan di ≤900px
-            // (P2-4), tanpa ini link rail kehilangan accessible name.
-            // textDecoration/color inline: token CSS beku sampai G6
-            // (tokens.css), jembatan Phase 0 untuk <a> nav D-F2.
-            aria-label={r.label}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <span className="nav-label">{r.label}</span>
-          </a>
+        {NAV_GROUPS.map((g) => (
+          <div key={g.id} className="nav-group">
+            <h2 className="nav-group-heading">{g.label}</h2>
+            {g.items.map((r) => (
+              <a
+                key={r.id}
+                href={hashFor(r.id)}
+                className={r.id === route ? "nav-item nav-item-active" : "nav-item"}
+                aria-current={r.id === route ? "page" : undefined}
+                aria-label={r.label}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <span className="nav-label">{r.label}</span>
+              </a>
+            ))}
+            {g.id === "tools" &&
+              SHELL_COPY.navToolItems.map((label) => (
+                <a
+                  key={label}
+                  href={hashFor("setup")}
+                  className="nav-item"
+                  aria-label={label}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <span className="nav-label">{label}</span>
+                </a>
+              ))}
+          </div>
         ))}
       </nav>
       {unknownHash && (
@@ -363,6 +394,8 @@ function Shell() {
         <CommandPalette ctx={paletteCtx} onClose={closePalette} />
       )}
       <aside
+        ref={drawerAsideRef}
+        tabIndex={-1}
         className="app-aside"
         id="job-center-aside"
         aria-label="Panel samping"

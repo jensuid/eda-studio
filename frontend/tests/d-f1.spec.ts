@@ -102,7 +102,7 @@ test.describe("D-F1 — 5 tahap bersinyal sah", () => {
     await expect(stageLink(page, 2, "Dataset")).toContainText("Selesai");
     await expect(stageLink(page, 3, "Profil")).toContainText("Belum");
 
-    await page.getByRole("link", { name: "Profiling" }).click();
+    await page.getByRole("link", { name: "Profil", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Profiling" }).click();
     await page.waitForFunction(
       () => document.body.textContent?.includes("Profiling selesai") ?? false,
@@ -110,11 +110,11 @@ test.describe("D-F1 — 5 tahap bersinyal sah", () => {
     await expect(stageLink(page, 3, "Profil")).toContainText("Selesai");
 
     // Quality + Readiness (fresh) → tahap 4 & 9 'Selesai'.
-    await page.getByRole("link", { name: "Quality" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     await expect(stageLink(page, 4, "Kualitas")).toContainText("Selesai");
 
-    await page.getByRole("link", { name: "Readiness" }).click();
+    await page.getByRole("link", { name: "Kesiapan", exact: true }).click();
     await page
       .getByRole("button", { name: "Jalankan Readiness Assessment" })
       .click();
@@ -138,13 +138,13 @@ test.describe("D-F1 — 5 tahap bersinyal sah", () => {
       /berubah sejak hasil ini dibuat/,
     );
 
-    await page.getByRole("link", { name: "Quality" }).click();
+    await page.getByRole("link", { name: "Kualitas", exact: true }).click();
     await page.getByRole("button", { name: "Jalankan Quality Check" }).click();
     const stage4 = stageLink(page, 4, "Kualitas");
     await expect(stage4).toContainText("Perlu diperbarui");
     await expect(stage4).not.toContainText("Selesai");
 
-    await page.getByRole("link", { name: "Readiness" }).click();
+    await page.getByRole("link", { name: "Kesiapan", exact: true }).click();
     await page
       .getByRole("button", { name: "Jalankan Readiness Assessment" })
       .click();

@@ -30,8 +30,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Verifikasi dasar (fail-closed): repo bersih, tag belum ada, HEAD sudah di origin.
-if [ -n "$(git status --porcelain)" ]; then
+# Verifikasi dasar (fail-closed): repo bersih untuk file tracked, tag belum
+# ada, HEAD sudah di origin. Untracked dirs (.workbuddy-ai/, notes/,
+# prototypes/) memang tidak di-commit dan tidak boleh memblokir pengetagan.
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "Working tree tidak bersih — commit/stash dulu." >&2; exit 1
 fi
 if git rev-parse "$VERSION" >/dev/null 2>&1; then

@@ -259,7 +259,7 @@ Status `QA-SHELL-001:83-96` (catatan: baris B1:85 masih menyebut
   Node + 6 render matrix UI); regresi `d-f1.spec.ts` 10/10; gate
   HARNESS-5 hijau; `src/` tak tersentuh.
 - **Bukti:** tabel sel × bukti di §Bukti SESSION-STATE · gate §4 ·
-  commit produk menyusul (lihat SESSION-STATE §1).
+  commit produk `7ed3bd4`.
 
 ---
 

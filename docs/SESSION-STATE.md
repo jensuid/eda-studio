@@ -1,6 +1,6 @@
 # SESSION-STATE — Posisi Sesi EDA Workbench
 
-**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `f934beb` (pra-commit B2) · **Kartu aktif:** `G6-B2` `done`
+**Diperbarui:** 2026-11-09 · **HEAD terverifikasi:** `7ed3bd4` · **Kartu aktif:** `G6-B2` `done`
 **File ini adalah satu-satunya status hari ini.** Sesi baru wajib baca ini pertama (lihat `AGENTS.md` §HARNESS-1).
 Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hanya mencatat progress kerja.
 
@@ -9,7 +9,7 @@ Status kebijakan/ratifikasi tetap di `docs/status-register.md`; dokumen ini hany
 ## 1. Status sesi
 
 - **Fase:** Harness strengthening selesai (`490fffa`); implementasi UI/UX Phase 1 dimulai di sesi ini.
-- **Kartu terakhir selesai:** `G6-B2` (Tabel sinyal × status stepper 5 tahap D-F1, seeded fixtures, 900px + 1440px) — done 2026-11-09, commit produk menyusul, gate §4. Sebelumnya: `G6-B1` commit produk `ee93c09`.
+- **Kartu terakhir selesai:** `G6-B2` (Tabel sinyal × status stepper 5 tahap D-F1, seeded fixtures, 900px + 1440px) — done 2026-11-09, commit produk `7ed3bd4`, gate §4. Sebelumnya: `G6-B1` commit produk `ee93c09`.
 - **Kartu berikutnya:** `G6-B3` (`QA-SHELL-001:87`); bukan kartu UIUX. Urutan G6 tetap: B1, B2 done → B3. Fase 5 UI/UX tetap selesai; sisa utang PO: radius 4px vs 6px (D-DS5).
 - **Sesi aktif:** `G6-B2` `done` (sesi ini, fresh session 2026-11-09).
 
@@ -48,7 +48,7 @@ Status akhir: done 2026-11-09 — spec hijau 23/23, gate hijau, `src/` tak terse
 
 - Gate G6-B1 (2026-11-09, sesi ini): `pytest` **287 passed** (32.21s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b1.spec.ts` **2/2 hijau** (T1–T8 keyboard-only @900px + @1440px, log per tugas; 1 flake transien pada run pertama @900px, hijau pada rerun penuh) · regresi terkait: `seeded+vertical+a11y` **42 passed** (6.2m) · `git diff --stat`: docs + spec baru `g6-b1.spec.ts` (untracked). Bukti acceptance di §Bukti.
 
-- Gate G6-B2 (2026-11-09, sesi ini, HEAD `f934beb` pra-commit): `pytest` **287 passed** (58.22s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b2.spec.ts` **23/23 hijau** (1.9m) run pertama tanpa flake — 17 tests truth-table Node + 6 render-matrix UI seeded @900px/@1440px · regresi `frontend/tests/d-f1.spec.ts` **10/10 hijau** (3.5m) · `git diff --stat`: `docs/SESSION-STATE.md` + spec baru `g6-b2.spec.ts` (untracked). Bukti acceptance di §Bukti.
+- Gate G6-B2 (2026-11-09, sesi ini, HEAD `f934beb` pra-commit produk `7ed3bd4`): `pytest` **287 passed** (58.22s) · `ruff` All checks passed · `frontend/node_modules/.bin/tsc --noEmit -p frontend` exit 0 · `tools/token_ownership_lint.py` OK · `src/` **tak tersentuh** (kartu bukti test-only) · Playwright: `frontend/tests/g6-b2.spec.ts` **23/23 hijau** (1.9m) run pertama tanpa flake — 17 tests truth-table Node + 6 render-matrix UI seeded @900px/@1440px · regresi `frontend/tests/d-f1.spec.ts` **10/10 hijau** (3.5m) · `git diff --stat`: `docs/SESSION-STATE.md` + spec baru `g6-b2.spec.ts` (untracked). Bukti acceptance di §Bukti.
 
 ## 5. Bukti (`file:line` wajib)
 
